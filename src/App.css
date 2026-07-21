@@ -1,0 +1,496 @@
+/* Scope scrollbar below the title header on the repository DynamicPage.
+   DynamicPage's internal scroll container wraps both header and content,
+   so the scrollbar track extends across the full height including the title.
+   We remove overflow from the scroll container and re-enable it on the
+   exposed content part so the scrollbar only starts below the header. */
+.repo-dynamic-page .ui5-dynamic-page-scroll-container {
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.repo-dynamic-page::part(content) {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.no-padding-dynamic-page .ui5-dynamic-page-scroll-container {
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.no-padding-dynamic-page::part(content) {
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.no-padding-dynamic-page::part(fit-content) {
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+
+:root {
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --grid-cell-size: 96px;
+  --card-min-height: 100px;
+  --card-min-width: 320px;
+}
+
+body {
+  font-family: var(--sapFontFamily);
+}
+
+ui5-card {
+  --_ui5_card_box_shadow: none;
+}
+
+.dict-cat-name:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Cap overflow menus at 400px so long lists become scrollable */
+.ui5-menu-rp[ui5-responsive-popover]::part(content) {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Transparent chip variant — no background, shell text color, no visible border */
+.shellbar-chip--transparent {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.shellbar-chip--transparent > button {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--sapShell_TextColor, #1d2d3e) !important;
+}
+
+.shellbar-chip--transparent > button:hover {
+  background: var(--sapShell_Hover_Background) !important;
+  border-color: transparent !important;
+}
+
+/* Outline chip variant — transparent background, visible border, shell text color */
+.shellbar-chip--outline {
+  background: transparent !important;
+}
+
+.shellbar-chip--outline > button {
+  background: transparent !important;
+  border-color: var(--sapShell_TextColor, #1d2d3e) !important;
+  color: var(--sapShell_TextColor, #1d2d3e) !important;
+  opacity: 0.75;
+}
+
+.save-state-chip {
+  transition: opacity 2s ease;
+  opacity: 1;
+}
+
+.save-state-chip--fading {
+  opacity: 0;
+}
+
+.page-configure {
+  padding: 16px 0 12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.page-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+}
+
+.page-content {
+  flex: 1;
+  overflow: auto;
+  /* 2rem inline padding keeps card box-shadows inside the overflow clip boundary.
+     The negative margin pulls the container outward so visual alignment stays at
+     the ObjectPageSection's native padding-inline (2rem). */
+  margin-inline: -2rem;
+  padding: 0 2rem var(--spacing-md);
+}
+
+.page-content__grid {
+  max-width: 2960px;
+  margin: 0 auto;
+}
+
+/* ── Card "More" popover menu (shared by DraggableCard and widgets) ── */
+
+.widget-more-popover::part(content),
+.view-mode-popover::part(content),
+.no-padding-popover::part(content) {
+  padding: 0;
+}
+
+ui5-dialog::part(content) {
+  padding: 0;
+  overflow: hidden;
+}
+
+.appearance-dialog-label {
+  display: block;
+  margin-bottom: 0 !important;
+  line-height: 1.4;
+}
+
+
+
+/* Fix VariantManagement SaveViewDialog: restore content padding and footer border
+   that the component's CSS module strips out */
+ui5-dialog[class*="_dialog_"]::part(content) {
+  padding-inline: 1rem;
+  padding-block: 0.75rem;
+}
+ui5-dialog[class*="_dialog_"]::part(footer) {
+  border-block-start: 1px solid var(--sapPageHeader_BorderColor, #d9d9d9);
+  padding-inline: 1rem;
+  padding-block: 0.25rem;
+}
+
+ui5-message-box::part(content) {
+  padding: 1rem;
+}
+
+ui5-message-box ui5-dialog::part(content) {
+  padding: 1rem;
+}
+
+.delete-message-box::part(header) {
+  padding: 0;
+  justify-content: flex-start;
+}
+
+/* Fix VariantManagement ManageViewsDialog: remove top border on table header row */
+ui5-dialog[class*="_manageViewsDialog_"] ui5-table-header-row {
+  border-top: none;
+}
+
+/* Pin header/footer padding to 1rem (same as S-range dialogs like ShareDialog)
+   regardless of viewport media range. Applied per-dialog via className. */
+ui5-dialog.dialog-padding-s::part(header),
+ui5-dialog.dialog-padding-s::part(footer) {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Restore hover on list items inside Delete-mode lists.
+   UI5 forces actionable=false when selectionMode=Delete, suppressing the hover rule.
+   We re-apply the same background so Delete lists still feel interactive. */
+ui5-list[selection-mode="Delete"] ui5-li-custom:hover {
+  background-color: var(--sapList_Hover_Background);
+  cursor: pointer;
+}
+
+/* Prevent the SigTableWrapper title from being squished when the panel is open.
+   The title ToolbarItem is always the first child of the toolbar; giving it
+   flex-shrink: 0 and min-width: max-content ensures its text never clips. */
+[data-component="sig-table-wrapper"] ui5-toolbar > ui5-toolbar-item:first-child {
+  flex-shrink: 0;
+  min-width: max-content;
+}
+
+/* Allow overflow menu popup to escape the last cell in AnalyticalTable */
+[data-component-name="AnalyticalTableContainer"] [role="gridcell"]:last-child {
+  overflow: visible;
+}
+
+/* Restore hover on AnalyticalTable rows when selectionMode="None".
+   The _trActive CSS class (which carries the hover rule) is only added when
+   selectionMode is Single or Multiple — so rows with no selection get no hover.
+   We re-apply the same background via the stable data-component-name attribute. */
+[data-component-name="AnalyticalTableContainer"] [role="row"]:not([data-empty-row]):hover {
+  background-color: var(--sapList_Hover_Background);
+  cursor: pointer;
+}
+
+[data-component-name="AnalyticalTableContainer"] [role="row"][data-is-selected] {
+  background-color: var(--sapList_SelectionBackgroundColor);
+  border-block-end-color: var(--sapList_SelectionBorderColor);
+}
+
+[data-component-name="AnalyticalTableContainer"] [role="row"][data-is-selected]:hover {
+  background-color: var(--sapList_Hover_SelectionBackground);
+}
+
+
+ui5-li-custom::part(checkbox) {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+ui5-li-custom::part(content) {
+  align-items: flex-start;
+}
+
+.attr-table ui5-table-row::part(row-internal) {
+  height: auto;
+}
+
+.attr-table ui5-table-cell::part(cell) {
+  padding-block: 0.625rem;
+}
+
+.attr-table-wrap ui5-table-cell {
+  padding-block: 0.625rem;
+}
+
+/* The drop-zone TableRow is the actual last-child, so UI5 suppresses ITS border (fine, it's 0-height).
+   But because it exists, the last *content* row (nth-last-child(2)) is not treated as last-child by
+   UI5 and already receives a natural 1px row separator. Our rule below was adding a second border on
+   top of that, making it appear thicker. No extra CSS needed here — the row border is already correct. */
+
+/* (removed — ObjectPageTitle handles spacing correctly without this) */
+
+/* Suppress the focus ring that appears after a tab click. outline-offset is also reset
+   because the CSS module sets it to calc(sapContent_FocusWidth * -1) on :focus. */
+section[id^="ObjectPageSection-"]:focus,
+section[id^="ObjectPageSection-"]:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+
+section[id^="ObjectPageSection-"] > [class*="outlineSpacerDiv"] {
+  height: 0;
+}
+
+.under-construction {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sapBackgroundColor, #f5f6f7);
+  min-height: calc(100vh - 220px);
+}
+
+.under-construction__text {
+  font-family: var(--sapFontFamily);
+  font-size: var(--sapFontHeader4Size, 1.25rem);
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+/* Remove separators from all nav tree items by zeroing the border-bottom CSS variable */
+.nav-tree-flat ui5-tree-item,
+.nav-tree-smart-folders ui5-tree-item {
+  --ui5-listitem-border-bottom: none;
+}
+
+/* Align icons of non-expandable tree items with section title text.
+   Collapse the toggle-box width to 0 so the icon sits flush with the 0.75rem
+   padding that the list already provides, matching the section title indent. */
+.nav-tree-flat ui5-tree-item,
+.nav-tree-smart-folders ui5-tree-item {
+  --_ui5-tree-toggle-box-width: 0.75rem;
+}
+
+
+.card__header {
+  padding: var(--_ui5_card_header_padding, 1rem 1rem 0.75rem 1rem);
+  border-bottom: var(--_ui5_card_header_border, 1px solid var(--sapTile_SeparatorColor));
+  border-radius: var(--_ui5_card_border-radius, var(--sapTile_BorderCornerRadius))
+                 var(--_ui5_card_border-radius, var(--sapTile_BorderCornerRadius))
+                 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.card__header:hover:not(:has(ui5-button:hover, button:hover)) {
+  background-color: var(--_ui5_card_header_hover_bg, var(--sapTile_Hover_Background));
+}
+
+.card__header:active,
+.card-dragging .card__header {
+  cursor: grabbing;
+  background-color: var(--_ui5_card_header_active_bg, var(--sapTile_Active_Background));
+}
+
+/* ── DraggableCard component ── */
+
+.draggable-card {
+  background-color: var(--sapTile_Background);
+  border: var(--_ui5_card_border, none);
+  border-radius: var(--_ui5_card_border-radius, var(--sapTile_BorderCornerRadius));
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.draggable-card__title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--_ui5_card_header_title_font_family, var(--sapFontHeaderFamily, var(--sapFontFamily)));
+  font-size: var(--_ui5_card_header_title_font_size, var(--sapFontHeader6Size, 0.875rem));
+  font-weight: var(--_ui5_card_header_title_font_weight, normal);
+  color: var(--sapTile_TitleTextColor);
+}
+
+.draggable-card__content {
+  flex: 1;
+  padding: 1rem;
+}
+
+.table-asset-name:hover,
+.table-asset-name:hover::part(text) {
+  text-decoration: underline;
+  text-decoration-color: inherit;
+}
+
+/* Let the header's border-radius show — wrapper's overflow:hidden was clipping it */
+.atoms-table-wrapper [data-component="sig-table-wrapper"] {
+  overflow: visible;
+}
+
+/* Rounded border outline on the SigTableWrapper header only */
+.atoms-table-wrapper [data-component="sig-table-wrapper"] > div:first-child {
+  border: 1px solid var(--sapList_BorderColor);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+/* Hide only the column header for the grouped category column, not the group row cells */
+.hide-grouped-col [role="columnheader"][data-column-id="category"] {
+  display: none;
+}
+
+/* Prevent text cursor in language list items */
+.lang-list-item, .lang-list-item * {
+  user-select: none;
+  cursor: pointer;
+}
+
+.lang-list-item:hover {
+  background: var(--sapList_Hover_Background) !important;
+}
+
+
+.param-menu ui5-li {
+  min-width: 10rem;
+}
+
+/* param chip menu: match width to opener */
+.ui5-menu-rp[ui5-responsive-popover] {
+  min-width: var(--_param_menu_min_width, auto);
+}
+
+
+.element-row:hover {
+  background: var(--sapList_Hover_Background) !important;
+}
+
+.attr-tree-row:hover {
+  background: var(--sapList_Hover_Background) !important;
+}
+
+
+/* SplitterLayout: override layer-internal overflow:hidden so grip icon is visible */
+._splitterLayout_6n3m3_1 {
+  overflow: visible !important;
+}
+
+._splitterElement_5jt3n_1 {
+  overflow: visible !important;
+}
+
+[data-splitter-vertical="horizontal"] {
+  cursor: col-resize;
+}
+
+/* FlexibleColumnLayout in modeler: columns must fill height, not scroll */
+.modeler-fcl .ui5-fcl-column {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cap the mid (right) panel width */
+.modeler-fcl .ui5-fcl-column:nth-child(2) {
+  max-width: 380px !important;
+  min-width: 280px !important;
+  width: 380px !important;
+  flex: 0 0 380px !important;
+}
+
+/* First column takes remaining space */
+.modeler-fcl .ui5-fcl-column:nth-child(1) {
+  flex: 1 1 auto !important;
+  max-width: none !important;
+}
+
+/* Right-rail: move selected indicator to right side */
+.modeler-rail ui5-side-navigation-item {
+  --_ui5_side_navigation_collapsed_selected_item_background: linear-gradient(0deg, #0064d9, #0064d9) no-repeat 100% 0 / .188rem 100%, #ebf8ff;
+  --_ui5_side_navigation_collapsed_selected_item_background_hover: linear-gradient(0deg, #0064d9, #0064d9) no-repeat 100% 0 / .188rem 100%, var(--sapList_Hover_Background);
+}
+
+/* Element detail panel: remove TabContainer gray content area */
+.element-detail-panel ui5-tabcontainer::part(content) {
+  display: none;
+}
+.element-detail-panel ui5-tabcontainer {
+  --_ui5_tc_header_box_shadow: none;
+}
+
+/* Hide Wizard content area — used as step indicator only */
+ui5-wizard::part(content) {
+  display: none;
+}
+ui5-wizard {
+  --_ui5_wizard_progress_nav_border_bottom: none;
+  min-height: unset !important;
+  width: 100% !important;
+  height: 62px !important;
+  overflow: hidden !important;
+}
+ui5-wizard-step {
+  display: none !important;
+  height: 0 !important;
+}
+.ui5-wiz-nav {
+  width: 100% !important;
+  padding-inline-end: 0 !important;
+  padding-right: 0 !important;
+  border-bottom: none !important;
+}
+.ui5-wiz-step-root {
+  padding-inline-end: 0 !important;
+  padding-right: 0 !important;
+}
+.ui5-wiz-content {
+  display: none !important;
+  height: 0 !important;
+}
+.ui5-wiz-root {
+  min-height: unset !important;
+}
+ui5-illustrated-message {
+  --_ui5_illustrated_message_padding: 1rem 1rem 0 1rem;
+}

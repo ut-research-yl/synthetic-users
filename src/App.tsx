@@ -1,0 +1,115 @@
+import './App.css'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { WorkspaceProvider } from './contexts/WorkspaceContext'
+import { ReleaseProvider } from './contexts/ReleaseContext'
+import Shell from './components/Shell'
+import Audience from './pages/Audience'
+import Users from './pages/Users'
+import Groups from './pages/Groups'
+import ContentAccess from './pages/ContentAccess'
+import FeatureAccess from './pages/FeatureAccess'
+import HomePage from './pages/HomePage'
+import Navigation from './pages/Navigation'
+import Theme from './pages/Theme'
+import DiagramPage from './pages/DiagramPage'
+import FactSheet from './pages/FactSheet'
+import HelpResources from './pages/HelpResources'
+import AttributeVisualization from './pages/AttributeVisualization'
+import Collaboration from './pages/Collaboration'
+import ApprovalWorkflows from './pages/ApprovalWorkflows'
+import ProcessRating from './pages/ProcessRating'
+import ProcessInsights from './pages/ProcessInsights'
+import CloudALM from './pages/CloudALM'
+import WalkMe from './pages/WalkMe'
+import AccessConfiguration from './pages/AccessConfiguration'
+import DataSharingIndustry from './pages/DataSharingIndustry'
+import DataCollectionConfig from './pages/DataCollectionConfig'
+import DataPrivacyManagement from './pages/DataPrivacyManagement'
+import WorkspaceDetails from './pages/WorkspaceDetails'
+import ModelingPreferences from './pages/ModelingPreferences'
+import ModelingLanguages from './pages/ModelingLanguages'
+import ModelingLanguageAppearance from './pages/ModelingLanguageAppearance'
+import Authentication from './pages/Authentication'
+import NetworkPrivacy from './pages/NetworkPrivacy'
+import AssetTypes from './pages/AssetTypes'
+import AssetTypeDetail from './pages/AssetTypeDetail'
+import DictionaryCategories from './pages/DictionaryCategories'
+import DictionaryCategoryDetail from './pages/DictionaryCategoryDetail'
+import AttributeDefinitions from './pages/AttributeDefinitions'
+import Repository from './pages/Repository'
+import SearchResults from './pages/SearchResults'
+import Reporting from './pages/Reporting'
+import HomeDashboard from './pages/HomeDashboard'
+import AllResources from './pages/AllResources'
+import SmartFolder from './pages/SmartFolder'
+import TrashPage from './pages/TrashPage'
+import VariantManagement from './pages/VariantManagement'
+import ModelingConventions from './pages/ModelingConventions'
+import ProcessConsultingAgent from './pages/ProcessConsultingAgent'
+import ConventionsStandalone from './pages/ConventionsStandalone'
+import ModelerLobby from './pages/ModelerLobby'
+import ModelerLayout from './pages/ModelerLayout'
+import JourneyModelerLayout from './pages/JourneyModelerLayout'
+
+export default function App() {
+  return (
+    <ReleaseProvider>
+    <WorkspaceProvider>
+    <HashRouter>
+      <Routes>
+        <Route path="conventions-standalone" element={<ConventionsStandalone />} />
+        <Route path="/" element={<Shell />}>
+          <Route index element={<Navigate to="/home" replace />} />
+          <Route path="audience" element={<Audience />} />
+          <Route path="users" element={<Users />} />
+          <Route path="groups" element={<Groups />} />
+          <Route path="resource-access" element={<ContentAccess />} />
+          <Route path="feature-access" element={<FeatureAccess />} />
+          <Route path="home-page" element={<HomePage />} />
+          <Route path="general-settings" element={<WorkspaceDetails />} />
+          <Route path="navigation" element={<Navigation />} />
+          <Route path="theme" element={<Theme />} />
+          <Route path="diagram-page" element={<DiagramPage />} />
+          <Route path="fact-sheet" element={<FactSheet />} />
+          <Route path="help-resources" element={<HelpResources />} />
+          <Route path="attribute-visualization" element={<AttributeVisualization />} />
+          <Route path="collaboration" element={<Collaboration />} />
+          <Route path="journey-model-approval" element={<ApprovalWorkflows />} />
+          <Route path="process-rating" element={<ProcessRating />} />
+          <Route path="walkme" element={<WalkMe />} />
+          <Route path="access-configuration" element={<AccessConfiguration />} />
+          <Route path="data-sharing-industry" element={<DataSharingIndustry />} />
+          <Route path="data-collection-config" element={<DataCollectionConfig />} />
+          <Route path="data-privacy-management" element={<DataPrivacyManagement />} />
+          <Route path="process-insights" element={<ProcessInsights />} />
+          <Route path="cloud-alm" element={<CloudALM />} />
+          <Route path="modeling-preferences" element={<ModelingPreferences />} />
+          <Route path="modeling-languages" element={<ModelingLanguages />} />
+          <Route path="modeling-languages/:langId" element={<ModelingLanguageAppearance />} />
+          <Route path="authentication" element={<Authentication />} />
+          <Route path="network-privacy" element={<NetworkPrivacy />} />
+          <Route path="repository" element={<Repository />} />
+          <Route path="search" element={<SearchResults />} />
+          <Route path="reporting" element={<Reporting />} />
+          <Route path="asset-types" element={<AssetTypes />} />
+          <Route path="asset-types/:id" element={<AssetTypeDetail />} />
+          <Route path="dictionary-categories" element={<DictionaryCategories />} />
+          <Route path="dictionary-categories/:id" element={<DictionaryCategoryDetail />} />
+          <Route path="attribute-definitions" element={<AttributeDefinitions />} />
+          <Route path="home" element={<HomeDashboard />} />
+          <Route path="all-resources" element={<AllResources />} />
+          <Route path="smart-folder" element={<SmartFolder />} />
+          <Route path="trash" element={<TrashPage />} />
+          <Route path="variant-management" element={<VariantManagement />} />
+          <Route path="modeling-conventions" element={<ModelingConventions />} />
+          <Route path="process-consulting-agent" element={<ProcessConsultingAgent />} />
+          <Route path="modeler" element={<ModelerLobby />} />
+          <Route path="modeler/new-journey" element={<JourneyModelerLayout />} />
+          <Route path="modeler/:assetId" element={<ModelerLayout />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+    </WorkspaceProvider>
+    </ReleaseProvider>
+  )
+}

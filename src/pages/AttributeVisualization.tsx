@@ -1,0 +1,1072 @@
+import { Fragment, useState, useEffect, useRef } from 'react'
+import type { InputDomRef } from '@ui5/webcomponents-react'
+import {
+  Button, Icon, Select, Option, Input, Text, Title, Popover,
+  RadioButton, MessageStrip, Dialog, Bar, Menu, MenuItem, Switch, Link,
+  Table, TableHeaderRow, TableHeaderCell, TableRow, TableCell, Label,
+  ObjectPage, ObjectPageTitle, ObjectPageSection, ObjectPageMode,
+} from '@ui5/webcomponents-react'
+import { getIconData } from '@ui5/webcomponents-base/dist/asset-registries/Icons.js'
+import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
+
+const PROPERTIES = [
+  'Critical Application', 'Priority', 'Status', 'accountable',
+  'APQC Metric', 'APQC Metrics', 'Business Requirements', 'SAP Executable',
+  'KPI Definition', 'linkedGlossary', 'Owner', 'Process owner',
+  'Related SAP S/4HANA Best Practices', 'informed', 'consulted',
+]
+
+const RELATIONS = ['is', 'is not', 'is empty', 'is not empty']
+
+const VALUE_OPTIONS: Record<string, string[]> = {
+  Status: ['Design Phase', 'Build Phase', 'Test Phase', 'Go Live', 'Retired'],
+  Priority: ['High', 'Medium', 'Low'],
+  'Critical Application': ['Yes', 'No'],
+  'KPI Definition': ['Yes', 'No'],
+  'SAP Executable': ['Yes', 'No'],
+}
+
+const PALETTE_COLORS = [
+  // SAP Horizon accent colors
+  '#d27700', '#aa0808', '#ba066c', '#a100c2', '#5d36ff',
+  '#0057d2', '#046c7a', '#256f3a', '#6c32a9', '#5b738b',
+  // SAP Horizon accent background colors
+  '#fff3b8', '#ffd0e7', '#ffdbe7', '#ffdcf3', '#ded3ff',
+  '#d1efff', '#c2fcee', '#ebf5cb', '#ddccf0', '#eaecee',
+  // Neutrals
+  '#000000', '#404040', '#808080', '#b3b3b3', '#cccccc', '#e6e6e6', '#f2f2f2', '#ffffff',
+  '#cc0000', '#e65c00', '#e6b800', '#5cb85c', '#00b3b3', '#0066cc', '#6600cc', '#cc0099',
+  '#ff3333', '#ff8533', '#ffd633', '#85e085', '#33cccc', '#3385ff', '#8533ff', '#ff33cc',
+  '#ff9999', '#ffcc99', '#fff0b3', '#ccffcc', '#99ffff', '#99ccff', '#cc99ff', '#ffb3ec',
+  '#800000', '#804000', '#806600', '#336633', '#004d4d', '#003380', '#330080', '#660033',
+  '#4d0000', '#4d2600', '#4d3d00', '#1a331a', '#001a1a', '#001a4d', '#1a004d', '#33001a',
+  '#ff6600', '#ffcc00', '#99cc00', '#009999', '#0066ff', '#9900cc', '#ff0066', '#ff6699',
+  '#ff9966', '#ffdd66', '#bbdd66', '#66ccbb', '#66aaff', '#cc66ff', '#ff6688', '#ffbbcc',
+]
+
+const ICON_OPTIONS: { name: string; label: string }[] = [
+  // Status & Alerts
+  { name: 'status-positive', label: 'status positive' },
+  { name: 'status-negative', label: 'status negative' },
+  { name: 'status-critical', label: 'status critical' },
+  { name: 'status-error', label: 'status error' },
+  { name: 'status-in-process', label: 'in process' },
+  { name: 'status-inactive', label: 'inactive' },
+  { name: 'accept', label: 'accept' },
+  { name: 'decline', label: 'decline' },
+  { name: 'alert', label: 'alert' },
+  { name: 'warning', label: 'warning' },
+  { name: 'warning2', label: 'warning 2' },
+  { name: 'information', label: 'information' },
+  { name: 'error', label: 'error' },
+  { name: 'circle-task', label: 'circle task' },
+  { name: 'circle-task-2', label: 'circle task 2' },
+  // Priority & Importance
+  { name: 'flag', label: 'flag' },
+  { name: 'flag-2', label: 'flag 2' },
+  { name: 'bookmark', label: 'bookmark' },
+  { name: 'favorite', label: 'favorite' },
+  { name: 'favorite-list', label: 'starred' },
+  { name: 'thumb-up', label: 'thumb up' },
+  { name: 'thumb-down', label: 'thumb down' },
+  { name: 'high-priority', label: 'high priority' },
+  { name: 'key', label: 'key' },
+  { name: 'locked', label: 'locked' },
+  // Charts & Analytics
+  { name: 'pie-chart', label: 'pie chart' },
+  { name: 'bar-chart', label: 'bar chart' },
+  { name: 'line-chart', label: 'line chart' },
+  { name: 'area-chart', label: 'area chart' },
+  { name: 'full-stacked-column-chart', label: 'column chart' },
+  { name: 'scatter-chart', label: 'scatter chart' },
+  { name: 'donut-chart', label: 'donut chart' },
+  { name: 'kpi-corporate-performance', label: 'kpi' },
+  { name: 'trend-up', label: 'trend up' },
+  { name: 'trend-down', label: 'trend down' },
+  { name: 'horizontal-bullet-chart', label: 'bullet chart' },
+  { name: 'simulate', label: 'simulate' },
+  // Business Objects
+  { name: 'employee', label: 'employee' },
+  { name: 'customer', label: 'customer' },
+  { name: 'supplier', label: 'supplier' },
+  { name: 'product', label: 'product' },
+  { name: 'technical-object', label: 'technical object' },
+  { name: 'target-group', label: 'target group' },
+  { name: 'org-chart', label: 'org chart' },
+  { name: 'opportunity', label: 'opportunity' },
+  { name: 'contacts', label: 'business partner' },
+  { name: 'role', label: 'role' },
+  { name: 'group', label: 'group' },
+  { name: 'people-connected', label: 'team' },
+  // Process & Workflow
+  { name: 'process', label: 'process' },
+  { name: 'workflow-tasks', label: 'workflow tasks' },
+  { name: 'task', label: 'task' },
+  { name: 'checklist-item', label: 'to do' },
+  { name: 'checklist', label: 'checklist' },
+  { name: 'approvals', label: 'approvals' },
+  { name: 'decision', label: 'decision' },
+  { name: 'connected', label: 'connected' },
+  { name: 'map', label: 'map' },
+  { name: 'journey-change', label: 'journey' },
+  // Technology & Systems
+  { name: 'database', label: 'database' },
+  { name: 'cloud', label: 'cloud' },
+  { name: 'it-system', label: 'it system' },
+  { name: 'developer-settings', label: 'developer' },
+  { name: 'source-code', label: 'coding' },
+  { name: 'settings', label: 'settings' },
+  { name: 'action-settings', label: 'configuration' },
+  { name: 'official-service', label: 'api' },
+  { name: 'share-2', label: 'integration' },
+  { name: 'chain-link', label: 'link' },
+  // Finance & Compliance
+  { name: 'money-bills', label: 'money' },
+  { name: 'expense-report', label: 'expense' },
+  { name: 'document-text', label: 'audit' },
+  { name: 'permission', label: 'certificate' },
+  { name: 'shield', label: 'shield' },
+  { name: 'insurance-house', label: 'insurance' },
+  { name: 'filter', label: 'requirement' },
+  { name: 'goal', label: 'goal' },
+  // Documents & Content
+  { name: 'document', label: 'document' },
+  { name: 'attachment', label: 'attachment' },
+  { name: 'notes', label: 'notes' },
+  { name: 'comment', label: 'comment' },
+  { name: 'tag', label: 'tag' },
+  { name: 'text', label: 'text' },
+  { name: 'education', label: 'education' },
+  { name: 'course-book', label: 'course book' },
+  // Misc & Indicators
+  { name: 'time-entry-request', label: 'time' },
+  { name: 'calendar', label: 'calendar' },
+  { name: 'geographic-bubble-chart', label: 'geography' },
+  { name: 'building', label: 'building' },
+  { name: 'factory', label: 'factory' },
+  { name: 'batch-payments', label: 'batch' },
+  { name: 'lightbulb', label: 'idea' },
+  { name: 'add-activity', label: 'activity' },
+  { name: 'physical-activity', label: 'physical' },
+  { name: 'question-mark', label: 'question' },
+]
+
+type Condition = { id: string; property: string; relation: string; value: string }
+type Rule = { id: string; name: string; color: string; icon: string; showIcon: boolean; showValue: boolean; valueLabel: string; logic: 'and' | 'or'; conditions: Condition[] }
+type Layer = {
+  id: string; active: boolean; name: string; rules: Rule[]
+}
+
+const INITIAL_LAYERS: Layer[] = [
+  { id: '1', active: true, name: 'KPI Definition', rules: [{ id: 'r1', name: '', color: '#009900', icon: 'pie-chart', showIcon: true, showValue: false, valueLabel: '', logic: 'and', conditions: [{ id: 'c1', property: 'KPI Definition', relation: 'is', value: 'Yes' }] }] },
+  { id: '2', active: true, name: 'Requirements fulfilled', rules: [{ id: 'r2', name: '', color: '#99CC00', icon: 'accept', showIcon: true, showValue: false, valueLabel: '', logic: 'and', conditions: [{ id: 'c2', property: 'Status', relation: 'is', value: 'Build Phase' }] }] },
+  { id: '3', active: true, name: 'Requirements open', rules: [{ id: 'r3', name: '', color: '#CCCC00', icon: 'circle-task', showIcon: true, showValue: false, valueLabel: '', logic: 'and', conditions: [{ id: 'c3', property: 'Status', relation: 'is', value: 'Design Phase' }] }] },
+  { id: '4', active: true, name: 'Is critical component', rules: [{ id: 'r4', name: '', color: '#FF9933', icon: 'alert', showIcon: true, showValue: false, valueLabel: '', logic: 'and', conditions: [{ id: 'c4', property: 'Critical Application', relation: 'is', value: 'Yes' }] }] },
+  { id: '5', active: true, name: 'SAP Transactions', rules: [{ id: 'r5', name: '', color: '#0066FF', icon: 'technical-object', showIcon: true, showValue: true, valueLabel: 'Yes', logic: 'and', conditions: [{ id: 'c5', property: 'SAP Executable', relation: 'is', value: 'Yes' }] }] },
+]
+
+const AUDIENCES = ['General audience', 'Administrators', 'Acme Italy', 'Acme France']
+
+type OverlayVis = 'visible-active' | 'visible' | 'hidden'
+
+type IconPathData = { pathData: string | string[]; viewBox: string }
+
+function makeColoredIconUrl(iconPathData: IconPathData | null, bgColor: string, iconColor: string): string {
+  const validHex = (c: string) => /^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#888888'
+  const bg = validHex(bgColor)
+  const fg = validHex(iconColor)
+  const fallback = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect width="24" height="24" fill="${bg}" rx="3"/></svg>`)}`
+  if (!iconPathData) return fallback
+  try {
+    const vb = iconPathData.viewBox.replace(/[^0-9 .]/g, '')
+    const paths = (Array.isArray(iconPathData.pathData) ? iconPathData.pathData : [iconPathData.pathData])
+      .map((p: string) => `<path d="${p.replace(/"/g, '')}" fill="${fg}"/>`)
+      .join('')
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">` +
+      `<rect width="24" height="24" fill="${bg}" rx="3"/>` +
+      `<svg x="4" y="4" width="16" height="16" viewBox="${vb}">${paths}</svg>` +
+      `</svg>`
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  } catch { /* fall through */ }
+  return fallback
+}
+
+function isLightColor(hex: string): boolean {
+  const h = hex.startsWith('#') ? hex.slice(1) : hex
+  if (h.length < 6) return true
+  const r = parseInt(h.slice(0, 2), 16) / 255
+  const g = parseInt(h.slice(2, 4), 16) / 255
+  const b = parseInt(h.slice(4, 6), 16) / 255
+  const toLinear = (c: number) => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  const L = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
+  return L > 0.30
+}
+
+export default function AttributeVisualization() {
+  const [layers, setLayers] = useState<Layer[]>(INITIAL_LAYERS)
+  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
+  const [colorHex, setColorHex] = useState('')
+  const [lastValidHex, setLastValidHex] = useState('')
+  const [hexBlurred, setHexBlurred] = useState(false)
+  const hexInputRef = useRef<InputDomRef>(null)
+  useEffect(() => {
+    if (openColorPicker) {
+      setTimeout(() => hexInputRef.current?.focus(), 0)
+    }
+  }, [openColorPicker])
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [renameLayerId, setRenameLayerId] = useState<string | null>(null)
+  const [renameName, setRenameName] = useState('')
+  const [iconPickerOpen, setIconPickerOpen] = useState<string | null>(null)
+  const [iconSearch, setIconSearch] = useState('')
+  const [iconPathData, setIconPathData] = useState<Record<string, IconPathData | null>>({})
+  const [isDirty, setIsDirty] = useState(false)
+  const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const [collapsedRules, setCollapsedRules] = useState<Record<string, boolean>>({})
+  const toggleRuleCollapse = (ruleId: string) => setCollapsedRules(prev => ({ ...prev, [ruleId]: !prev[ruleId] }))
+  const [renameRuleDialogOpen, setRenameRuleDialogOpen] = useState(false)
+  const [renameRuleId, setRenameRuleId] = useState<string | null>(null)
+  const [renameRuleName, setRenameRuleName] = useState('')
+
+  const [layerVis, setLayerVis] = useState<Record<string, Record<string, OverlayVis>>>(() =>
+    Object.fromEntries(INITIAL_LAYERS.map(l => [l.id, Object.fromEntries(AUDIENCES.map(a => [a, 'visible-active' as OverlayVis]))]))
+  )
+  const [selectedCfgLayerId, setSelectedCfgLayerId] = useState<string | null>(INITIAL_LAYERS[0].id)
+  const [tool, setTool] = useState<'modeler' | 'pm-legacy'>('modeler')
+  const [showMatrix, setShowMatrix] = useState(false)
+  const [layerVisSnapshot, setLayerVisSnapshot] = useState<Record<string, Record<string, OverlayVis>> | null>(null)
+
+  const openMatrix = () => { setLayerVisSnapshot(JSON.parse(JSON.stringify(layerVis))); setShowMatrix(true) }
+  const cancelMatrix = () => { if (layerVisSnapshot) setLayerVis(layerVisSnapshot); setShowMatrix(false) }
+  const saveMatrix = () => { setIsDirty(true); setShowMatrix(false) }
+  const matrixHasChanges = layerVisSnapshot !== null && JSON.stringify(layerVis) !== JSON.stringify(layerVisSnapshot)
+
+  const selectedCfgLayerData = layers.find(l => l.id === selectedCfgLayerId) ?? null
+
+  // Load icon path data for each rule in selected layer
+  useEffect(() => {
+    if (!selectedCfgLayerData) return
+    selectedCfgLayerData.rules.forEach(rule => {
+      if (!rule.showIcon || !rule.icon) return
+      getIconData(rule.icon).then(data => {
+        if (data && typeof data === 'object' && 'pathData' in data && data.pathData) {
+          setIconPathData(prev => ({ ...prev, [rule.id]: { pathData: data.pathData!, viewBox: data.viewBox ?? '0 0 16 16' } }))
+        }
+      })
+    })
+  }, [selectedCfgLayerData?.id, selectedCfgLayerData?.rules.map(r => r.icon + r.showIcon).join()])
+
+
+  const toggleActive = (layerId: string) => {
+    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, active: !l.active } : l))
+    setIsDirty(true)
+  }
+
+  const deleteLayer = (layerId: string) => {
+    setLayers(prev => prev.filter(l => l.id !== layerId))
+    setSelectedCfgLayerId(null)
+    setConfirmDeleteOpen(false)
+    setIsDirty(true)
+  }
+
+  const updateRule = (layerId: string, ruleId: string, updates: { color?: string; icon?: string; showIcon?: boolean; showValue?: boolean; valueLabel?: string; logic?: 'and' | 'or' }) => {
+    setLayers(prev => prev.map(l => l.id !== layerId ? l : {
+      ...l, rules: l.rules.map(r => {
+        if (r.id !== ruleId) {
+          // sync icon change to all rules
+          return updates.icon !== undefined ? { ...r, icon: updates.icon } : r
+        }
+        return { ...r, ...updates }
+      }),
+    }))
+    setIsDirty(true)
+  }
+
+  const addRule = (layerId: string) => {
+    const ruleId = Date.now().toString()
+    setLayers(prev => prev.map(l => l.id !== layerId ? l : {
+      ...l, rules: [...l.rules, { id: ruleId, name: '', color: '#0066FF', icon: 'pie-chart', showIcon: true, showValue: false, valueLabel: '', logic: 'and' as const, conditions: [{ id: ruleId + '-c0', property: PROPERTIES[0], relation: 'is', value: '' }] }],
+    }))
+    setIsDirty(true)
+  }
+
+  const deleteRule = (layerId: string, ruleId: string) => {
+    setLayers(prev => prev.map(l => l.id !== layerId ? l : {
+      ...l, rules: l.rules.filter(r => r.id !== ruleId),
+    }))
+    setIsDirty(true)
+  }
+
+  const updateCondition = (layerId: string, ruleId: string, condId: string, updates: Partial<Condition>) => {
+    setLayers(prev => prev.map(l => l.id !== layerId ? l : {
+      ...l, rules: l.rules.map(r => r.id !== ruleId ? r : {
+        ...r, conditions: r.conditions.map(c => c.id !== condId ? c : { ...c, ...updates }),
+      }),
+    }))
+    setIsDirty(true)
+  }
+
+  const addCondition = (layerId: string, ruleId: string) => {
+    const condId = Date.now().toString() + '-cond'
+    setLayers(prev => prev.map(l => l.id !== layerId ? l : {
+      ...l, rules: l.rules.map(r => r.id !== ruleId ? r : {
+        ...r, conditions: [...r.conditions, { id: condId, property: PROPERTIES[0], relation: 'is', value: '' }],
+      }),
+    }))
+    setIsDirty(true)
+  }
+
+  const deleteCondition = (layerId: string, ruleId: string, condId: string) => {
+    setLayers(prev => prev.map(l => l.id !== layerId ? l : {
+      ...l, rules: l.rules.map(r => r.id !== ruleId ? r : {
+        ...r, conditions: r.conditions.filter(c => c.id !== condId),
+      }),
+    }))
+    setIsDirty(true)
+  }
+
+  const setLayerVisibility = (layerId: string, audience: string, v: OverlayVis) => {
+    setLayerVis(prev => ({ ...prev, [layerId]: { ...prev[layerId], [audience]: v } }))
+    setIsDirty(true)
+  }
+
+  const [newOverlayDialogOpen, setNewOverlayDialogOpen] = useState(false)
+  const [newOverlayName, setNewOverlayName] = useState('')
+
+  const addLayerCfg = (name: string) => {
+    const newId = Date.now().toString()
+    setLayers(prev => [...prev, { id: newId, active: true, name, rules: [] }])
+    setLayerVis(prev => ({ ...prev, [newId]: Object.fromEntries(AUDIENCES.map(a => [a, 'visible-active' as OverlayVis])) }))
+    setSelectedCfgLayerId(newId)
+  }
+
+  const border = 'var(--sapList_BorderColor)'
+
+  return (
+    <>
+    <ObjectPage
+      style={{ height: '100%' } as React.CSSProperties}
+      mode={ObjectPageMode.IconTabBar}
+      hidePinButton
+      selectedSectionId={tool}
+      onSelectedSectionChange={(e: any) => {
+        const idx = e.detail?.selectedSectionIndex ?? 0
+        setTool(idx === 0 ? 'modeler' : 'pm-legacy')
+      }}
+      titleArea={
+        <ObjectPageTitle
+          header="Attribute Overlays"
+          subHeader="Define how attribute data is visually displayed on diagram elements."
+        />
+      }
+      footerArea={isDirty ? (
+        <Bar design="FloatingFooter">
+          <Button slot="endContent" design="Emphasized" onClick={() => setIsDirty(false)}>Save</Button>
+          <Button slot="endContent" onClick={() => { setLayers(INITIAL_LAYERS); setIsDirty(false) }}>Discard Changes</Button>
+        </Bar>
+      ) : undefined}
+    >
+      <ObjectPageSection id="modeler" titleText="Modeler" hideTitleText>
+        <div style={{ padding: '1rem 0 16px' }}>
+          <MessageStrip design="Critical" hideCloseButton>
+            This configuration applies to <strong>the New Process Modeler only.</strong> It has no effect on the Old Process Modeler.
+          </MessageStrip>
+        </div>
+        <div style={{ display: 'flex', border: `1px solid ${border}`, borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden', flex: 1, minHeight: 0, height: 'calc(100% - 1rem)', alignItems: 'stretch' }}>
+
+
+          {/* ── Left: overlay list */}
+          {true && (
+            <div style={{ width: '20rem', flexShrink: 0, borderRight: `1px solid ${border}`, display: 'flex', flexDirection: 'column', background: 'white' }}>
+              <div style={{ padding: '0.625rem 0.75rem 0.625rem 1rem', borderBottom: `1px solid ${border}`, background: 'var(--sapList_HeaderBackground)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Title level="H5" style={{ flex: 1 } as React.CSSProperties}>Attribute Overlays</Title>
+                <div>
+                  <Button
+                    design="Transparent"
+                    icon="overflow"
+                    style={{ opacity: 1, '--ui5-button-base-padding': '0 4px' } as React.CSSProperties}
+                    id="overlay-list-header-btn"
+                    onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'header' ? null : 'header') }}
+                  />
+                  <Menu
+                    opener="overlay-list-header-btn"
+                    open={openMenu === 'header'}
+                    onClose={() => setOpenMenu(null)}
+                    onItemClick={e => {
+                      const text = (e.detail?.item as any)?.text
+                      setOpenMenu(null)
+                      if (text === 'Create Overlay') { setNewOverlayName(''); setNewOverlayDialogOpen(true) }
+                      if (text === 'Visibility Settings') openMatrix()
+                    }}
+                  >
+                  <MenuItem text="Create Overlay" />
+                  <MenuItem text="Visibility Settings" />
+                </Menu>
+                </div>
+              </div>
+
+              <div role="listbox" aria-label="Overlays" style={{ flex: 1, overflowY: 'auto' }}>
+                {layers.map(layer => {
+                  const isSelected = selectedCfgLayerId === layer.id
+                  return (
+                    <div
+                      key={layer.id}
+                      role="option"
+                      tabIndex={0}
+                      aria-selected={isSelected}
+                      onClick={() => setSelectedCfgLayerId(layer.id)}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCfgLayerId(layer.id) } }}
+                      style={{
+                        padding: '0.5rem 0.25rem 0.5rem 0.875rem',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        background: isSelected ? 'var(--sapList_SelectionBackgroundColor)' : 'transparent',
+                        borderBottom: `1px solid ${border}`,
+                        borderLeft: isSelected ? '3px solid var(--sapSelectedColor)' : '3px solid transparent',
+                        opacity: layer.active ? 1 : 0.55,
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={{ fontWeight: isSelected ? '600' : '400', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: layer.name ? 'normal' : 'italic', color: layer.name ? undefined : 'var(--sapContent_LabelColor)' }}>
+                          {layer.name || 'New overlay'}
+                        </Text>
+                        <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' }}>
+                          {layer.rules.length === 0 ? 'No rules' : `${layer.rules.length} rule${layer.rules.length !== 1 ? 's' : ''}`}
+                        </Text>
+                      </div>
+                      <Button
+                        id={`layer-menu-${layer.id}`}
+                        icon="overflow"
+                        design="Transparent"
+                        accessibleName={`Options for ${layer.name || 'overlay'}`}
+                        style={{ opacity: 1, '--ui5-button-base-padding': '0 4px' } as React.CSSProperties}
+                        onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === layer.id ? null : layer.id) }}
+                      />
+                      <Menu
+                        opener={`layer-menu-${layer.id}`}
+                        open={openMenu === layer.id}
+                        onClose={() => setOpenMenu(null)}
+                        onItemClick={(e: any) => {
+                          const text = e.detail?.item?.text
+                          setOpenMenu(null)
+                          if (text === 'Rename') { setRenameLayerId(layer.id); setRenameName(layer.name); setRenameDialogOpen(true) }
+                          else if (text === 'Enable' || text === 'Disable') toggleActive(layer.id)
+                          else if (text === 'Delete') { setSelectedCfgLayerId(layer.id); setConfirmDeleteOpen(true) }
+                        }}
+                      >
+                        <MenuItem text="Rename" />
+                        <MenuItem text={layer.active ? 'Disable' : 'Enable'} />
+                        <MenuItem text="Delete" />
+                      </Menu>
+                    </div>
+                  )
+                })}
+              </div>
+
+            </div>
+          )}
+
+          {/* ── Right: detail panel */}
+          {selectedCfgLayerData ? (
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: 'white' }}>
+                <div style={{ padding: '8px 1rem 8px', background: 'var(--sapList_Background)', display: 'flex', alignItems: 'center' }}>                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Title level="H5" style={{ fontStyle: selectedCfgLayerData.name ? 'normal' : 'italic' }}>
+                      {selectedCfgLayerData.name || 'New overlay'}
+                    </Title>
+                    <Switch
+                      checked={selectedCfgLayerData.active}
+                      onChange={() => toggleActive(selectedCfgLayerData.id)}
+                    />
+                  </div>
+                  {!selectedCfgLayerData.active && (
+                    <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>
+                      This overlay is disabled and won't appear in the editor.
+                    </Text>
+                  )}
+                </div>
+
+                <div style={{ padding: '0 1rem 24px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+                {/* ── Rules */}
+                <div>
+                  <div style={{ borderTop: `1px solid ${border}`, marginBottom: '24px' }} />
+                  <Title level="H5" style={{ marginBottom: '0.25rem' }}>Rules</Title>
+                  <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '1rem' }}>
+                    This overlay appears on diagram elements when at least one rule matches. Each rule defines how the overlay looks and when it appears.
+                  </Text>
+
+                  {selectedCfgLayerData.rules.length === 0 ? (
+                    <MessageStrip design="Information" hideCloseButton style={{ marginBottom: '0.75rem' }}>
+                      No rules defined. Add a rule to control when this overlay appears.
+                    </MessageStrip>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '0.75rem' }}>
+                      {selectedCfgLayerData.rules.map((rule, ruleIdx) => {
+                        const pickerKey = `cfg-${selectedCfgLayerData.id}-${rule.id}`
+                        const colorBtnId = `color-btn-cfg-${selectedCfgLayerData.id}-${rule.id}`
+                        const iconBtnId = `icon-btn-cfg-${selectedCfgLayerData.id}-${rule.id}`
+                        const ruleIconPathData = iconPathData[rule.id] ?? null
+                        const ruleIconColor = isLightColor(rule.color) ? '#000000' : '#ffffff'
+                        return (
+                          <div key={rule.id} style={{ border: `1px solid ${border}`, borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden' }}>
+
+                            {/* Row 1: Rule title + collapse + kebab */}
+                            <div
+                              style={{ display: 'flex', alignItems: 'center', padding: '0.5rem 0.75rem', background: 'var(--sapList_HeaderBackground)', borderBottom: collapsedRules[rule.id] ? 'none' : `1px solid ${border}`, cursor: 'pointer', userSelect: 'none' }}
+                              onClick={() => toggleRuleCollapse(rule.id)}
+                            >
+                              <Icon name={collapsedRules[rule.id] ? 'navigation-right-arrow' : 'navigation-down-arrow'} style={{ width: '1rem', height: '1rem', color: 'var(--sapContent_IconColor)', flexShrink: 0, marginRight: '0.5rem' }} />
+                              <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)', flex: 1 }}>
+                                {rule.name || `Rule ${ruleIdx + 1}`}
+                              </Text>
+                              <Button
+                                id={`rule-menu-btn-${rule.id}`}
+                                icon="overflow"
+                                design="Transparent"
+                                tooltip="More actions"
+                                style={{ '--ui5-button-base-padding': '0 4px' } as React.CSSProperties}
+                                onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === `rule-${rule.id}` ? null : `rule-${rule.id}`) }}
+                              />
+                              <Menu
+                                opener={`rule-menu-btn-${rule.id}`}
+                                open={openMenu === `rule-${rule.id}`}
+                                onClose={() => setOpenMenu(null)}
+                                onItemClick={(e: any) => {
+                                  const text = e.detail?.item?.text
+                                  setOpenMenu(null)
+                                  if (text === 'Rename') {
+                                    setRenameRuleId(rule.id)
+                                    setRenameRuleName(rule.name || `Rule ${ruleIdx + 1}`)
+                                    setRenameRuleDialogOpen(true)
+                                  } else if (text === 'Duplicate') {
+                                    const newId = Date.now().toString()
+                                    const sourceName = rule.name || `Rule ${ruleIdx + 1}`
+                                    setLayers(prev => prev.map(l => l.id !== selectedCfgLayerData.id ? l : {
+                                      ...l, rules: [...l.rules, { ...rule, id: newId, name: `${sourceName} (copy)`, conditions: rule.conditions.map(c => ({ ...c, id: c.id + '-dup' })) }]
+                                    }))
+                                    setIsDirty(true)
+                                  } else if (text === 'Delete') {
+                                    deleteRule(selectedCfgLayerData.id, rule.id)
+                                  }
+                                }}
+                              >
+                                <MenuItem text="Rename" />
+                                <MenuItem text="Duplicate" />
+                                <MenuItem text="Delete" />
+                              </Menu>
+                            </div>
+
+                            {/* Collapsible content */}
+                            {!collapsedRules[rule.id] && <div>
+
+                            {/* Style + Preview */}
+                            <div style={{ display: 'flex' }}>
+                              {/* Style controls */}
+                              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '16px 0.75rem 0 16px', background: 'var(--sapList_Background)' }}>
+                                <Text style={{ fontSize: '14px', fontWeight: '600' }}>Style</Text>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem', flexWrap: 'wrap' }}>
+
+                                  {/* Icon */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', opacity: (!rule.showIcon || ruleIdx > 0) ? 0.4 : 1 }}>
+                                    <Label>Icon</Label>
+                                    <SigChipV2
+                                      id={iconBtnId}
+                                      leadingIcon={rule.icon}
+                                      value={ICON_OPTIONS.find(o => o.name === rule.icon)?.label ?? rule.icon}
+                                      trailingIcon="slim-arrow-down"
+                                      disabled={!rule.showIcon || ruleIdx > 0}
+                                      tooltip={ruleIdx > 0 ? 'Icon is shared across all rules. Change it in the first rule.' : undefined}
+                                      onClick={() => { if (rule.showIcon && ruleIdx === 0) { setIconPickerOpen(iconPickerOpen === iconBtnId ? null : iconBtnId); setIconSearch('') } }}
+                                    />
+                                    <Popover open={iconPickerOpen === iconBtnId} opener={iconBtnId} placement="Bottom" onClose={() => setIconPickerOpen(null)}>
+                                      <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        <Input accessibleName="Search icons" placeholder="Search icons…" value={iconSearch} style={{ width: '100%' }} onInput={e => setIconSearch((e.target as unknown as HTMLInputElement).value)} />
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 2rem)', gap: '0.125rem' }}>
+                                          {ICON_OPTIONS.filter(o => !iconSearch.trim() || o.label.includes(iconSearch.toLowerCase()) || o.name.includes(iconSearch.toLowerCase())).map(o => (
+                                            <Button key={o.name} icon={o.name} tooltip={o.label} design="Transparent"
+                                              style={{ width: '2rem', height: '2rem', minWidth: 0, padding: 0, color: 'var(--sapTextColor)', border: rule.icon === o.name ? '2px solid var(--sapSelectedColor)' : 'none', borderRadius: '4px' } as React.CSSProperties}
+                                              onClick={() => { updateRule(selectedCfgLayerData.id, rule.id, { icon: o.name }); setIconPickerOpen(null) }} />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </Popover>
+                                  </div>
+
+                                  {/* Color */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <Label>Color</Label>
+                                    <SigChipV2
+                                      id={colorBtnId}
+                                      trailingIcon="slim-arrow-down"
+                                      avatarImageUrl={makeColoredIconUrl(rule.showIcon ? ruleIconPathData : null, rule.color, ruleIconColor)}
+                                      value=""
+                                      tooltip="Choose color"
+                                      onClick={() => { setOpenColorPicker(openColorPicker === pickerKey ? null : pickerKey); const h = rule.color.replace('#', ''); setColorHex(h); setLastValidHex(h); setHexBlurred(false) }}
+                                    />
+                                    <Popover opener={colorBtnId} open={openColorPicker === pickerKey} onClose={() => { setOpenColorPicker(null); setHexBlurred(false) }}>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <Title level="H6" style={{ fontSize: 'var(--sapFontSize)', fontWeight: 600, marginBottom: '0.25rem' }}>Color</Title>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1.375rem)', gap: '0.2rem' }}>
+                                          {PALETTE_COLORS.map(c => (
+                                            <Button key={c} design="Transparent" tooltip={c.toUpperCase()} aria-label={c.toUpperCase()}
+                                              style={{ width: '1.375rem', height: '1.375rem', background: c, padding: 0, border: c.toLowerCase() === rule.color.toLowerCase() ? '2px solid var(--sapSelectedColor)' : '1px solid rgba(0,0,0,0.18)', borderRadius: '3px', boxShadow: c.toLowerCase() === rule.color.toLowerCase() ? '0 0 0 1px var(--sapSelectedColor)' : 'none', minWidth: 'unset', '--ui5-button-base-background': c, '--ui5-button-hover-background': c } as React.CSSProperties}
+                                              onClick={() => { updateRule(selectedCfgLayerData.id, rule.id, { color: c }); setColorHex(c.replace('#', '')); setLastValidHex(c.replace('#', '')); setHexBlurred(false); setOpenColorPicker(null) }}
+                                            />
+                                          ))}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                          <Text style={{ fontSize: 'var(--sapFontSmallSize)' }}>#</Text>
+                                          {(() => { const hexValid = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(colorHex); return (<>
+                                          <div onBlur={() => setHexBlurred(true)}>
+                                          <Input ref={hexInputRef} accessibleName="Hex color value" value={colorHex} maxlength={6} valueState={hexBlurred && !hexValid && colorHex !== '' ? 'Negative' : 'None'} style={{ width: '5rem' }} onInput={e => { const v = (e.target as unknown as HTMLInputElement).value; setColorHex(v); if (/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(v)) setLastValidHex(v) }} onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' && hexValid) { updateRule(selectedCfgLayerData.id, rule.id, { color: '#' + colorHex }); setOpenColorPicker(null) } }}>
+                                            {hexBlurred && !hexValid && colorHex !== '' && <div slot="valueStateMessage">Select a color or enter a valid hex color.</div>}
+                                          </Input>
+                                          </div>
+                                          <div style={{ width: '1.375rem', height: '1.375rem', flexShrink: 0, borderRadius: '3px', border: '1px solid rgba(0,0,0,0.18)', background: lastValidHex ? '#' + lastValidHex : 'transparent' }} />
+                                          <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem' }}>
+                                            <Button design="Transparent" disabled={!hexValid} onClick={() => { updateRule(selectedCfgLayerData.id, rule.id, { color: '#' + colorHex }); setOpenColorPicker(null) }}>OK</Button>
+                                          </div>
+                                          </>)})()}
+                                        </div>
+                                      </div>
+                                    </Popover>
+                                  </div>
+
+                                  {/* Visual indicator */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <Label>Visual indicator</Label>
+                                    {(() => {
+                                      const visMode = rule.showIcon && !rule.showValue ? 'icon' : rule.showIcon && rule.showValue ? 'both' : 'value'
+                                      const visLabel = visMode === 'icon' ? 'Colored Icon' : visMode === 'both' ? 'Icon & Attribute Value' : 'Attribute Value'
+                                      const visIcon = visMode === 'icon' ? 'paint-bucket' : visMode === 'both' ? 'text' : 'letter'
+                                      const visBtnId = `vis-btn-${rule.id}`
+                                      return (
+                                        <>
+                                          <SigChipV2
+                                            id={visBtnId}
+                                            leadingIcon={visIcon}
+                                            value={visLabel}
+                                            trailingIcon="slim-arrow-down"
+                                            onClick={() => setOpenMenu(openMenu === visBtnId ? null : visBtnId)}
+                                          />
+                                          <Menu
+                                            opener={visBtnId}
+                                            open={openMenu === visBtnId}
+                                            onClose={() => setOpenMenu(null)}
+                                            onItemClick={(e: any) => {
+                                              const text = e.detail?.item?.text
+                                              setOpenMenu(null)
+                                              updateRule(selectedCfgLayerData.id, rule.id, {
+                                                showIcon: text !== 'Attribute Value',
+                                                showValue: text !== 'Colored Icon',
+                                              })
+                                            }}
+                                          >
+                                            <MenuItem text="Colored Icon" />
+                                            <MenuItem text="Icon & Attribute Value" />
+                                            <MenuItem text="Attribute Value" />
+                                          </Menu>
+                                        </>
+                                      )
+                                    })()}
+                                  </div>
+
+                                </div>
+                              </div>
+
+                              {/* Preview */}
+                              <div aria-hidden="true" style={{ background: 'var(--sapGroup_ContentBackground, #f5f6f7)', border: `1px solid ${border}`, borderRadius: 'var(--sapElement_BorderCornerRadius)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem 1.25rem', flexShrink: 0, minWidth: '120px', margin: '0.75rem 16px 0 0' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px' }}>
+                                  {(rule.showIcon || rule.showValue) && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: rule.color, borderRadius: '4px', width: rule.showIcon && !rule.showValue ? '20px' : 'auto', height: '20px', padding: rule.showValue ? '0 6px' : '0', justifyContent: 'center', flexShrink: 0 }}>
+                                      {rule.showIcon && <Icon name={rule.icon} style={{ fontSize: '12px', width: '12px', height: '12px', color: ruleIconColor, pointerEvents: 'none' }} />}
+                                      {rule.showValue && <Text style={{ fontSize: '10px', fontWeight: '600', color: ruleIconColor, fontFamily: "var(--sapFontFamily, '72', sans-serif)", whiteSpace: 'nowrap', lineHeight: '1' }}>{rule.valueLabel || 'Value'}</Text>}
+                                    </div>
+                                  )}
+                                  <div style={{ width: '80px', height: '60px', border: '1.5px solid #1a1a1a', borderRadius: '8px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: '12px', color: '#131e29', fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>Task</Text>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Conditions */}
+                            <div style={{ padding: '0 0.75rem 0 16px', background: 'white' }}>
+                              <Text style={{ fontSize: '14px', fontWeight: '600' }}>Conditions</Text>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', padding: '8px 0.75rem 0 16px', background: 'white' }}>
+                              <div style={{ flex: 2, minWidth: '10rem' }}><Label>Property</Label></div>
+                              <div style={{ width: '8rem', flexShrink: 0 }}><Label>Relation</Label></div>
+                              <div style={{ flex: 1, minWidth: '8rem' }}><Label>Value</Label></div>
+                              <div style={{ width: '2rem', flexShrink: 0 }} />
+                            </div>
+                            {rule.conditions.map((cond, _condIdx) => {
+                              const valueOptions = VALUE_OPTIONS[cond.property] ?? []
+                              const needsValue = (cond.relation === 'is' || cond.relation === 'is not') && !cond.value.trim()
+                              return (
+                                <Fragment key={cond.id}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.75rem 0.5rem 16px', background: 'white', flexWrap: 'wrap' }}>
+                                    <Select accessibleName="Condition property" style={{ flex: 2, minWidth: '10rem' }} onChange={e => updateCondition(selectedCfgLayerData.id, rule.id, cond.id, { property: (e.detail.selectedOption as HTMLElement).textContent ?? cond.property })}>
+                                      {PROPERTIES.map(p => <Option key={p} selected={p === cond.property}>{p}</Option>)}
+                                    </Select>
+                                    <Select accessibleName="Condition relation" style={{ width: '8rem', flexShrink: 0 }} onChange={e => updateCondition(selectedCfgLayerData.id, rule.id, cond.id, { relation: (e.detail.selectedOption as HTMLElement).textContent ?? cond.relation })}>
+                                      {RELATIONS.map(r => <Option key={r} selected={r === cond.relation}>{r}</Option>)}
+                                    </Select>
+                                    {cond.relation !== 'is empty' && cond.relation !== 'is not empty' && (
+                                      valueOptions.length > 0 ? (
+                                        <Select accessibleName="Condition value" style={{ flex: 1, minWidth: '8rem' }} onChange={e => updateCondition(selectedCfgLayerData.id, rule.id, cond.id, { value: (e.detail.selectedOption as HTMLElement).textContent ?? cond.value })}>
+                                          {valueOptions.map(v => <Option key={v} selected={v === cond.value}>{v}</Option>)}
+                                        </Select>
+                                      ) : (
+                                        <Input
+                                          accessibleName="Condition value"
+                                          value={cond.value}
+                                          valueState={needsValue ? 'Critical' : 'None'}
+                                          placeholder="Value"
+                                          style={{ flex: 1, minWidth: '8rem' }}
+                                          onInput={e => updateCondition(selectedCfgLayerData.id, rule.id, cond.id, { value: (e.target as unknown as HTMLInputElement).value })}
+                                        >
+                                          <div slot="valueStateMessage">A value is required for this condition</div>
+                                        </Input>
+                                      )
+                                    )}
+                                    <Button icon="delete" design="Transparent" tooltip="Delete condition" style={{ flexShrink: 0, width: '2rem' }} onClick={() => deleteCondition(selectedCfgLayerData.id, rule.id, cond.id)} />
+                                  </div>
+                                </Fragment>
+                              )
+                            })}
+                            <div style={{ padding: '0 0.5rem 16px 12px', background: 'var(--sapList_Background)' }}>
+                              <Button design="Transparent" icon="add" onClick={() => addCondition(selectedCfgLayerData.id, rule.id)}>Add Condition</Button>
+                            </div>
+
+                            </div>}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  <Button design="Default" icon="add" onClick={() => addRule(selectedCfgLayerData.id)}>Add Rule</Button>
+                </div>
+
+                <div style={{ borderTop: `1px solid ${border}`, marginBottom: '8px' }} />
+
+                {/* ── Visibility per audience */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
+                    <Title level="H5">Visibility per Audience</Title>
+                    <Link onClick={openMatrix} style={{ marginLeft: 'auto' } as React.CSSProperties}>Visibility Settings</Link>
+                  </div>
+                  <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '1rem' }}>
+                    Set the default visibility of this overlay for each audience. Users with edit access can always show or hide enabled overlays independently in the model editor.
+                  </Text>
+                  <div>
+                    <div style={{ overflowX: 'auto' }}>
+                    <Table
+                      headerRow={
+                        <TableHeaderRow>
+                          <TableHeaderCell style={{ textAlign: 'center' }}>Audience</TableHeaderCell>
+                          <TableHeaderCell style={{ textAlign: 'center' }}>
+                            <div title="Shown by default in the model editor." style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', cursor: 'default' }}>
+                              <Icon name="accept" />
+                              <Text style={{ fontWeight: '600' }}>Enabled and Active</Text>
+                            </div>
+                          </TableHeaderCell>
+                          <TableHeaderCell style={{ textAlign: 'center' }}>
+                            <div title="Available but hidden by default." style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', cursor: 'default' }}>
+                              <Icon name="show" />
+                              <Text style={{ fontWeight: '600' }}>Enabled</Text>
+                            </div>
+                          </TableHeaderCell>
+                          <TableHeaderCell style={{ textAlign: 'center' }}>
+                            <div title="Not available to this audience." style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', cursor: 'default' }}>
+                              <Icon name="hide" />
+                              <Text style={{ fontWeight: '600' }}>Disabled</Text>
+                            </div>
+                          </TableHeaderCell>
+                        </TableHeaderRow>
+                      }
+                    >
+                      {AUDIENCES.map(audience => {
+                        const currentVis = layerVis[selectedCfgLayerData.id]?.[audience] ?? 'visible-active'
+                        return (
+                          <TableRow key={audience}>
+                            <TableCell><Text>{audience}</Text></TableCell>
+                            <TableCell>
+                              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <RadioButton accessibleName={`${audience}: Enabled and Active`} name={`vis-${selectedCfgLayerData.id}-${audience}`} checked={currentVis === 'visible-active'} onChange={() => setLayerVisibility(selectedCfgLayerData.id, audience, 'visible-active')} />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <RadioButton accessibleName={`${audience}: Enabled`} name={`vis-${selectedCfgLayerData.id}-${audience}`} checked={currentVis === 'visible'} onChange={() => setLayerVisibility(selectedCfgLayerData.id, audience, 'visible')} />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <RadioButton accessibleName={`${audience}: Disabled`} name={`vis-${selectedCfgLayerData.id}-${audience}`} checked={currentVis === 'hidden'} onChange={() => setLayerVisibility(selectedCfgLayerData.id, audience, 'hidden')} />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </Table>
+                    </div>
+                  </div>
+                </div>
+
+                </div>
+              </div>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}>
+                <Text style={{ color: 'var(--sapContent_LabelColor)' }}>Select an overlay from the list to configure it</Text>
+              </div>
+            )}
+
+        </div>
+      </ObjectPageSection>
+      <ObjectPageSection id="pm-legacy" titleText="Process Manager (legacy)" hideTitleText>
+        <div style={{ padding: '1rem 0 16px' }}>
+          <MessageStrip design="Critical" hideCloseButton>
+            This configuration applies to <strong>the Old Process Modeler only.</strong> It has no effect on the New Process Modeler.
+          </MessageStrip>
+        </div>
+        <div style={{ display: 'flex', border: `1px solid ${border}`, borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden', flex: 1, minHeight: 0, height: 'calc(100% - 1rem)', alignItems: 'stretch' }}>
+          {/* ── Left: overlay list */}
+          {true && (
+            <div style={{ width: '20rem', flexShrink: 0, borderRight: `1px solid ${border}`, display: 'flex', flexDirection: 'column', background: 'white' }}>
+              <div style={{ padding: '0.625rem 0.75rem 0.625rem 1rem', borderBottom: `1px solid ${border}`, background: 'var(--sapList_HeaderBackground)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Title level="H5" style={{ flex: 1 } as React.CSSProperties}>Attribute Overlays</Title>
+                <div>
+                  <Button
+                    design="Transparent"
+                    icon="overflow"
+                    style={{ opacity: 1, '--ui5-button-base-padding': '0 4px' } as React.CSSProperties}
+                    id="overlay-list-header-btn-pm"
+                    onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'header-pm' ? null : 'header-pm') }}
+                  />
+                  <Menu
+                    opener="overlay-list-header-btn-pm"
+                    open={openMenu === 'header-pm'}
+                    onClose={() => setOpenMenu(null)}
+                    onItemClick={e => {
+                      const text = (e.detail?.item as any)?.text
+                      setOpenMenu(null)
+                      if (text === 'Create Overlay') { setNewOverlayName(''); setNewOverlayDialogOpen(true) }
+                      if (text === 'Visibility Settings') openMatrix()
+                    }}
+                  >
+                    <MenuItem text="Create Overlay" />
+                    <MenuItem text="Visibility Settings" />
+                  </Menu>
+                </div>
+              </div>
+              <div role="listbox" aria-label="Overlays" style={{ flex: 1, overflowY: 'auto' }}>
+                {layers.map(layer => {
+                  const isSelected = selectedCfgLayerId === layer.id
+                  return (
+                    <div
+                      key={layer.id}
+                      role="option"
+                      tabIndex={0}
+                      aria-selected={isSelected}
+                      onClick={() => setSelectedCfgLayerId(layer.id)}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCfgLayerId(layer.id) } }}
+                      style={{
+                        padding: '0.5rem 0.25rem 0.5rem 0.875rem',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        background: isSelected ? 'var(--sapList_SelectionBackgroundColor)' : 'white',
+                        borderBottom: `1px solid ${border}`,
+                        borderLeft: isSelected ? '3px solid var(--sapSelectedColor)' : '3px solid transparent',
+                        opacity: layer.active ? 1 : 0.55,
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={{ fontWeight: isSelected ? '600' : '400', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: layer.name ? 'normal' : 'italic', color: layer.name ? undefined : 'var(--sapContent_LabelColor)' }}>
+                          {layer.name || 'New overlay'}
+                        </Text>
+                        <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' }}>
+                          {layer.rules.length === 0 ? 'No rules' : `${layer.rules.length} rule${layer.rules.length !== 1 ? 's' : ''}`}
+                        </Text>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          {selectedCfgLayerData ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}>
+              <Text style={{ color: 'var(--sapContent_LabelColor)' }}>Select an overlay to configure it in the Modeler tab.</Text>
+            </div>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}>
+              <Text style={{ color: 'var(--sapContent_LabelColor)' }}>Select an overlay from the list to configure it</Text>
+            </div>
+          )}
+        </div>
+      </ObjectPageSection>
+    </ObjectPage>
+
+    {/* ── Visibility Matrix dialog */}
+    <Dialog
+      open={showMatrix}
+      headerText="Visibility Settings"
+      style={{ width: 'fit-content', maxWidth: '90vw', maxHeight: '80vh' } as React.CSSProperties}
+      onClose={cancelMatrix}
+      footer={
+        <Bar endContent={<><Button design="Emphasized" onClick={saveMatrix} disabled={!matrixHasChanges}>Save</Button><Button onClick={cancelMatrix} style={{ marginLeft: '0.5rem' } as React.CSSProperties}>Cancel</Button></>} style={{ '--ui5-bar-end-content-area-width': 'auto', paddingInlineEnd: '0' } as React.CSSProperties} />
+      }
+    >
+      <div style={{ padding: '1rem 2rem' }}>
+        <MessageStrip design="Information" hideCloseButton style={{ marginBottom: '1rem' } as React.CSSProperties}>
+          Set default visibility for all overlays and audience groups in one view.
+        </MessageStrip>
+        <Table
+          headerRow={
+            <TableHeaderRow>
+              <TableHeaderCell>Overlay</TableHeaderCell>
+              {AUDIENCES.map(a => (
+                <TableHeaderCell key={a}>{a}</TableHeaderCell>
+              ))}
+            </TableHeaderRow>
+          }
+        >
+          {layers.map(layer => (
+            <TableRow key={layer.id}>
+              <TableCell style={{ padding: '0.4rem 0.5rem' } as React.CSSProperties}>
+                <Text style={{ fontStyle: layer.name ? 'normal' : 'italic', color: layer.name ? undefined : 'var(--sapContent_LabelColor)', opacity: layer.active ? 1 : 0.55 }}>
+                  {layer.name || 'New overlay'}
+                </Text>
+              </TableCell>
+              {AUDIENCES.map(audience => {
+                const vis = layerVis[layer.id]?.[audience] ?? 'visible-active'
+                return (
+                  <TableCell key={audience} style={{ padding: '0.4rem calc(0.5rem + 2.5px)' } as React.CSSProperties}>
+                    <Select
+                      accessibleName={`Visibility for ${layer.name || 'overlay'} - ${audience}`}
+                      style={{ width: 'auto' } as React.CSSProperties}
+                      onChange={e => {
+                        const text = (e.detail.selectedOption as HTMLElement).textContent?.trim() ?? ''
+                        const v: OverlayVis = text === 'Enabled and Active' ? 'visible-active' : text === 'Enabled' ? 'visible' : 'hidden'
+                        setLayerVisibility(layer.id, audience, v)
+                      }}
+                    >
+                      <Option selected={vis === 'visible-active'}>Enabled and Active</Option>
+                      <Option selected={vis === 'visible'}>Enabled</Option>
+                      <Option selected={vis === 'hidden'}>Disabled</Option>
+                    </Select>
+                  </TableCell>
+                )
+              })}
+            </TableRow>
+          ))}
+        </Table>
+      </div>
+    </Dialog>
+
+    {/* ── New Overlay dialog */}
+    <Dialog
+      open={newOverlayDialogOpen}
+      headerText="Create Overlay"
+      onClose={() => setNewOverlayDialogOpen(false)}
+    >
+      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '22rem' }}>
+        <Label required for="new-overlay-name">Name</Label>
+        <Input
+          id="new-overlay-name"
+          value={newOverlayName}
+          placeholder="Overlay name"
+          style={{ width: '100%' }}
+          onInput={e => setNewOverlayName((e.target as unknown as HTMLInputElement).value)}
+        />
+      </div>
+      <Bar slot="footer" design="Footer">
+        <Button slot="endContent" design="Emphasized" disabled={!newOverlayName.trim()} onClick={() => {
+          addLayerCfg(newOverlayName.trim())
+          setIsDirty(true)
+          setNewOverlayDialogOpen(false)
+        }}>Create</Button>
+        <Button slot="endContent" design="Transparent" onClick={() => setNewOverlayDialogOpen(false)}>Cancel</Button>
+      </Bar>
+    </Dialog>
+
+    {/* ── Rename dialog */}
+    <Dialog
+      open={renameDialogOpen}
+      headerText="Rename Overlay"
+      onClose={() => setRenameDialogOpen(false)}
+    >
+      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '22rem' }}>
+        <Label required for="rename-overlay-name">Name</Label>
+        <Input
+          id="rename-overlay-name"
+          value={renameName}
+          placeholder="Overlay name"
+          style={{ width: '100%' }}
+          onInput={e => setRenameName((e.target as unknown as HTMLInputElement).value)}
+        />
+      </div>
+      <Bar slot="footer" design="Footer">
+        <Button slot="endContent" design="Emphasized" disabled={!renameName.trim()} onClick={() => {
+          if (!renameLayerId || !renameName.trim()) return
+          setLayers(prev => prev.map(l => l.id === renameLayerId ? { ...l, name: renameName.trim() } : l))
+          setIsDirty(true)
+          setRenameDialogOpen(false)
+        }}>Rename</Button>
+        <Button slot="endContent" design="Transparent" onClick={() => setRenameDialogOpen(false)}>Cancel</Button>
+      </Bar>
+    </Dialog>
+
+    {/* ── Rename Rule dialog */}
+    <Dialog
+      open={renameRuleDialogOpen}
+      headerText="Rename"
+      onClose={() => setRenameRuleDialogOpen(false)}
+    >
+      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '22rem' }}>
+        <Label required for="rename-rule-name">Name</Label>
+        <Input
+          id="rename-rule-name"
+          value={renameRuleName}
+          placeholder="Rule name"
+          style={{ width: '100%' }}
+          onInput={e => setRenameRuleName((e.target as unknown as HTMLInputElement).value)}
+        />
+      </div>
+      <Bar slot="footer" design="Footer">
+        <Button slot="endContent" design="Emphasized" disabled={!renameRuleName.trim()} onClick={() => {
+          if (!renameRuleId) return
+          setLayers(prev => prev.map(l => l.id !== selectedCfgLayerData?.id ? l : {
+            ...l, rules: l.rules.map(r => r.id === renameRuleId ? { ...r, name: renameRuleName.trim() } : r)
+          }))
+          setIsDirty(true)
+          setRenameRuleDialogOpen(false)
+        }}>Rename</Button>
+        <Button slot="endContent" design="Transparent" onClick={() => setRenameRuleDialogOpen(false)}>Cancel</Button>
+      </Bar>
+    </Dialog>
+
+    {/* ── Delete confirmation dialog */}
+    {selectedCfgLayerData && (
+      <Dialog
+        open={confirmDeleteOpen}
+        headerText="Delete Overlay"
+        onClose={() => setConfirmDeleteOpen(false)}
+      >
+        <div style={{ padding: '1rem' }}>
+          <p style={{ margin: 0, fontFamily: 'var(--sapFontFamily)', fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
+            Delete <strong>"{selectedCfgLayerData.name}"</strong>? This overlay and all its rules will be permanently removed and can no longer be used on diagrams.
+          </p>
+        </div>
+        <Bar slot="footer" design="Footer">
+          <Button slot="endContent" design="Negative" onClick={() => deleteLayer(selectedCfgLayerData.id)}>Delete</Button>
+          <Button slot="endContent" design="Transparent" onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
+        </Bar>
+      </Dialog>
+    )}
+    </>
+  )
+}

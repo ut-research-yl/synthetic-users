@@ -1,0 +1,304 @@
+import { useState, useCallback } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  DynamicPage, DynamicPageTitle,
+  Title, Breadcrumbs, BreadcrumbsItem,
+  Text, Button, Toolbar, ToolbarButton,
+  List, ListItemStandard,
+  Bar, Toast,
+} from '@ui5/webcomponents-react'
+import { ASSET_TYPES } from './AssetTypes'
+import { useWorkspace } from '../contexts/WorkspaceContext'
+import { DuplicateSettingsDialog } from '../components/DuplicateSettingsDialog'
+
+const NOTATION_IDS = new Set(['bpmn', 'dmn', 'value-chain', 'nav-map'])
+const NOTATION_ASSET_TYPES = ASSET_TYPES.filter(t => NOTATION_IDS.has(t.id))
+const NON_NOTATION_ASSET_TYPES = ASSET_TYPES.filter(t => !NOTATION_IDS.has(t.id))
+const NO_AUDIENCE_IDS = new Set(['objective', 'initiative', 'insight', 'dashboard', 'process-semantic-view'])
+import AttributeEditorPanel, { makeInitialGroups, makeModelingGroups, type AttrGroup, AUDIENCES } from '../components/AttributeEditorPanel'
+
+type SubElement = { id: string; name: string; icon: string; group: string }
+
+const SUB_ELEMENTS: Record<string, SubElement[]> = {
+  bpmn: [
+    { id: 'task',         name: 'Task',               icon: 'task',        group: 'Shapes' },
+    { id: 'start-event',  name: 'Start Event',        icon: 'circle-task', group: 'Shapes' },
+    { id: 'end-event',    name: 'End Event',          icon: 'record',      group: 'Shapes' },
+    { id: 'int-event',    name: 'Intermediate Event', icon: 'circle-task', group: 'Shapes' },
+    { id: 'gateway',      name: 'Gateway',            icon: 'decision',    group: 'Shapes' },
+    { id: 'pool',         name: 'Pool',               icon: 'table-view',  group: 'Shapes' },
+    { id: 'lane',         name: 'Lane',               icon: 'table-view',  group: 'Shapes' },
+    { id: 'seq-flow',     name: 'Sequence Flow',      icon: 'arrow-right', group: 'Connectors' },
+    { id: 'msg-flow',     name: 'Message Flow',       icon: 'arrow-right', group: 'Connectors' },
+    { id: 'data-obj',     name: 'Data Object',        icon: 'document',    group: 'Artifacts' },
+    { id: 'annotation',   name: 'Text Annotation',    icon: 'comment',     group: 'Artifacts' },
+  ],
+  dmn: [
+    { id: 'decision',      name: 'Decision',                 icon: 'decision',    group: 'Shapes' },
+    { id: 'input-data',    name: 'Input Data',               icon: 'download',    group: 'Shapes' },
+    { id: 'knowledge-src', name: 'Knowledge Source',         icon: 'database',    group: 'Shapes' },
+    { id: 'bkm',           name: 'Business Knowledge Model', icon: 'learning',    group: 'Shapes' },
+    { id: 'info-req',      name: 'Information Requirement',  icon: 'arrow-right', group: 'Connectors' },
+    { id: 'knowledge-req', name: 'Knowledge Requirement',    icon: 'arrow-right', group: 'Connectors' },
+  ],
+  'value-chain': [
+    { id: 'activity',     name: 'Activity',            icon: 'task',        group: 'Shapes' },
+    { id: 'sup-activity', name: 'Supporting Activity', icon: 'task',        group: 'Shapes' },
+    { id: 'connection',   name: 'Connection',          icon: 'arrow-right', group: 'Connectors' },
+  ],
+  'nav-map': [
+    { id: 'page',     name: 'Page',     icon: 'document',    group: 'Shapes' },
+    { id: 'category', name: 'Category', icon: 'group',       group: 'Shapes' },
+    { id: 'link',     name: 'Link',     icon: 'arrow-right', group: 'Connectors' },
+  ],
+}
+
+const ASSET_TYPE_ICON: Record<string, string> = {
+  'bpmn':        'SAP-icons-v4/process-manager',
+  'dmn':         'SAP-icons-v4/diagram-dmn',
+  'value-chain': 'SAP-icons-v4/process-map',
+  'nav-map':     'SAP-icons-v4/navigation-map',
+}
+
+// Generate varied initial groups per sidebar item so each item has independent, distinct defaults
+function makeItemGroups(itemId: string, notation: boolean): AttrGroup[] {
+  if (itemId === 'model') return notation ? makeModelingGroups() : makeInitialGroups()
+
+  const vis = Object.fromEntries(AUDIENCES.map(a => [a, 'Visible' as const]))
+  const grpEnabled = Object.fromEntries(AUDIENCES.map(a => [a, true]))
+
+  type Attr = AttrGroup['attrs'][number]
+  const std = (id: string, name: string, type: string, description: string, extra?: Partial<Attr>): Attr =>
+    ({ id, name, type, description, attrClass: 'Standard', required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Maria Chen', lastEditedAt: 'May 28, 2025, 10:14', ...extra })
+  const custom = (id: string, name: string, type: string, description: string, extra?: Partial<Attr>): Attr =>
+    ({ id, name, type, description, attrClass: 'Custom', required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Tom Becker', lastEditedAt: 'Jun 1, 2025, 09:02', ...extra })
+
+  type GroupDef = { main: Attr[]; custom: Attr[] }
+
+  const elementGroups: Record<string, GroupDef> = {
+    default: {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The display name of the element.', { required: true }),
+        std('desc', 'Description', 'Multi-Line Text', 'A free-text description of the element.'),
+      ],
+      custom: [
+        custom('documentation', 'Documentation', 'Multi-Line Text', 'Technical documentation for this element.', { visibility: { ...vis, Viewer: 'Invisible' as const } }),
+      ],
+    },
+    'seq-flow': {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The label shown on the sequence flow.'),
+      ],
+      custom: [
+        custom('condition', 'Condition', 'Multi-Line Text', 'The condition expression that determines when this flow is taken.'),
+      ],
+    },
+    'msg-flow': {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The label shown on the message flow.'),
+      ],
+      custom: [
+        custom('message', 'Message', 'Single-Line Text', 'The message identifier exchanged on this flow.'),
+      ],
+    },
+    'gateway': {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The display name of the gateway.'),
+      ],
+      custom: [
+        custom('type', 'Gateway Type', 'Selection', 'The type of gateway logic: XOR, OR, or AND.'),
+      ],
+    },
+    'pool': {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The name of the participant or lane.', { required: true }),
+      ],
+      custom: [
+        custom('org-unit', 'Org Unit', 'Model Link', 'The organisational unit linked to this pool.'),
+      ],
+    },
+    'decision': {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The display name of the decision.', { required: true }),
+        std('desc', 'Description', 'Multi-Line Text', 'A free-text description of the decision.'),
+      ],
+      custom: [
+        custom('type', 'Decision Type', 'Selection', 'The type of decision logic applied.'),
+        custom('owner', 'Owner', 'Single-Line Text', 'The person or team responsible for this decision.'),
+      ],
+    },
+    'connection': {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The label shown on the connection.'),
+        std('desc', 'Description', 'Multi-Line Text', 'A free-text description of the connection.'),
+      ],
+      custom: [
+        custom('weight', 'Weight', 'Number', 'The relative weighting of this connection.', { enabled: false }),
+      ],
+    },
+    'link': {
+      main: [
+        std('name', 'Name', 'Single-Line Text', 'The label shown on the link.'),
+        std('desc', 'Description', 'Multi-Line Text', 'A free-text description of the link.'),
+      ],
+      custom: [
+        custom('url', 'Target URL', 'Single-Line Text', 'The target URL this link points to.'),
+      ],
+    },
+    'info-req':      { main: [std('name', 'Name', 'Single-Line Text', 'The label shown on the information requirement.')], custom: [] },
+    'knowledge-req': { main: [std('name', 'Name', 'Single-Line Text', 'The label shown on the knowledge requirement.')], custom: [] },
+  }
+
+  const groups = elementGroups[itemId] ?? elementGroups['default']
+  const result: AttrGroup[] = [
+    { id: 'main', name: 'Main Attributes', enabled: { ...grpEnabled }, expanded: true, attrs: groups.main },
+  ]
+  if (groups.custom.length > 0) {
+    result.push({ id: 'custom1', name: 'New Attribute Group', enabled: { ...grpEnabled }, expanded: true, attrs: groups.custom })
+  }
+  return result
+}
+
+export default function AssetTypeDetail() {
+  const { id = '' } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { dictCategories } = useWorkspace()
+
+  const assetType = ASSET_TYPES.find(t => t.id === id)
+
+  const [attrGroupsMap, setAttrGroupsMap] = useState<Record<string, AttrGroup[]>>({})
+  const [selectedSubEl, setSelectedSubEl] = useState<string | null>(null)
+  const [dirty, setDirty] = useState(false)
+  const [saveToast, setSaveToast] = useState(false)
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
+
+  const markDirty = () => { if (!dirty) setDirty(true) }
+  const handleSave = () => { setDirty(false); setSaveToast(true) }
+  const handleReset = () => setDirty(false)
+
+  const currentKey = selectedSubEl ?? 'model'
+  const currentAttrGroups = attrGroupsMap[currentKey] ?? makeItemGroups(currentKey, !!assetType?.notation)
+  const setCurrentAttrGroups = useCallback((updater: React.SetStateAction<AttrGroup[]>) => {
+    setAttrGroupsMap(prev => {
+      const current = prev[currentKey] ?? makeItemGroups(currentKey, !!assetType?.notation)
+      const next = typeof updater === 'function' ? updater(current) : updater
+      return { ...prev, [currentKey]: next }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentKey])
+
+  if (!assetType) {
+    return (
+      <div style={{ padding: '2rem' }}>
+        <Text>Asset type not found.</Text>
+        <Button design="Transparent" onClick={() => navigate('/asset-types')}>Back to Asset Types</Button>
+      </div>
+    )
+  }
+
+  const subElements = SUB_ELEMENTS[id] ?? []
+  const subGroups = [...new Set(subElements.map(e => e.group))]
+  const selectedSubElName = subElements.find(e => e.id === selectedSubEl)?.name
+
+  return (
+    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
+      <DynamicPage className="no-padding-dynamic-page" style={{ height: '100%' }} hidePinButton showFooter={dirty} titleArea={
+        <DynamicPageTitle>
+          <Breadcrumbs slot="breadcrumbs">
+            <BreadcrumbsItem onClick={() => navigate('/asset-types')} style={{ cursor: 'pointer' }}>
+              Asset Types
+            </BreadcrumbsItem>
+            <BreadcrumbsItem>{assetType.name}</BreadcrumbsItem>
+          </Breadcrumbs>
+          <Title slot="heading" level="H3">{assetType.name}</Title>
+          {!NO_AUDIENCE_IDS.has(id) && (
+          <Toolbar slot="actionsBar">
+            <ToolbarButton design="Transparent" text="Duplicate Settings" onClick={() => setDuplicateDialogOpen(true)} />
+          </Toolbar>
+          )}
+        </DynamicPageTitle>
+      }
+        footerArea={
+          <Bar design="FloatingFooter">
+            <Button slot="endContent" design="Emphasized" onClick={handleSave}>Save</Button>
+            <Button slot="endContent" onClick={handleReset}>Cancel</Button>
+          </Bar>
+        }
+      >
+
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Left panel — sub-elements (notation types only) */}
+          {assetType.notation && (
+            <div style={{
+              width: '260px',
+              flexShrink: 0,
+              borderRight: '1px solid var(--sapList_BorderColor)',
+              background: 'var(--sapList_Background)',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+            }}>
+              <div style={{ padding: '0.5rem 1rem 0.25rem', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', userSelect: 'none' as const, fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
+                Asset
+              </div>
+              <List onItemClick={e => {
+                const itemId = (e.detail.item as HTMLElement).id
+                if (itemId === 'model') setSelectedSubEl(null)
+              }}>
+                <ListItemStandard id="model" icon={ASSET_TYPE_ICON[id] ?? 'product'} selected={selectedSubEl === null}>
+                  Model
+                </ListItemStandard>
+              </List>
+              <div style={{ padding: '0.5rem 1rem 0.25rem', marginTop: '0.75rem', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', userSelect: 'none' as const, fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
+                Elements
+              </div>
+              <List onItemClick={e => {
+                const itemId = (e.detail.item as HTMLElement).id
+                if (itemId.startsWith('sub-')) setSelectedSubEl(itemId.replace('sub-', ''))
+              }}>
+                {subGroups.map(group => (
+                  [
+                    <div key={`${group}-header`} style={{ padding: '0.5rem 1rem 0.25rem', marginTop: '0.5rem', fontSize: 'var(--sapFontSmallSize)', fontWeight: 600, color: 'var(--sapContent_LabelColor)', userSelect: 'none' as const, letterSpacing: '0.04em', fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
+                      {group}
+                    </div>,
+                    ...subElements.filter(e => e.group === group).map(el => (
+                      <ListItemStandard key={el.id} id={`sub-${el.id}`} icon={el.icon} selected={selectedSubEl === el.id}>
+                        {el.name}
+                      </ListItemStandard>
+                    ))
+                  ]
+                ))}
+              </List>
+            </div>
+          )}
+
+          {/* Right panel */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+            <AttributeEditorPanel
+              attrGroups={currentAttrGroups}
+              setAttrGroups={setCurrentAttrGroups}
+              markDirty={markDirty}
+              hideAudience={NO_AUDIENCE_IDS.has(id)}
+              title={selectedSubElName ?? assetType.name}
+              hideAssignSection={false}
+              defaultAssignedTo={assetType.notation ? [assetType.name] : [assetType.name]}
+              assignableAssetTypes={assetType.notation ? [
+                ...NOTATION_ASSET_TYPES,
+                ...dictCategories.map(c => ({ id: c.id, name: c.name })),
+              ] : NON_NOTATION_ASSET_TYPES}
+              modelingMode={assetType.notation}
+              dictCategories={assetType.notation ? dictCategories : undefined}
+            />
+          </div>
+        </div>
+      </DynamicPage>
+      <Toast open={saveToast} placement="BottomCenter" onClose={() => setSaveToast(false)}>Changes saved.</Toast>
+      <DuplicateSettingsDialog
+        open={duplicateDialogOpen}
+        sourceAudience={AUDIENCES[0]}
+        onClose={() => setDuplicateDialogOpen(false)}
+        onDuplicate={() => setDuplicateDialogOpen(false)}
+      />
+    </div>
+  )
+}
