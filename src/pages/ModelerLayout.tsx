@@ -68,7 +68,7 @@ export default function ModelerLayout() {
             setSelectedLiShape(shape)
             setSelectedElementId(null)
             if (shape && activePanel) {
-              setActivePanel('li-shape-detail')
+              setActivePanel('element-detail')
             }
           }}
           onRegisterLiShapeUpdater={(fn) => { liShapeUpdateRef.current = fn }}

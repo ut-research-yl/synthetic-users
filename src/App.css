@@ -143,9 +143,22 @@ ui5-card {
   padding: 0;
 }
 
+.no-padding-popover::part(arrow) {
+  display: none;
+}
+
 ui5-dialog::part(content) {
   padding: 0;
   overflow: hidden;
+}
+
+.connect-widget-dialog ui5-bar::part(endcontent) {
+  padding: 0;
+}
+
+.connect-widget-dialog ui5-li-custom::part(native-li) {
+  padding-inline-start: 0.5rem;
+  overflow: visible;
 }
 
 .appearance-dialog-label {

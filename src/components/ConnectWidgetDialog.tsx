@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Button, Dialog, Bar, Title, RadioButton, Table, TableRow, TableCell, TableHeaderRow, TableHeaderCell, Input, Icon, Label, Select, Option, Text, Wizard, WizardStep, IllustratedMessage, List, ListItemCustom } from '@ui5/webcomponents-react'
+import { Button, Dialog, Bar, Title, RadioButton, Table, TableRow, TableCell, TableHeaderRow, TableHeaderCell, Input, Icon, Label, Select, Option, Text, Wizard, WizardStep, IllustratedMessage, List, ListItemCustom, Breadcrumbs, BreadcrumbsItem } from '@ui5/webcomponents-react'
 
 type PageMap = Record<string, string[]>
 type SectionMap = Record<string, { pages: PageMap }>
@@ -145,14 +145,11 @@ function PreviewChart({ type }: { type: string }) {
 
 function Breadcrumb({ parts }: { parts: string[] }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16 }}>
+    <Breadcrumbs style={{ marginBottom: '1rem' } as React.CSSProperties}>
       {parts.map((p, i) => (
-        <React.Fragment key={i}>
-          <Text style={{ color: i < parts.length - 1 ? '#0064d9' : 'var(--sapTextColor)', fontSize: 'var(--sapFontSize)', cursor: i < parts.length - 1 ? 'pointer' : 'default' } as React.CSSProperties}>{p}</Text>
-          {i < parts.length - 1 && <Icon name="slim-arrow-right" style={{ width: 10, height: 10, color: 'var(--sapContent_LabelColor)' } as React.CSSProperties} />}
-        </React.Fragment>
+        <BreadcrumbsItem key={i}>{p}</BreadcrumbsItem>
       ))}
-    </div>
+    </Breadcrumbs>
   )
 }
 
@@ -211,7 +208,7 @@ export default function ConnectWidgetDialog({ open, onClose }: Props) {
       open={open}
       onClose={handleClose}
       style={{ width: '1100px', height: '700px', maxHeight: '700px', '--_ui5_dialog_width': '1100px', '--_ui5_dialog_max_height': '700px', '--_ui5_dialog_min_height': '700px', '--_ui5_dialog_content_padding': '0' } as React.CSSProperties}
-      header={<Bar design="Header"><Title slot="startContent" level="H4">Connect Widget</Title></Bar>}
+      header={<Bar design="Header"><Title slot="startContent" level="H4">Add Widget to Canvas</Title></Bar>}
       footer={
         <Bar design="Footer">
           {step > 1 && <Button slot="startContent" design="Transparent" onClick={() => setStep(s => s - 1)}>Back</Button>}
@@ -435,8 +432,8 @@ export default function ConnectWidgetDialog({ open, onClose }: Props) {
                     <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block' } as React.CSSProperties}>
                       {WIDGET_META[selectedWidget]?.name}
                     </Text>
-                    <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)', display: 'block', marginBottom: 8 } as React.CSSProperties}>
-                      {selectedProcess} › {selectedSource} › {selectedPage}
+                    <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)', display: 'block', marginBottom: '0.5rem' } as React.CSSProperties}>
+                      {selectedProcess} / {selectedSource} / {selectedPage}
                     </Text>
                     <div style={{
                       background: '#fff', borderRadius: 12, border: '1px solid var(--sapPageHeader_BorderColor, #e5e5e5)',
