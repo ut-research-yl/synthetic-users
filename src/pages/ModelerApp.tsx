@@ -140,28 +140,35 @@ function findLiShapePosition(
   shapeType?: string
 ): { cx: number; cy: number } {
   const liR = shapeType === 'Value' ? 14 : 30
-  const gap = shapeType === 'Value' ? 20 : 40
-  const offsets = [
-    { dx: -(bpmnEl.hw + liR + gap), dy: 0 },
-    { dx: bpmnEl.hw + liR + gap, dy: 0 },
-    { dx: 0, dy: bpmnEl.hh + liR + gap },
-    { dx: 0, dy: -(bpmnEl.hh + liR + gap) },
-    { dx: -(bpmnEl.hw + liR + gap), dy: bpmnEl.hh + liR + gap },
-    { dx: bpmnEl.hw + liR + gap, dy: bpmnEl.hh + liR + gap },
-    { dx: -(bpmnEl.hw + liR + gap), dy: -(bpmnEl.hh + liR + gap) },
-    { dx: bpmnEl.hw + liR + gap, dy: -(bpmnEl.hh + liR + gap) },
-  ]
+  const gap = 100
+  const steps = [1, 1.5, 2, 2.5]
+  const offsets: { dx: number; dy: number }[] = []
+  for (const s of steps) {
+    const dx = (bpmnEl.hw + liR + gap) * s
+    const dy = (bpmnEl.hh + liR + gap) * s
+    offsets.push(
+      { dx: 0, dy: -dy },
+      { dx: 0, dy: dy },
+      { dx: -dx, dy: 0 },
+      { dx: dx, dy: 0 },
+      { dx: -dx, dy: -dy },
+      { dx: dx, dy: -dy },
+      { dx: -dx, dy: dy },
+      { dx: dx, dy: dy },
+    )
+  }
+  // check ALL elements for collision (not just solid ones)
   for (const off of offsets) {
     const cx = bpmnEl.cx + off.dx
     const cy = bpmnEl.cy + off.dy
     const collision = existingElements.some(e =>
-      Math.abs(e.cx - cx) < e.hw + liR + 10 && Math.abs(e.cy - cy) < e.hh + liR + 10
+      Math.abs(e.cx - cx) < Math.max(e.hw, 24) + liR + 20 && Math.abs(e.cy - cy) < Math.max(e.hh, 24) + liR + 20
     ) || liShapes.some(ls =>
-      Math.abs(ls.cx - cx) < liR * 2 + 10 && Math.abs(ls.cy - cy) < liR * 2 + 10
+      Math.abs(ls.cx - cx) < liR * 2 + 20 && Math.abs(ls.cy - cy) < liR * 2 + 20
     )
     if (!collision) return { cx, cy }
   }
-  return { cx: bpmnEl.cx - (bpmnEl.hw + liR + 20), cy: bpmnEl.cy + bpmnEl.hh + liR + 40 }
+  return { cx: bpmnEl.cx - (bpmnEl.hw + liR + gap), cy: bpmnEl.cy + bpmnEl.hh + liR + gap * 2 }
 }
 
 // ── SVG shape renderers ───────────────────────────────────────────────────────
