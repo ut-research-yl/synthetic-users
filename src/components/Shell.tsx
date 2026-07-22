@@ -206,7 +206,7 @@ export default function Shell() {
   const [wipBannerVisible, setWipBannerVisible] = useState(true)
   const [errorStateEnabled, setErrorStateEnabled] = useState(false)
   const [releaseSelectorOpen, setReleaseSelectorOpen] = useState(false)
-  const [hotspotVisible, setHotspotVisible] = useState(true)
+  const [hotspotVisible, setHotspotVisible] = useState(false)
 
   // URL-driven overlays: ?overlay=welcome|about|conventions|settings
   const settingsOpen = overlayParam === 'settings'
@@ -391,37 +391,14 @@ export default function Shell() {
         {wipBannerVisible && (
           <div style={{
             height: '2.75rem',
-            background: 'var(--sapPositiveColor)',
+            background: 'var(--sapHighlightColor)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 3rem',
             position: 'relative',
           }}>
             <Text style={{ color: 'var(--sapHighlightTextColor)', textAlign: 'center', fontSize: 'var(--sapFontSmallSize)' }}>
-              This prototype reflects the Signavio suite after the{' '}
-              <a
-                href="https://app.mural.co/t/sapsignavio0592/m/sapsignavio0592/1783153659017/72282da78a3a0f35288890e240b49c491943e1de?sender=u66157a715d6c8ae5349d8165"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: 'var(--sapHighlightTextColor)', fontWeight: 'bold' }}
-              >Explorer Sunset</a>
-              {' '}— Ready for implementation.
+              <strong>Work in progress</strong> — placement and user experience are still being designed and may change.
             </Text>
-            <div style={{ position: 'absolute', right: '3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Text style={{ color: 'var(--sapHighlightTextColor)', fontSize: 'var(--sapFontSmallSize)', whiteSpace: 'nowrap' }}>
-                Error State
-              </Text>
-              <Switch
-                checked={errorStateEnabled}
-                onChange={() => setErrorStateEnabled(v => !v)}
-                style={{
-                  '--ui5-switch-track-checked-bg': 'rgba(255,255,255,0.35)',
-                  '--ui5-switch-track-checked-border-color': 'rgba(255,255,255,0.6)',
-                  '--ui5-switch-handle-checked-bg': 'var(--sapHighlightTextColor)',
-                  '--ui5-switch-track-bg': 'rgba(0,0,0,0.2)',
-                  '--ui5-switch-handle-bg': 'rgba(255,255,255,0.7)',
-                } as React.CSSProperties}
-              />
-            </div>
             <Button
               design="Transparent"
               icon="decline"
