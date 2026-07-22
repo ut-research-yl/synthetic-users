@@ -263,7 +263,7 @@ export default function ImportFileDialog({ open, onClose, onSuccess }: Props) {
       <div style={{ padding: '1rem 1.5rem' }}>
         {phase === 'select' && (
           <>
-            <Text>Select a BPMN XML or Visio file to import. The file will be added to your shared workspace.</Text>
+            <Text>Select a BPMN XML or Visio file to import. We'll add the file to your shared workspace.</Text>
             <div
               onClick={() => inputRef.current?.click()}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}

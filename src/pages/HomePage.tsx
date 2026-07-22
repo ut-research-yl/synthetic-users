@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
-import { Select, Option, Label, Icon, Text, CheckBox, Button, Input, Link, MessageStrip } from '@ui5/webcomponents-react'
+import { Select, Option, Label, Icon, Text, CheckBox, Button, Input, Link, MessageStrip, List, ListItemCustom } from '@ui5/webcomponents-react'
 import PageHeader from '../components/PageHeader'
 import AudienceSectionBar from '../components/AudienceSectionBar'
 import SettingsPageLayout, { SettingsSection } from '../components/SettingsPageLayout'
 import s from '../components/SettingsPage.module.css'
 import { useWorkspace } from '../contexts/WorkspaceContext'
-import { useDragReorder } from '../utils/useDragReorder'
 
 type Widget = {
   id: string
@@ -26,13 +25,13 @@ const INITIAL_WIDGETS: Widget[] = [
   { id: 'monitoring', label: 'Monitoring Widgets from SAP Signavio Process Intelligence', draggable: true, showable: true, expandable: true, shown: false, expanded: false },
   { id: 'recent', label: 'Recently Viewed', draggable: true, showable: true, expandable: false, shown: false, expanded: false },
   { id: 'favorites', label: 'Favorites', draggable: true, showable: true, expandable: false, shown: false, expanded: false },
-  { id: 'entry', label: 'Entry Diagram', draggable: true, showable: true, expandable: true, shown: true, expanded: false },
+  { id: 'entry', label: 'Entry Model', draggable: true, showable: true, expandable: true, shown: true, expanded: false },
 ]
 
 const INITIAL_SHOW_CREATE = true
 type Translation = { id: string; language: string; title: string; welcomeMessage: string }
 const INITIAL_TRANSLATIONS: Translation[] = [
-  { id: '1', language: 'English (United States)', title: '', welcomeMessage: 'Workspace Settings Prototype' },
+  { id: '1', language: 'English (United States)', title: '', welcomeMessage: 'Your starting point for everything process' },
 ]
 const INITIAL_WIDGET_IDS: string[] = Array(6).fill('')
 
@@ -110,11 +109,9 @@ function HomePageHeaderContent({ showCreate, onShowCreateChange, translations, o
           }}>
             {translations[0].title || 'Welcome to SAP Signavio'}
           </h3>
-          {translations[0].welcomeMessage && (
-            <span style={{ fontSize: 'var(--sapFontSize)', fontFamily: '"72", Arial, Helvetica, sans-serif', color: 'var(--sapContent_NonInteractiveIconColor)' }}>
-              {translations[0].welcomeMessage}
-            </span>
-          )}
+          <span style={{ fontSize: 'var(--sapFontSize)', fontFamily: '"72", Arial, Helvetica, sans-serif', color: 'var(--sapContent_NonInteractiveIconColor)' }}>
+            {translations[0].welcomeMessage || 'Your starting point for everything process'}
+          </span>
         </div>
         {showCreate && <Button design="Emphasized" endIcon="slim-arrow-down" style={{ flexShrink: 0, pointerEvents: 'none' }}>Create</Button>}
       </div>
@@ -206,11 +203,6 @@ function EntryDiagramContent() {
   )
 }
 
-const cardStyle = (highlighted: boolean, isFirst = false): React.CSSProperties => ({
-  background: highlighted ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapGroup_ContentBackground)',
-  borderTop: isFirst ? 'none' : '1px solid var(--sapList_BorderColor)',
-})
-
 const rowStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem',
 }
@@ -220,12 +212,16 @@ function isDirtyCheck(
   showCreate: boolean,
   translations: Translation[],
   widgetIds: string[],
+  savedWidgets: Widget[],
+  savedShowCreate: boolean,
+  savedTranslations: Translation[],
+  savedWidgetIds: string[],
 ): boolean {
   if (JSON.stringify(widgets.map(w => ({ id: w.id, shown: w.shown }))) !==
-      JSON.stringify(INITIAL_WIDGETS.map(w => ({ id: w.id, shown: w.shown })))) return true
-  if (showCreate !== INITIAL_SHOW_CREATE) return true
-  if (JSON.stringify(translations) !== JSON.stringify(INITIAL_TRANSLATIONS)) return true
-  if (widgetIds.some(v => v !== '')) return true
+      JSON.stringify(savedWidgets.map(w => ({ id: w.id, shown: w.shown })))) return true
+  if (showCreate !== savedShowCreate) return true
+  if (JSON.stringify(translations) !== JSON.stringify(savedTranslations)) return true
+  if (JSON.stringify(widgetIds) !== JSON.stringify(savedWidgetIds)) return true
   return false
 }
 
@@ -236,20 +232,30 @@ export default function HomePage() {
   const [showCreate, setShowCreate] = useState(INITIAL_SHOW_CREATE)
   const [translations, setTranslations] = useState<Translation[]>(INITIAL_TRANSLATIONS)
   const [widgetIds, setWidgetIds] = useState<string[]>(INITIAL_WIDGET_IDS)
+
+  const [savedWidgets, setSavedWidgets] = useState(INITIAL_WIDGETS)
+  const [savedShowCreate, setSavedShowCreate] = useState(INITIAL_SHOW_CREATE)
+  const [savedTranslations, setSavedTranslations] = useState<Translation[]>(INITIAL_TRANSLATIONS)
+  const [savedWidgetIds, setSavedWidgetIds] = useState<string[]>(INITIAL_WIDGET_IDS)
+
   const { setHomeTitle, setHomeWelcomeMessage } = useWorkspace()
 
-  const isDirty = isDirtyCheck(widgets, showCreate, translations, widgetIds)
+  const isDirty = isDirtyCheck(widgets, showCreate, translations, widgetIds, savedWidgets, savedShowCreate, savedTranslations, savedWidgetIds)
 
   const handleSave = () => {
     setHomeTitle(translations[0].title)
     setHomeWelcomeMessage(translations[0].welcomeMessage)
+    setSavedWidgets(widgets.map(w => ({ ...w })))
+    setSavedShowCreate(showCreate)
+    setSavedTranslations(translations.map(t => ({ ...t })))
+    setSavedWidgetIds([...widgetIds])
   }
 
   const handleReset = () => {
-    setWidgets(INITIAL_WIDGETS)
-    setShowCreate(INITIAL_SHOW_CREATE)
-    setTranslations(INITIAL_TRANSLATIONS)
-    setWidgetIds(INITIAL_WIDGET_IDS)
+    setWidgets(savedWidgets.map(w => ({ ...w })))
+    setShowCreate(savedShowCreate)
+    setTranslations(savedTranslations.map(t => ({ ...t })))
+    setWidgetIds([...savedWidgetIds])
   }
 
   const toggleShown = (id: string) =>
@@ -263,58 +269,97 @@ export default function HomePage() {
     }
   }
 
-  const drag = useDragReorder(widgets, setWidgets)
+  const handleMove = (e: CustomEvent) => {
+    const sourceId = (e.detail.source.element as HTMLElement).dataset.id ?? ''
+    const destId = (e.detail.destination.element as HTMLElement).dataset.id ?? ''
+    const placement = e.detail.destination.placement as 'Before' | 'After' | 'On'
+    if (!sourceId || !destId || placement === 'On') return
+    setWidgets(prev => {
+      const from = prev.findIndex(w => w.id === sourceId)
+      const to = prev.findIndex(w => w.id === destId)
+      if (from === -1 || to === -1) return prev
+      const next = [...prev]
+      const [item] = next.splice(from, 1)
+      const insertAt = placement === 'Before' ? (to > from ? to - 1 : to) : (to < from ? to + 1 : to)
+      next.splice(insertAt, 0, item)
+      return next
+    })
+  }
 
-  const renderWidget = (widget: Widget, index?: number, isFirst = false) => {
-    const isDraggable = widget.draggable && index !== undefined
-    return (
-      <div
-        key={widget.id}
-        draggable={isDraggable}
-        onDragStart={isDraggable ? drag.onDragStart(index!) : undefined}
-        onDragOver={isDraggable ? drag.onDragOver(index!) : undefined}
-        onDragEnd={isDraggable ? drag.onDragEnd : undefined}
-        style={cardStyle(drag.dragging === index, isFirst)}
-      >
-        <div style={rowStyle}>
-          {widget.draggable
-            ? <Icon name="horizontal-grip" style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }} />
-            : <div style={{ width: '1.25rem', flexShrink: 0 }} />
-          }
-          <Text style={{ flex: 1 }}>{widget.label}</Text>
-          {widget.showable
-            ? <CheckBox checked={widget.shown} text="Show on Home" onChange={() => toggleShown(widget.id)} />
-            : <div style={{ visibility: 'hidden' }}><CheckBox text="Show on Home" /></div>
-          }
-          {widget.expandable
-            ? <Button
-                icon={widget.expanded ? 'slim-arrow-up' : 'slim-arrow-down'}
-                design="Transparent"
-                tooltip={widget.expanded ? 'Collapse' : 'Expand'}
-                style={{ flexShrink: 0 }}
-                onClick={() => toggleExpanded(widget.id)}
-              />
-            : <div style={{ visibility: 'hidden' }}><Button icon="slim-arrow-down" design="Transparent" /></div>
-          }
-        </div>
-        {widget.expandable && widget.expanded && (
-          widget.id === 'header'
-            ? <HomePageHeaderContent
-                showCreate={showCreate}
-                onShowCreateChange={setShowCreate}
-                translations={translations}
-                onTranslationsChange={setTranslations}
-              />
-            : widget.id === 'monitoring'
-              ? <MonitoringContent
-                  widgetIds={widgetIds}
-                  onWidgetIdChange={(i, v) => setWidgetIds(prev => prev.map((val, idx) => idx === i ? v : val))}
+  const renderWidget = (widget: Widget, isNonDraggableHeader = false) => {
+    const expandedContent = widget.expandable && widget.expanded
+      ? widget.id === 'header'
+        ? <HomePageHeaderContent
+            showCreate={showCreate}
+            onShowCreateChange={setShowCreate}
+            translations={translations}
+            onTranslationsChange={setTranslations}
+          />
+        : widget.id === 'monitoring'
+          ? <MonitoringContent
+              widgetIds={widgetIds}
+              onWidgetIdChange={(i, v) => setWidgetIds(prev => prev.map((val, idx) => idx === i ? v : val))}
+            />
+          : widget.id === 'entry'
+            ? <EntryDiagramContent />
+            : null
+      : null
+
+    if (isNonDraggableHeader) {
+      return (
+        <div key={widget.id} style={{ borderBottom: '1px solid var(--sapList_BorderColor)' }}>
+          <div style={rowStyle}>
+            <div style={{ width: '1.25rem', flexShrink: 0 }} />
+            <Text style={{ flex: 1 }}>{widget.label}</Text>
+            <div style={{ visibility: 'hidden' }}><CheckBox text="Show on Home" /></div>
+            {widget.expandable
+              ? <Button
+                  icon={widget.expanded ? 'slim-arrow-up' : 'slim-arrow-down'}
+                  design="Transparent"
+                  tooltip={widget.expanded ? 'Collapse' : 'Expand'}
+                  style={{ flexShrink: 0 }}
+                  onClick={() => toggleExpanded(widget.id)}
                 />
-              : widget.id === 'entry'
-                ? <EntryDiagramContent />
-                : null
-        )}
-      </div>
+              : <div style={{ visibility: 'hidden' }}><Button icon="slim-arrow-down" design="Transparent" /></div>
+            }
+          </div>
+          {expandedContent}
+        </div>
+      )
+    }
+
+    return (
+      <ListItemCustom
+        key={widget.id}
+        movable
+        data-id={widget.id}
+        type="Inactive"
+        style={{ padding: 0 }}
+      >
+        <div style={{ pointerEvents: 'none', width: '100%' }}>
+          <div style={rowStyle}>
+            <Icon name="horizontal-grip" style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }} />
+            <Text style={{ flex: 1 }}>{widget.label}</Text>
+            <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {widget.showable
+                ? <CheckBox checked={widget.shown} text="Show on Home" onChange={() => toggleShown(widget.id)} />
+                : <div style={{ visibility: 'hidden' }}><CheckBox text="Show on Home" /></div>
+              }
+              {widget.expandable
+                ? <Button
+                    icon={widget.expanded ? 'slim-arrow-up' : 'slim-arrow-down'}
+                    design="Transparent"
+                    tooltip={widget.expanded ? 'Collapse' : 'Expand'}
+                    style={{ flexShrink: 0 }}
+                    onClick={() => toggleExpanded(widget.id)}
+                  />
+                : <div style={{ visibility: 'hidden' }}><Button icon="slim-arrow-down" design="Transparent" /></div>
+              }
+            </div>
+          </div>
+          {expandedContent && <div style={{ pointerEvents: 'auto' }}>{expandedContent}</div>}
+        </div>
+      </ListItemCustom>
     )
   }
 
@@ -323,10 +368,15 @@ export default function HomePage() {
       <AudienceSectionBar value={audience} onChange={setAudience} className={s.narrowContent} />
 
       <SettingsPageLayout>
-        <SettingsSection title="Home Page configuration" subtitle="Manage which content is displayed on the home page and how it is sorted.">
+        <SettingsSection title="Home Page Configuration" subtitle="Manage which content is displayed on the home page and how it is sorted.">
           <div className={s.rowNoPad} style={{ gap: 0 }}>
-            {renderWidget(header, undefined, true)}
-            {widgets.map((widget, index) => renderWidget(widget, index))}
+            {renderWidget(header, true)}
+            <List
+              onMoveOver={e => e.preventDefault()}
+              onMove={handleMove}
+            >
+              {widgets.map(widget => renderWidget(widget))}
+            </List>
           </div>
         </SettingsSection>
       </SettingsPageLayout>

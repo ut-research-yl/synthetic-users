@@ -1,14 +1,15 @@
 import React, { useState, useRef } from 'react'
 import {
-  Text, Label, Icon, Button, CheckBox, Select, Option, RadioButton,
+  Text, Icon, Button, CheckBox, Select, Option,
   Menu, MenuItem, MenuSeparator,
   Table, TableHeaderRow, TableHeaderCell, TableRow, TableCell,
-  FlexBox, ToolbarItem, Input, ToggleButton, MessageBox, Toast,
+  FlexBox, ToolbarItem, Input, ToggleButton, MessageBox, Toast, Title,
 } from '@ui5/webcomponents-react'
 import type { TableMoveEventDetail } from '@ui5/webcomponents/dist/Table.js'
 import type { Ui5CustomEvent } from '@ui5/webcomponents-react-base'
 import { SigTableWrapper, SigFilterBar, SigFilter, MultiSelect, SingleSelect } from '@signavio/sap-signavio-uixtension'
 import { AttributeGroupDialog } from './AttributeGroupDialog'
+import { AttributeGroupVisibilityDialog } from './AttributeGroupVisibilityDialog'
 import { SortPopover } from './SortPopover'
 import { CreateAttributeDialog, type AttributeType } from './CreateAttributeDialog'
 
@@ -111,16 +112,18 @@ type Props = {
   hideCreateGroup?: boolean
   dictCategoryMode?: boolean
   title?: string
+  titleNode?: React.ReactNode
   hideAssignSection?: boolean
   defaultAssignedTo?: string[]
   assignableAssetTypes?: { id: string; name: string }[]
+  modelingSubElements?: { id: string; name: string }[]
   dictMode?: boolean
   dictCategories?: { id: string; name: string; parentId?: string }[]
   modelingMode?: boolean
+  inlinePadding?: string
 }
 
-export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDirty, hideAudience = false, hideRequiredColumn = false, hideCreateGroup = false, dictCategoryMode = false, title: panelTitle, hideAssignSection, defaultAssignedTo, assignableAssetTypes, dictMode, dictCategories, modelingMode }: Props) {
-  const [visAudience, setVisAudience] = useState(AUDIENCES[0])
+export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDirty, hideAudience = false, hideRequiredColumn = false, hideCreateGroup = false, dictCategoryMode = false, title: panelTitle, titleNode, hideAssignSection, defaultAssignedTo, assignableAssetTypes, modelingSubElements, dictMode, dictCategories, modelingMode, inlinePadding }: Props) {
   const [groupSearch, setGroupSearch] = useState<Record<string, string>>({})
   const [groupSortBy, setGroupSortBy] = useState<Record<string, string>>({})
   const [groupSortDir, setGroupSortDir] = useState<Record<string, 'asc' | 'desc'>>({})
@@ -134,6 +137,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
   const showToast = (msg: string) => setToast(msg)
   const [editAttrDialogOpen, setEditAttrDialogOpen] = useState(false)
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [visibilityGroupId, setVisibilityGroupId] = useState<string | null>(null)
   const groupDragRef = useRef<number | null>(null)
   const [groupDragOverIdx, setGroupDragOverIdx] = useState<number | null>(null)
   const hideRequiredEnabled = !!(modelingMode || dictMode || hideRequiredColumn)
@@ -162,13 +166,6 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
       showToast('Attribute group added')
     }
     setGroupDialogOpen(false)
-  }
-
-  const toggleGroupEnabled = (groupId: string) => {
-    setAttrGroups(prev => prev.map(g =>
-      g.id === groupId ? { ...g, enabled: { ...g.enabled, [visAudience]: !g.enabled[visAudience] } } : g
-    ))
-    markDirty()
   }
 
   const deleteGroup = (groupId: string) => {
@@ -286,46 +283,31 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
     markDirty()
   }
 
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem 2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.25rem' }}>
-        {!hideCreateGroup && <Button design="Emphasized" onClick={openAddGroupDialog}>Create Attribute Group</Button>}
-      </div>
-      {!hideAudience && (
-      <div style={{
-        display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '1rem',
-        padding: '0.75rem 1rem', marginBottom: '1.25rem',
-        background: 'var(--sapInformationBackground)',
-        border: '1px solid var(--sapMessage_InformationBorderColor)',
-        borderRadius: 'var(--sapElement_BorderCornerRadius)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '12rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-            <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
-              Visibility settings are audience-specific
-            </Text>
-            <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' }}>
-              {hideRequiredEnabled
-              ? 'Attributes, attribute groups, and ordering apply to all audiences – only the Visible / Visible if set / Invisible columns change per audience.'
-              : 'Attributes, attribute groups, ordering, required, and enabled status apply to all audiences — only the Visible / Visible if set / Invisible columns change per audience.'
-            }
-            </Text>
-          </div>
-        </div>
-        <FlexBox alignItems="Center" style={{ gap: '0.5rem' }}>
-          <Select
-            id="vis-audience-select"
-            style={{ minWidth: '160px' }}
-            onChange={e => setVisAudience((e.detail as any).selectedOption?.textContent ?? AUDIENCES[0])}
-          >
-            {AUDIENCES.map(a => (
-              <Option key={a} selected={a === visAudience}>{a}</Option>
-            ))}
-          </Select>
-        </FlexBox>
-      </div>
-      )}
+  const hasTitleRow = !!(titleNode || panelTitle || !hideCreateGroup)
 
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      {hasTitleRow && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: '1.25rem',
+          background: 'var(--sapList_Background)',
+          borderRadius: 'var(--sapElement_BorderCornerRadius)',
+          padding: '0.5rem 1rem',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          ...(inlinePadding ? { marginInline: inlinePadding } : {}),
+        }}>
+          {titleNode
+            ? titleNode
+            : panelTitle
+              ? <Title level="H3" style={{ fontSize: 'var(--sapFontHeader4Size)' }}>{panelTitle}</Title>
+              : <span />
+          }
+          {!hideCreateGroup && <Button design="Emphasized" onClick={openAddGroupDialog}>Create Attribute Group</Button>}
+        </div>
+      )}
       {attrGroups.map((group, groupIdx) => {
         const searchQuery = (groupSearch[group.id] ?? '').toLowerCase().trim()
         const activeFilters = groupFilters[group.id] ?? {}
@@ -396,26 +378,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                     <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>
                       {group.name} ({group.attrs.length})
                     </Text>
-                    {modelingMode && (
-                    <FlexBox alignItems="Center" style={{ gap: '0.125rem' }}>
-                      <CheckBox
-                        checked={group.enabled[visAudience]}
-                        accessibleName={`Show group ${group.name}`}
-                        onChange={() => toggleGroupEnabled(group.id)}
-                      />
-                      <Label style={{ cursor: 'default', color: 'var(--sapTextColor)' }}>Visible</Label>
-                    </FlexBox>
-                    )}
-                    {!(modelingMode || dictMode) && !hideAudience && (
-                    <FlexBox alignItems="Center" style={{ gap: '0.125rem' }}>
-                      <CheckBox
-                        checked={group.enabled[visAudience]}
-                        accessibleName={`Enable group ${group.name}`}
-                        onChange={() => toggleGroupEnabled(group.id)}
-                      />
-                      <Label style={{ cursor: 'default', color: 'var(--sapTextColor)' }}>Enabled</Label>
-                    </FlexBox>
-                    )}                  </FlexBox>
+                  </FlexBox>
                 </ToolbarItem>
               }
               searchSlot={
@@ -529,7 +492,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                     design="Emphasized"
                     onClick={() => setCreateAttrDialogGroupId(group.id)}
                   >
-                    Add
+                    Add Attribute
                   </Button>
                 </ToolbarItem>
                 )
@@ -540,6 +503,11 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                   <ToolbarItem overflowPriority="AlwaysOverflow">
                     <Button icon="edit" design="Transparent" onClick={() => openEditGroupDialog(group.id)}>Edit Group</Button>
                   </ToolbarItem>
+                  {modelingMode && (
+                  <ToolbarItem overflowPriority="AlwaysOverflow">
+                    <Button icon="show" design="Transparent" onClick={() => setVisibilityGroupId(group.id)}>Set Visibility</Button>
+                  </ToolbarItem>
+                  )}
                   <ToolbarItem overflowPriority="AlwaysOverflow">
                     <Button icon="navigation-up-arrow" design="Transparent" disabled={groupIdx === 0} onClick={() => moveGroup(group.id, -1)}>Move Up</Button>
                   </ToolbarItem>
@@ -554,15 +522,14 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
               }
             >
               {group.expanded && (
-                <div className="attr-table-wrap" style={{ overflowX: 'auto' }}>
                   <Table
                     className="attr-table"
-                    style={{ minWidth: '1100px' }}
+                    style={{}}
                     onMoveOver={handleAttrMoveOver as any}
                     onMove={(e: any) => handleAttrMove(group.id, e)}
                     headerRow={
                       <TableHeaderRow>
-                        <TableHeaderCell width="1fr">
+                        <TableHeaderCell width="minmax(380px, 1fr)">
                           <span style={{ paddingInlineStart: 'calc(1rem + 0.75rem)' }}>Attribute Name</span>
                         </TableHeaderCell>
                         <TableHeaderCell width="96px">Class</TableHeaderCell>
@@ -570,25 +537,32 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                         {!dictCategoryMode && !modelingMode && !((hideRequiredColumn || hideRequiredEnabled) && group.id === 'main') && <TableHeaderCell width="96px" style={{ textAlign: 'center' } as any}>Required</TableHeaderCell>}
                         {!dictCategoryMode && !modelingMode && (hideRequiredColumn || hideRequiredEnabled) && group.id === 'main' && <TableHeaderCell width="96px" />}
                         {!dictCategoryMode && !modelingMode && <TableHeaderCell width="96px" style={{ textAlign: 'center' } as any}>Enabled</TableHeaderCell>}
-                        {!hideAudience && !(dictCategoryMode && group.id === 'main') && (<>
-                        <TableHeaderCell width="96px" style={{ textAlign: 'center' } as any}>Visible</TableHeaderCell>
-                        <TableHeaderCell width="96px" style={{ textAlign: 'center' } as any}>Visible If Set</TableHeaderCell>
-                        <TableHeaderCell width="96px" style={{ textAlign: 'center' } as any}>Invisible</TableHeaderCell>
-                        </>)}
-                        {!hideAudience && dictCategoryMode && group.id === 'main' && (<>
-                        <TableHeaderCell width="96px" />
-                        <TableHeaderCell width="96px" />
-                        <TableHeaderCell width="96px" />
-                        </>)}
-                        <TableHeaderCell width="3rem" />
+                        {!hideAudience && !(dictCategoryMode && group.id === 'main') && AUDIENCES.map(audience => (
+                          <TableHeaderCell key={audience} width="120px">
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                              <Text style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--sapContent_LabelColor)', whiteSpace: 'nowrap' }}>Visibility</Text>
+                              <Text style={{ fontSize: 'var(--sapFontSize)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '104px', display: 'block' }}>{audience}</Text>
+                            </div>
+                          </TableHeaderCell>
+                        ))}
+                        {!hideAudience && dictCategoryMode && group.id === 'main' && AUDIENCES.map(audience => (
+                          <TableHeaderCell key={audience} width="120px" />
+                        ))}
+                        <TableHeaderCell width="44px" />
                       </TableHeaderRow>
                     }
                   >
                     {group.attrs.length === 0 && (
                       <TableRow>
-                        <TableCell {...{ colSpan: 9 - (hideAudience ? 3 : 0) - (modelingMode ? 2 : (dictCategoryMode ? 2 : ((hideRequiredColumn || hideRequiredEnabled) && group.id === 'main' ? 1 : 0))) } as any}>
+                        <TableCell {...{ colSpan:
+                          3
+                          + (!dictCategoryMode && !modelingMode && !((hideRequiredColumn || hideRequiredEnabled) && group.id === 'main') ? 1 : 0)
+                          + (!dictCategoryMode && !modelingMode ? 1 : 0)
+                          + (!hideAudience ? AUDIENCES.length : 0)
+                          + 1
+                        } as any}>
                           <div style={{ padding: '1.25rem', textAlign: 'center' }}>
-                            <Text style={{ color: 'var(--sapContent_LabelColor)' }}>No attributes. Click Add to create one.</Text>
+                            <Text style={{ color: 'var(--sapContent_LabelColor)' }}>No attributes. Choose Add to create one.</Text>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -597,8 +571,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                       const realIdx = group.attrs.findIndex(a => a.id === attr.id)
                       const otherGroups = attrGroups.filter(g => g.id !== group.id)
                       const isAttrDisabled = !modelingMode && !hideRequiredColumn && !attr.enabled
-                      const isGroupDisabled = !hideRequiredColumn && !group.enabled[visAudience]
-                      const isDisabled = isAttrDisabled || isGroupDisabled
+                      const isDisabled = isAttrDisabled
 
                       return (
                         <TableRow
@@ -663,41 +636,26 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                             </FlexBox>
                           </TableCell>
                           )}
-                          {!hideAudience && !(dictCategoryMode && group.id === 'main') && (<>
-                          <TableCell>
-                            <FlexBox justifyContent="Center">
-                              <RadioButton
-                                name={`vis-${attr.id}`}
-                                checked={attr.visibility[visAudience] === 'Visible'}
-                                disabled={modelingMode && !group.enabled[visAudience]}
-                                onChange={() => updateAttr(group.id, attr.id, { visibility: { ...attr.visibility, [visAudience]: 'Visible' } })}
-                              />
-                            </FlexBox>
+                          {!hideAudience && !(dictCategoryMode && group.id === 'main') && AUDIENCES.map(audience => (
+                          <TableCell key={audience}>
+                            <Select
+                              accessibleName={`Visibility for ${attr.name} — ${audience}`}
+                              style={{ width: '100%' }}
+                              disabled={group.enabled[audience] === false}
+                              onChange={(e: any) => updateAttr(group.id, attr.id, { visibility: { ...attr.visibility, [audience]: e.detail.selectedOption?.textContent as AttrVis } })}
+                            >
+                              {group.enabled[audience] === false
+                                ? <Option selected>Invisible</Option>
+                                : (['Visible', 'Visible if set', 'Invisible'] as AttrVis[]).map(v => (
+                                  <Option key={v} selected={attr.visibility[audience] === v}>{v}</Option>
+                                ))
+                              }
+                            </Select>
                           </TableCell>
-                          <TableCell>
-                            <FlexBox justifyContent="Center">
-                              <RadioButton
-                                name={`vis-${attr.id}`}
-                                checked={attr.visibility[visAudience] === 'Visible if set'}
-                                disabled={modelingMode && !group.enabled[visAudience]}
-                                onChange={() => updateAttr(group.id, attr.id, { visibility: { ...attr.visibility, [visAudience]: 'Visible if set' } })}
-                              />
-                            </FlexBox>
-                          </TableCell>
-                          <TableCell>
-                            <FlexBox justifyContent="Center">
-                              <RadioButton
-                                name={`vis-${attr.id}`}
-                                checked={attr.visibility[visAudience] === 'Invisible'}
-                                disabled={modelingMode && !group.enabled[visAudience]}
-                                onChange={() => updateAttr(group.id, attr.id, { visibility: { ...attr.visibility, [visAudience]: 'Invisible' } })}
-                              />
-                            </FlexBox>
-                          </TableCell>
-                          </>)}
-                          {!hideAudience && dictCategoryMode && group.id === 'main' && (<>
-                          <TableCell /><TableCell /><TableCell />
-                          </>)}
+                          ))}
+                          {!hideAudience && dictCategoryMode && group.id === 'main' && AUDIENCES.map(audience => (
+                          <TableCell key={audience} />
+                          ))}
                           <TableCell style={{ position: 'sticky', right: 0, background: 'var(--sapList_Background)' } as any}>
                             {!(dictCategoryMode && group.id === 'main' && attr.attrClass === 'Standard') && (
                             <FlexBox justifyContent="End">
@@ -746,7 +704,6 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                       )
                     })}
                   </Table>
-                </div>
               )}
             </SigTableWrapper>
           </div>
@@ -759,6 +716,20 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
         onClose={() => setGroupDialogOpen(false)}
         onConfirm={handleGroupDialogConfirm}
       />
+      {modelingMode && (
+        <AttributeGroupVisibilityDialog
+          open={visibilityGroupId !== null}
+          groupName={attrGroups.find(g => g.id === visibilityGroupId)?.name ?? ''}
+          initialVisibility={attrGroups.find(g => g.id === visibilityGroupId)?.enabled ?? Object.fromEntries(AUDIENCES.map(a => [a, true]))}
+          onClose={() => setVisibilityGroupId(null)}
+          onSave={visibility => {
+            setAttrGroups(prev => prev.map(g => g.id === visibilityGroupId ? { ...g, enabled: visibility } : g))
+            markDirty()
+            showToast('Attribute group visibility updated')
+            setVisibilityGroupId(null)
+          }}
+        />
+      )}
       <CreateAttributeDialog
         open={createAttrDialogGroupId !== null}
         dialogTitle="Add Attribute"
@@ -767,6 +738,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
         hideAssignSection={hideAssignSection}
         defaultAssignedTo={defaultAssignedTo}
         assignableAssetTypes={assignableAssetTypes}
+        modelingSubElements={modelingSubElements}
         dictMode={dictMode}
         dictCategories={dictCategories}
         modelingMode={modelingMode}
@@ -806,9 +778,11 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
             hideAssignSection={hideAssignSection}
             defaultAssignedTo={defaultAssignedTo}
             assignableAssetTypes={assignableAssetTypes}
+            modelingSubElements={modelingSubElements}
             dictMode={dictMode}
             dictCategories={dictCategories}
             modelingMode={modelingMode}
+            hideAudience={hideAudience}
             onClose={() => { setEditAttrDialogOpen(false); setEditAttrPending(null) }}
             onCreate={(type: AttributeType, name: string) => {
               setAttrGroups(prev => prev.map(g => g.id === editAttrPending.groupId

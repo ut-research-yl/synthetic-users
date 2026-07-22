@@ -81,7 +81,7 @@ function EmptyCardContent({ title }: { title: string }) {
       gap: '0.5rem',
       textAlign: 'center',
     }}>
-      <Text style={{ fontWeight: '600', display: 'block' }}>No data available</Text>
+      <Text style={{ fontWeight: '600', display: 'block' }}>No data available.</Text>
       <Text style={{
         color: 'var(--sapContent_LabelColor)',
         fontSize: 'var(--sapFontSmallSize)',

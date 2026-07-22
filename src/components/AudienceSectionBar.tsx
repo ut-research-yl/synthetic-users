@@ -29,7 +29,7 @@ export default function AudienceSectionBar({ value, onChange, className }: Props
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
             Audience-specific settings
           </Text>
-          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>
+          <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' }}>
             Settings below apply only to the selected audience
           </Text>
         </FlexBox>

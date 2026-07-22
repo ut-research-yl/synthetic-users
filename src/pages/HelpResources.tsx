@@ -8,7 +8,7 @@ import {
 import PageHeader from '../components/PageHeader'
 import { useWorkspace, type HelpLink } from '../contexts/WorkspaceContext'
 import SettingsPageLayout, { SettingsSection } from '../components/SettingsPageLayout'
-import { StickyNote } from '../components/StickyNote'
+// import { StickyNote } from '../components/StickyNote' // R27 Q2
 
 export default function HelpResources() {
   const { helpLinks: links, setHelpLinks: setLinks } = useWorkspace()
@@ -119,10 +119,12 @@ export default function HelpResources() {
         </Bar>
       </Dialog>
 
+      {/* R27 Q2: audience notice — hidden until audience-specific help links are introduced
       <StickyNote
         position="right"
         text="Help Resources are currently <strong>not audience-specific</strong> — the same links are shown to all audiences, e.g. modeler help is also shown to the general audience.<br><br>If audience-specific help links are introduced, the <b>Duplicate Settings</b> dialog would also need a Help Resources section."
       />
+      */}
       <SettingsPageLayout>
 
         <SettingsSection

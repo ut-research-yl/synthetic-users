@@ -242,7 +242,7 @@ export function QuickLinksEditDialog({ open, mode, initialItems, initialTitle, o
         actions={['Discard Changes', 'Cancel']}
         emphasizedAction="Discard Changes"
       >
-        Are you sure you want to discard your changes?{'\n'}All entered data will be lost.
+        Do you want to discard your changes?{'\n'}All entered data will be lost.
       </MessageBox>
 
       <MessageBox

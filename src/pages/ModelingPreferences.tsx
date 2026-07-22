@@ -68,8 +68,7 @@ export default function ModelingPreferences() {
           <div className={s.rowWide}>
             <Text className={s.fieldDesc}>
               You can use colors in the schema of '#008000', 'rgb(0,128,0)' or simple name like 'green'.{' '}
-              <Link onClick={resetColors} href="#" style={{ cursor: 'pointer' }}>Click here</Link>
-              {' '}to reset to the default palette.
+              <Link onClick={resetColors} href="#" style={{ cursor: 'pointer' }}>Reset to the default palette</Link>.
             </Text>
             <div className={s.swatchGrid}>
               {colors.map((color, i) => (

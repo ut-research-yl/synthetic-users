@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ObjectPage, ObjectPageTitle, ObjectPageSection, ObjectPageMode, Toolbar, Button, IllustratedMessage, Toast, MessageBox, Menu, MenuItem, Label } from '@ui5/webcomponents-react'
+import { ObjectPage, ObjectPageTitle, ObjectPageSection, ObjectPageMode, Toolbar, Button, IllustratedMessage, Toast, MessageBox, Menu, MenuItem } from '@ui5/webcomponents-react'
 import '@ui5/webcomponents-fiori/dist/illustrations/NoData.js'
 import { CardGridFlexWidth } from '../components/CardGridFlexWidth'
 import { FavoritesWidget } from '../widgets/FavoritesWidget'
@@ -216,7 +216,6 @@ export default function HomeDashboard() {
         onSelectedSectionChange={(e) => setSelectedTab(e.detail.selectedSectionIndex ?? 0)}
         titleArea={
           <ObjectPageTitle
-            subHeader={<Label>Workspace Settings Prototype</Label>}
             header={
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -231,11 +230,9 @@ export default function HomeDashboard() {
                   </h3>
                   {selectedTab === 1 && <SaveStateIndicator state={saveState} />}
                 </div>
-                {homeWelcomeMessage && (
-                  <span style={{ fontSize: 'var(--sapFontSize)', fontFamily: '"72", Arial, Helvetica, sans-serif', color: 'var(--sapContent_NonInteractiveIconColor)' }}>
-                    {homeWelcomeMessage}
-                  </span>
-                )}
+                <span style={{ fontSize: 'var(--sapFontSize)', fontFamily: '"72", Arial, Helvetica, sans-serif', color: 'var(--sapContent_NonInteractiveIconColor)' }}>
+                  {homeWelcomeMessage || 'Your starting point for everything process'}
+                </span>
               </div>
             }
             actionsBar={

@@ -157,6 +157,7 @@ export default function Repository() {
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
   const [filterBarOpen, setFilterBarOpen] = useState(false)
   const [selReportingOpen, setSelReportingOpen] = useState(false)
+  const [selVariantMenuOpen, setSelVariantMenuOpen] = useState(false)
   const [selExportOpen, setSelExportOpen] = useState(false)
   const [selActionOpen, setSelActionOpen] = useState(false)
   const [selOpenOpen, setSelOpenOpen] = useState(false)
@@ -1587,12 +1588,12 @@ export default function Repository() {
             <MenuItem text="Open" icon="open-folder" />
             <MenuItem text="Details" icon="SAP-icons-v4/panel-right" />
             <MenuSeparator />
-            <MenuItem text="Share" icon="share-2" />
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Share" icon="share-2" />}
             <MenuItem text="Copy Link" icon="chain-link" />
-            <MenuItem text="Manage Access" icon="user-settings" />
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Manage Access" icon="user-settings" />}
             <MenuSeparator />
             <MenuItem text={favoriteIds.has(`file:${file.id}`) ? 'Remove from Favorites' : 'Add to Favorites'} icon={favoriteIds.has(`file:${file.id}`) ? 'favorite' : 'unfavorite'} />
-            <MenuItem text="Notifications" icon={notifPref === 'Off' ? 'SAP-icons-v4/notification-disabled' : 'bell'}><MenuItem text="Daily" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Daily' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Weekly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Weekly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Monthly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Monthly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuSeparator /><MenuItem text="Off" icon="SAP-icons-v4/notification-disabled" style={{ minWidth: '160px' } as any}>{notifPref === 'Off' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem></MenuItem>
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Notifications" icon={notifPref === 'Off' ? 'SAP-icons-v4/notification-disabled' : 'bell'}><MenuItem text="Daily" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Daily' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Weekly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Weekly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Monthly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Monthly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuSeparator /><MenuItem text="Off" icon="SAP-icons-v4/notification-disabled" style={{ minWidth: '160px' } as any}>{notifPref === 'Off' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem></MenuItem>}
             <MenuSeparator />
             <MenuItem text="Reporting" icon="SAP-icons-v4/report">
               <MenuItem text="Process documentation (PDF)" />
@@ -1644,12 +1645,12 @@ export default function Repository() {
             <MenuItem text="Edit in Modeler" icon="write-new" {...{ disabled: true } as any} />
             <MenuItem text="Edit in QuickModel" icon="SAP-icons-v4/quickmodel" />
             <MenuSeparator />
-            <MenuItem text="Share" icon="share-2" />
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Share" icon="share-2" />}
             <MenuItem text="Copy Link" icon="chain-link" />
-            <MenuItem text="Manage Access" icon="user-settings" />
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Manage Access" icon="user-settings" />}
             <MenuSeparator />
             <MenuItem text={favoriteIds.has(`file:${file.id}`) ? 'Remove from Favorites' : 'Add to Favorites'} icon={favoriteIds.has(`file:${file.id}`) ? 'favorite' : 'unfavorite'} />
-            <MenuItem text="Notifications" icon={notifPref === 'Off' ? 'SAP-icons-v4/notification-disabled' : 'bell'}><MenuItem text="Daily" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Daily' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Weekly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Weekly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Monthly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Monthly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuSeparator /><MenuItem text="Off" icon="SAP-icons-v4/notification-disabled" style={{ minWidth: '160px' } as any}>{notifPref === 'Off' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem></MenuItem>
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Notifications" icon={notifPref === 'Off' ? 'SAP-icons-v4/notification-disabled' : 'bell'}><MenuItem text="Daily" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Daily' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Weekly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Weekly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuItem text="Monthly" icon="bell" style={{ minWidth: '160px' } as any}>{notifPref === 'Monthly' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem><MenuSeparator /><MenuItem text="Off" icon="SAP-icons-v4/notification-disabled" style={{ minWidth: '160px' } as any}>{notifPref === 'Off' && <Icon slot="endContent" name="accept" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' }} />}</MenuItem></MenuItem>}
             <MenuSeparator />
             <MenuItem text="Compare Revisions" icon="compare" />
             <MenuItem text="Variant Management" icon="SAP-icons-v4/variant">
@@ -1682,12 +1683,12 @@ export default function Repository() {
               <MenuItem text="Show Started Approval Workflows" />
               <MenuItem text="Set Expiration Date" />
             </MenuItem>}
-            <MenuItem text="Read Confirmation" icon="SAP-icons-v4/visible-confirmed" />
-            <MenuItem text="Rate process" icon="feedback" />
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Read Confirmation" icon="SAP-icons-v4/visible-confirmed" />}
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Rate process" icon="feedback" />}
             {selectedRoot !== 'my-modeling' && <MenuItem text="Publish Revision" icon="SAP-icons-v4/published" />}
             {selectedRoot !== 'my-modeling' && <MenuItem text="Unpublish" icon="SAP-icons-v4/published-changed" disabled />}
-            <MenuSeparator />
-            <MenuItem text="Embed" icon="source-code" />
+            {selectedRoot !== 'my-modeling' && <MenuSeparator />}
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Embed" icon="source-code" />}
             <MenuItem text="Export as" icon="SAP-icons-v4/export">
               <MenuItem text="SAP Signavio Archive (SGX)" />
               <MenuItem text="BPMN 2.0 XML" />
@@ -1701,8 +1702,7 @@ export default function Repository() {
               <MenuItem text="Export Diagram Translations" />
             </MenuItem>
             <MenuItem text="Import Diagram Translations" icon="SAP-icons-v4/import" />
-            <MenuSeparator />
-            <MenuItem text="Sync with SAP Cloud ALM" icon="synchronize" />
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Sync with SAP Cloud ALM" icon="synchronize" />}
             <MenuSeparator />
             <MenuItem text="Rename" icon="edit" /><MenuItem text="Move to" icon="SAP-icons-v4/file-move" /><MenuItem text="Copy to" icon="copy" /><MenuItem text="Move to Trash" icon="delete" />
           </>
@@ -1876,7 +1876,7 @@ export default function Repository() {
                         </Menu>
                       </>)
                     })()}
-                    {(selectedFolderLeaf || isModelingFiles) && !isDictView && (() => {
+                    {(selectedFolderLeaf || isModelingFiles) && !isDictView && selectedRoot !== 'my-modeling' && (() => {
                       const folderNotifBtnId = 'folder-notif-btn'
                       return (<>
                         <Button
@@ -2095,9 +2095,9 @@ export default function Repository() {
                           selectedFilesList[0]?.type === 'Folder' ? (
                             <>
                               <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) navigateIntoFolder(f) }}>Open</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setShareView('share') } }}>Share</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setShareView('share') } }}>Share</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent" onClick={() => { navigator.clipboard?.writeText(window.location.href).catch(() => {}); setCopyLinkToast(true) }}>Copy Link</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setManageFromShare(false); setShareView('manage') } }}>Manage Access</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setManageFromShare(false); setShareView('manage') } }}>Manage Access</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent">Add to Favorites</Button></ToolbarItem>
                               <ToolbarItem><Button id="sel-reporting-btn" design="Transparent" endIcon="slim-arrow-down" onClick={() => setSelReportingOpen(v => !v)}>Reporting</Button></ToolbarItem>
                               <ToolbarItem><Button id="sel-export-btn" design="Transparent" endIcon="slim-arrow-down" onClick={() => setSelExportOpen(v => !v)}>Export as</Button></ToolbarItem>
@@ -2111,23 +2111,23 @@ export default function Repository() {
                               <ToolbarItem><Button id="sel-open-btn" design="Transparent" endIcon="slim-arrow-down" onClick={() => setSelOpenOpen(v => !v)}>Open</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Edit in Editor</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Edit in QuickModel</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setShareView('share') } }}>Share</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setShareView('share') } }}>Share</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent" onClick={() => { navigator.clipboard?.writeText(window.location.href).catch(() => {}); setCopyLinkToast(true) }}>Copy Link</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setManageFromShare(false); setShareView('manage') } }}>Manage Access</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setShareFile(f); setManageFromShare(false); setShareView('manage') } }}>Manage Access</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent">Add to Favorites</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent">Notifications</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Notifications</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent">Compare Revisions</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent">Variant Management</Button></ToolbarItem>
+                              <ToolbarItem><Button id="sel-variant-btn" design="Transparent" endIcon="slim-arrow-down" onClick={() => setSelVariantMenuOpen(v => !v)}>Variant Management</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Simulate</Button></ToolbarItem>
                               <ToolbarItem><Button id="sel-reporting-btn" design="Transparent" endIcon="slim-arrow-down" onClick={() => setSelReportingOpen(v => !v)}>Reporting</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Governance</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent">Read Confirmation</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent">Rate process</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Read Confirmation</Button></ToolbarItem>}
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Rate process</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent">Publish Revision</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent">Embed</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Embed</Button></ToolbarItem>}
                               <ToolbarItem><Button id="sel-export-btn" design="Transparent" endIcon="slim-arrow-down" onClick={() => setSelExportOpen(v => !v)}>Export as</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Import Diagram Translations</Button></ToolbarItem>
-                              <ToolbarItem><Button design="Transparent">Sync with SAP Cloud ALM</Button></ToolbarItem>
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Sync with SAP Cloud ALM</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setRenamingFile(f); setEditFolderOpen(true) } }}>Rename</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Move to</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Copy to</Button></ToolbarItem>
@@ -2379,6 +2379,13 @@ export default function Repository() {
                     <MenuItem text="Risks & controls report" />
                     <MenuItem text="User/Group assignment" />
                   </Menu>
+
+                  <Menu opener="sel-variant-btn" open={selVariantMenuOpen} onClose={() => setSelVariantMenuOpen(false)} onItemClick={() => setSelVariantMenuOpen(false)}>
+                    <MenuItem text="Clone to Create Variant" />
+                    <MenuItem text="Attach to Template" />
+                    <MenuItem text="Set as Template" />
+                  </Menu>
+
                   <Menu opener="sel-export-btn" open={selExportOpen} onClose={() => setSelExportOpen(false)} onItemClick={() => setSelExportOpen(false)}>
                     {selAllNonFolders ? (
                       <>
@@ -2602,9 +2609,9 @@ export default function Repository() {
                     >
                       <MenuItem text="Open" icon="open-folder" />
                       <MenuItem text="Details" icon="SAP-icons-v4/panel-right" />
-                      <MenuSeparator />
-                      <MenuItem text="Share" icon="share-2" />
-                      <MenuItem text="Manage Access" icon="user-settings" />
+                      {selectedRoot !== 'my-modeling' && <MenuSeparator />}
+                      {selectedRoot !== 'my-modeling' && <MenuItem text="Share" icon="share-2" />}
+                      {selectedRoot !== 'my-modeling' && <MenuItem text="Manage Access" icon="user-settings" />}
                       {!['modeling', 'my-modeling', 'data-modeling'].includes(selectedRoot) && <MenuItem text="Add to Favorites" icon="unfavorite" />}
                       <MenuSeparator />
                       <MenuItem text="Reporting" icon="SAP-icons-v4/report">
@@ -2710,6 +2717,7 @@ export default function Repository() {
               isFavorite={!!(selectedAsset && favoriteIds.has(`file:${selectedAsset.id}`))}
               onToggleFavorite={() => { if (selectedAsset) toggleFileFavorite(selectedAsset.id) }}
               isDictView={isDictView}
+              isModelingFolder={isModelingFiles && !isDictView && !showAllResources}
               onProcessAtomSaved={(name, description) => {
                 const newId = `pa-new-${Date.now()}`
                 setProcessAtoms(prev => [{

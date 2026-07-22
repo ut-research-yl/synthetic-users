@@ -11,7 +11,7 @@ import { AccessBadge, StatusBadge } from '../components/dashboard'
 import ProcessModelDashboard from './Reporting/ProcessModelDashboard'
 import UsageManagementDashboard from './Reporting/UsageManagementDashboard'
 import LicenseUsageDashboard from './Reporting/LicenseUsageDashboard'
-import GovernanceDashboard from './Reporting/GovernanceDashboard'
+import ProcessGovernanceDashboard from './Reporting/ProcessGovernanceDashboard'
 import { useState } from 'react'
 
 type Dashboard = { id: string; name: string; adminOnly: boolean }
@@ -20,7 +20,7 @@ const DASHBOARDS: Dashboard[] = [
   { id: 'process-model', name: 'Process Model', adminOnly: true },
   { id: 'usage-mgmt', name: 'Usage Management', adminOnly: false },
   { id: 'license-usage', name: 'License Usage', adminOnly: true },
-  { id: 'governance', name: 'Workspace Analytics', adminOnly: false },
+  { id: 'governance', name: 'Process Governance Dashboard', adminOnly: false },
 ]
 
 const REPORT_TYPES = [
@@ -72,7 +72,7 @@ export default function Reporting() {
   if (activeDashboard === 'process-model') return <ProcessModelDashboard onBack={() => setActiveDashboard(null)} />
   if (activeDashboard === 'usage-mgmt') return <UsageManagementDashboard onBack={() => setActiveDashboard(null)} />
   if (activeDashboard === 'license-usage') return <LicenseUsageDashboard onBack={() => setActiveDashboard(null)} />
-  if (activeDashboard === 'governance') return <GovernanceDashboard onBack={() => setActiveDashboard(null)} />
+  if (activeDashboard === 'governance') return <ProcessGovernanceDashboard onBack={() => setActiveDashboard(null)} />
 
   return (
     <ObjectPage mode="IconTabBar" style={{ height: '100%' }} hidePinButton

@@ -182,7 +182,7 @@ export default function Theme() {
                       <div style={{ width: '1.375rem', height: '1.375rem', flexShrink: 0, borderRadius: '3px', border: '1px solid rgba(0,0,0,0.18)', background: lastValidHex ? '#' + lastValidHex : 'transparent' }} />
                       <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem' }}>
                         <Button design="Transparent" tooltip="Restore the default color" onClick={(e) => { e.stopPropagation(); suppressCloseRef.current = true; setColorHex('ffffff'); setLastValidHex('ffffff'); setHexBlurred(false) }}>Reset</Button>
-                        <Button design="Transparent" disabled={!hexValid} onClick={() => { setHeaderColor('#' + colorHex); setColorPickerOpen(false); setColorChosen(true); setIsDirty(true) }}>OK</Button>
+                        <Button design="Transparent" disabled={!hexValid} onClick={() => { setHeaderColor('#' + colorHex); setColorPickerOpen(false); setColorChosen(true); setIsDirty(true) }}>Apply Color</Button>
                       </div>
                       </>)})()}
                     </div>

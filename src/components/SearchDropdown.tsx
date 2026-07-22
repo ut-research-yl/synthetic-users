@@ -288,7 +288,7 @@ export default function SearchDropdown({ open, rect, query, history, savedSearch
             <SectionHeader>Search History</SectionHeader>
             {history.length === 0 ? (
               <div style={{ padding: '0.75rem 1rem' }}>
-                <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>No recent searches</Text>
+                <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>No recent searches.</Text>
               </div>
             ) : history.map((term, i) => (
               <div
@@ -393,7 +393,7 @@ export default function SearchDropdown({ open, rect, query, history, savedSearch
       {savedSearches.length === 0 ? (
         <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
           <Icon name="search" style={{ fontSize: '2rem', color: 'var(--sapContent_NonInteractiveIconColor)' }} />
-          <Text style={{ color: 'var(--sapContent_LabelColor)', fontWeight: '600' }}>No saved searches yet</Text>
+          <Text style={{ color: 'var(--sapContent_LabelColor)', fontWeight: '600' }}>No saved searches yet.</Text>
           <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)', textAlign: 'center' }}>
             Use "Save Search" on the search results page to save a search as a Smart Folder.
           </Text>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   NavigationLayout,
@@ -37,25 +37,29 @@ import {
   Menu,
   MenuItem,
   MenuSeparator,
-  Bar,
   Toast,
   ToolbarItem,
   Popover,
   RadioButton,
   Icon,
+  IllustratedMessage,
+  MessageBox,
 } from '@ui5/webcomponents-react'
+import '@ui5/webcomponents-fiori/dist/illustrations/UnableToLoad.js'
 import { SigChipV2, SigDomainObject, SigTableWrapper } from '@signavio/sap-signavio-uixtension'
 import { useWorkspace } from '../contexts/WorkspaceContext'
 import { useRelease } from '../contexts/ReleaseContext'
 import { RELEASES } from '../releases'
 import SearchDropdown from './SearchDropdown'
 import WelcomeModal from './WelcomeModal'
+import HotspotTooltip from './HotspotTooltip'
 import ConventionsDialog from './Shell/ConventionsDialog'
 import AboutDialog from './Shell/AboutDialog'
 import { ADMIN_USERS } from '../contexts/WorkspaceContext'
 import { useNavigationLog } from '../hooks/useNavigationLog'
 import { useMockSave } from '../hooks/useMockSave'
 import { searchSettings } from '../settingsSearch'
+import { useDirtyState } from '../contexts/DirtyStateContext'
 
 
 const STANDARD_HELP_ITEMS = [
@@ -97,7 +101,7 @@ const SETTINGS_NAV = [
     ],
   },
   {
-    title: 'Assets and Meta Data',
+    title: 'Assets and Attributes',
     items: [
       { text: 'Asset Types', path: '/asset-types' },
       { text: 'Dictionary Categories', path: '/dictionary-categories' },
@@ -152,9 +156,12 @@ export default function Shell() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { additionalInfo, helpLinks, smartFolders, workspaceName, ownerId } = useWorkspace()
+  const { additionalInfo, helpLinks, smartFolders, workspaceName, ownerId, contentLanguages } = useWorkspace()
   const { currentRelease, setCurrentRelease, isAvailable } = useRelease()
   useNavigationLog()
+  const dirtyState = useDirtyState()
+  const pendingNavRef = useRef<string | null>(null)
+  const [unsavedChangesOpen, setUnsavedChangesOpen] = useState(false)
 
   // Overlay state — driven by ?overlay= URL param so they're directly linkable
   const overlayParam = searchParams.get('overlay')
@@ -164,6 +171,8 @@ export default function Shell() {
   }
 
   const [audience, setAudience] = useState<'administrators' | 'modelers'>('administrators')
+  const defaultContentLang = contentLanguages.find(l => l.isDefault)?.code ?? contentLanguages[0]?.code ?? 'en-US'
+  const [activeContentLanguage, setActiveContentLanguage] = useState(defaultContentLang)
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchHistory, setSearchHistory] = useState<string[]>(['Order to Cash', 'Customer Onboarding', 'Invoice Processing'])
@@ -190,11 +199,14 @@ export default function Shell() {
   }, [])
 
   const [settingsSearchQuery, setSettingsSearchQuery] = useState('')
+  const [settingsTab, setSettingsTab] = useState<'account' | 'notifications' | 'cookies' | 'subscriptions'>('account')
   const [navExpanded, setNavExpanded] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [helpMenuOpen, setHelpMenuOpen] = useState(false)
   const [wipBannerVisible, setWipBannerVisible] = useState(true)
+  const [errorStateEnabled, setErrorStateEnabled] = useState(false)
   const [releaseSelectorOpen, setReleaseSelectorOpen] = useState(false)
+  const [hotspotVisible, setHotspotVisible] = useState(true)
 
   // URL-driven overlays: ?overlay=welcome|about|conventions|settings
   const settingsOpen = overlayParam === 'settings'
@@ -222,6 +234,15 @@ export default function Shell() {
   const { saveState: profileSaveState, triggerSave: triggerProfileSave } = useMockSave()
 
   const INTERFACE_LANGUAGES = ['Deutsch', 'English', 'Français', 'Italiano', 'Русский', 'Español', 'Nederlands', '日本語', '한국어', 'Português (Portugal)', 'Português (Brazil)', '中文 (simplified)', '中文 (traditional)']
+
+  const getNativeName = (code: string) => {
+    const base = code.split('-')[0]
+    try { return new Intl.DisplayNames([base], { type: 'language' }).of(base) ?? base } catch { return base }
+  }
+  const getLocalName = (code: string) => {
+    const base = code.split('-')[0]
+    try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(base) ?? base } catch { return base }
+  }
 
   const [interfaceLanguage, setInterfaceLanguage] = useState('English')
   const [_dateFormat, _setDateFormat] = useState('DD/MM/YYYY')
@@ -285,41 +306,43 @@ export default function Shell() {
     triggerProfileSave()
   }
 
-  const handleProfileCancel = () => {
-    setProfileTitle(savedProfile.profileTitle)
-    setFirstName(savedProfile.firstName)
-    setLastName(savedProfile.lastName)
-    setProfileEmail(savedProfile.profileEmail)
-    setPhone(savedProfile.phone)
-    setCompany(savedProfile.company)
-    setProfileDirty(false)
+  const guardedNavigate = (path: string) => {
+    if (dirtyState.isDirty()) {
+      pendingNavRef.current = path
+      setUnsavedChangesOpen(true)
+    } else {
+      navigate(path)
+    }
   }
 
   const handleNavChange = (e: CustomEvent) => {
     const text = (e.detail?.item as any)?.text as string
     const path = TEXT_TO_PATH[text]
-    if (path) navigate(path)
+    if (path) guardedNavigate(path)
   }
 
   const handleOuterNavChange = (e: CustomEvent) => {
     const text = (e.detail?.item as any)?.text as string
     if (text === 'Home') {
-      navigate('/home')
+      guardedNavigate('/home')
       setNavExpanded(false)
     } else if (text === 'Repository') {
-      navigate('/repository')
+      guardedNavigate('/repository')
       setNavExpanded(false)
     } else if (text === 'Reporting') {
-      navigate('/reporting')
+      guardedNavigate('/reporting')
       setNavExpanded(false)
     } else if (text === 'Process Consulting Agent') {
-      navigate('/process-consulting-agent')
+      guardedNavigate('/process-consulting-agent')
+      setNavExpanded(false)
+    } else if (text === 'Process Landscape') {
+      guardedNavigate('/process-landscape')
       setNavExpanded(false)
     } else if (text === 'Workspace Settings') {
-      navigate('/users')
+      guardedNavigate('/users')
       setNavExpanded(false)
-    } else if (text === 'Modeler [Beta]') {
-      navigate('/modeler')
+    } else if (text === 'Modeler') {
+      guardedNavigate('/modeler')
       setNavExpanded(false)
     }
   }
@@ -345,6 +368,7 @@ export default function Shell() {
   const isReporting = location.pathname === '/reporting'
   const isHome = location.pathname === '/home'
   const isPCA = location.pathname === '/process-consulting-agent'
+  const isProcessLandscape = location.pathname === '/process-landscape'
 
   const isModeler = /^\/modeler/.test(location.pathname)
   const isModelingAssetType = /^\/asset-types\/(bpmn|dmn|value-chain|nav-map)/.test(location.pathname)
@@ -367,14 +391,37 @@ export default function Shell() {
         {wipBannerVisible && (
           <div style={{
             height: '2.75rem',
-            background: 'var(--sapHighlightColor)',
+            background: 'var(--sapPositiveColor)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 3rem',
             position: 'relative',
           }}>
             <Text style={{ color: 'var(--sapHighlightTextColor)', textAlign: 'center', fontSize: 'var(--sapFontSmallSize)' }}>
-              <strong>Work in progress</strong> — placement and user experience are still being designed and may change.
+              This prototype reflects the Signavio suite after the{' '}
+              <a
+                href="https://app.mural.co/t/sapsignavio0592/m/sapsignavio0592/1783153659017/72282da78a3a0f35288890e240b49c491943e1de?sender=u66157a715d6c8ae5349d8165"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--sapHighlightTextColor)', fontWeight: 'bold' }}
+              >Explorer Sunset</a>
+              {' '}— Ready for implementation.
             </Text>
+            <div style={{ position: 'absolute', right: '3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Text style={{ color: 'var(--sapHighlightTextColor)', fontSize: 'var(--sapFontSmallSize)', whiteSpace: 'nowrap' }}>
+                Error State
+              </Text>
+              <Switch
+                checked={errorStateEnabled}
+                onChange={() => setErrorStateEnabled(v => !v)}
+                style={{
+                  '--ui5-switch-track-checked-bg': 'rgba(255,255,255,0.35)',
+                  '--ui5-switch-track-checked-border-color': 'rgba(255,255,255,0.6)',
+                  '--ui5-switch-handle-checked-bg': 'var(--sapHighlightTextColor)',
+                  '--ui5-switch-track-bg': 'rgba(0,0,0,0.2)',
+                  '--ui5-switch-handle-bg': 'rgba(255,255,255,0.7)',
+                } as React.CSSProperties}
+              />
+            </div>
             <Button
               design="Transparent"
               icon="decline"
@@ -480,6 +527,11 @@ export default function Shell() {
         onItemClick={(e: CustomEvent) => {
           const text = (e.detail?.item as any)?.text
           if (text === 'Settings') {
+            setSettingsTab('account')
+            setSettingsOpen(true)
+            setUserMenuOpen(false)
+          } else if (text === 'My Subscriptions') {
+            setSettingsTab('subscriptions')
             setSettingsOpen(true)
             setUserMenuOpen(false)
           } else if (text === 'About') {
@@ -489,9 +541,12 @@ export default function Shell() {
             setAudience('administrators')
           } else if (text === 'Modelers') {
             setAudience('modelers')
+          } else {
+            const matchedLang = contentLanguages.find(l => getNativeName(l.code) === text)
+            if (matchedLang) setActiveContentLanguage(matchedLang.code)
           }
         }}
-        onManageAccountClick={() => { setSettingsOpen(true); setUserMenuOpen(false) }}
+        onManageAccountClick={() => { setSettingsTab('account'); setSettingsOpen(true); setUserMenuOpen(false) }}
       >
         <UserMenuAccount
           slot="accounts"
@@ -502,11 +557,21 @@ export default function Shell() {
           selected
         />
         <UserMenuItem icon="action-settings" text="Settings" />
+        <UserMenuItem icon="bell" text="My Subscriptions" />
         <UserMenuItem icon="customer" text="Audience">
           <UserMenuItem icon={audience === 'administrators' ? 'accept' : undefined} text="Administrators" />
           <UserMenuItem icon={audience === 'modelers' ? 'accept' : undefined} text="Modelers" />
         </UserMenuItem>
-        <UserMenuItem icon="translate" text="Content Language" />
+        <UserMenuItem icon="translate" text="Content Language">
+            {contentLanguages.map(lang => (
+              <UserMenuItem
+                key={lang.code}
+                icon={activeContentLanguage === lang.code ? 'accept' : undefined}
+                text={getNativeName(lang.code)}
+                additionalText={getLocalName(lang.code)}
+              />
+            ))}
+          </UserMenuItem>
         <UserMenuItem icon="official-service" text="Legal information">
           <UserMenuItem icon="shield" text="Privacy Policy" />
           <UserMenuItem icon="document-text" text="Terms of Use" />
@@ -518,10 +583,23 @@ export default function Shell() {
         open={settingsOpen}
         headerText="Settings"
         className="ui5-content-density-compact"
-        onClose={() => setSettingsOpen(false)}
+        onClose={() => { setSettingsOpen(false); setSettingsTab('account') }}
         style={{ '--sapFontHeader4Size': 'var(--sapFontHeader5Size)' } as React.CSSProperties}
       >
-        <UserSettingsItem icon="employee" text="Account" headerText="Account" selected>
+        <UserSettingsItem icon="employee" text="Account" headerText="Account" selected={settingsTab === 'account'}>
+          {errorStateEnabled ? (
+            <UserSettingsView text="Account" selected>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem 0' }}>
+                <IllustratedMessage
+                  name="UnableToLoad"
+                  titleText="Your account information couldn't be loaded"
+                  subtitleText="There was a problem connecting to the service. Please try again or contact your administrator if the issue persists."
+                >
+                  <Button design="Emphasized" onClick={() => {}}>Retry</Button>
+                </IllustratedMessage>
+              </div>
+            </UserSettingsView>
+          ) : (
           <UserSettingsAccountView text="Account" selected>
             <UserMenuAccount
               slot="account"
@@ -530,7 +608,6 @@ export default function Shell() {
               avatarInitials="CW"
               avatarColorScheme="Accent6"
             />
-
             {/* Personal Data */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '2.5rem 0 0' }}>
               <Title level="H4">Personal Data</Title>
@@ -553,7 +630,7 @@ export default function Shell() {
                   </div>
                 </div>
                 <div>
-                  <Label for="profile-email">E-Mail</Label>
+                  <Label for="profile-email">Email</Label>
                   <Input id="profile-email" value={profileEmail} style={{ width: '100%' }}
                     onInput={e => setProfileField('profileEmail', (e.target as unknown as HTMLInputElement).value)} />
                 </div>
@@ -570,11 +647,12 @@ export default function Shell() {
                 <div>
                   <Label for="ui-language">Interface Language</Label>
                   <Select id="ui-language" style={{ width: '100%' }}
-                    onChange={e => { setInterfaceLanguage((e.detail.selectedOption as HTMLElement).textContent ?? interfaceLanguage) }}>
+                    onChange={e => { setInterfaceLanguage((e.detail.selectedOption as HTMLElement).textContent ?? interfaceLanguage); setProfileDirty(true) }}>
                     {INTERFACE_LANGUAGES.map(l => <Option key={l} selected={l === interfaceLanguage}>{l}</Option>)}
                   </Select>
                 </div>
               </div>
+              <Button design="Default" disabled={!profileDirty} style={{ alignSelf: 'stretch' }} onClick={handleProfileSave}>Save</Button>
             </div>
 
             {/* Security */}
@@ -592,7 +670,7 @@ export default function Shell() {
                     onInput={e => setNewPassword((e.target as unknown as HTMLInputElement).value)} />
                 </div>
                 <div>
-                  <Label for="retype-password">Retype new password</Label>
+                  <Label for="retype-password">Confirm new password</Label>
                   <Input id="retype-password" type="Password" value={retypePassword} style={{ width: '100%' }}
                     onInput={e => setRetypePassword((e.target as unknown as HTMLInputElement).value)} />
                 </div>
@@ -626,16 +704,11 @@ export default function Shell() {
               </div>
             </div>
 
-            {profileDirty && (
-              <Bar design="FloatingFooter" style={{ position: 'sticky', bottom: '1rem' }}>
-                <Button slot="endContent" design="Emphasized" onClick={handleProfileSave}>Save</Button>
-                <Button slot="endContent" onClick={handleProfileCancel}>Discard Changes</Button>
-              </Bar>
-            )}
             <Toast open={profileSaveState === 'saved'} placement="BottomCenter">Changes saved.</Toast>
           </UserSettingsAccountView>
+          )}
         </UserSettingsItem>
-        <UserSettingsItem icon="bell" text="Notifications" headerText="Notifications">
+        <UserSettingsItem icon="bell" text="Notifications" headerText="Notifications" selected={settingsTab === 'notifications'}>
           <UserSettingsView text="Notifications">
             <div style={{ padding: '0 0 1rem' }}>
               <div style={{ border: '1px solid var(--sapList_BorderColor)', borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden' }}>
@@ -660,7 +733,7 @@ export default function Shell() {
             </div>
           </UserSettingsView>
         </UserSettingsItem>
-        <UserSettingsItem icon="sys-find" text="Cookies" headerText="Cookies">
+        <UserSettingsItem icon="sys-find" text="Cookies" headerText="Cookies" selected={settingsTab === 'cookies'}>
           <UserSettingsView text="Cookies">
             <div style={{ padding: '0 0 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <Text>
@@ -675,7 +748,20 @@ export default function Shell() {
             </div>
           </UserSettingsView>
         </UserSettingsItem>
-        <UserSettingsItem icon="bell" text="Subscriptions" headerText="Subscriptions">
+        <UserSettingsItem icon="bell" text="Subscriptions" headerText="Subscriptions" selected={settingsTab === 'subscriptions'}>
+          {errorStateEnabled ? (
+            <UserSettingsView text="Subscriptions">
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem 0' }}>
+                <IllustratedMessage
+                  name="UnableToLoad"
+                  titleText="Your subscriptions couldn't be loaded"
+                  subtitleText="There was a problem connecting to the service. Please try again or contact your administrator if the issue persists."
+                >
+                  <Button design="Emphasized" onClick={() => {}}>Retry</Button>
+                </IllustratedMessage>
+              </div>
+            </UserSettingsView>
+          ) : (
           <UserSettingsView text="Subscriptions">
             {(() => {
               const sorted = [...subscriptions].sort((a, b) => {
@@ -798,6 +884,7 @@ export default function Shell() {
               )
             })()}
           </UserSettingsView>
+          )}
         </UserSettingsItem>
       </UserSettingsDialog>
 
@@ -826,7 +913,7 @@ export default function Shell() {
                 checked={currentRelease === r.id}
                 onChange={() => { setCurrentRelease(r.id); setReleaseSelectorOpen(false) }}
               />
-              <div style={{ paddingLeft: '2rem' }}>
+              <div>
                 <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                   {r.description}
                 </Text>
@@ -845,6 +932,7 @@ export default function Shell() {
         <SideNavigationItem icon="task" text="Tasks" />
         <SideNavigationGroup text="Browse and Manage" expanded>
           <SideNavigationItem icon="folder-blank" text="Repository" selected={isRepository} />
+          {isAvailable('R27Q2') && <SideNavigationItem icon="SAP-icons-v4/navigation-map" text="Process Landscape" selected={isProcessLandscape} />}
           <SideNavigationItem icon="SAP-icons-v4/company-memory" text="Company Memory" />
           <SideNavigationItem icon="SAP-icons-v4/rocket" text="Value Accelerator Library" />
         </SideNavigationGroup>
@@ -865,17 +953,17 @@ export default function Shell() {
         )}
         <SideNavigationGroup text="Model and Govern" expanded>
           <SideNavigationItem icon="SAP-icons-v4/process-manager" text="Process Manager" />
-          <SideNavigationItem icon="write-new" text="Modeler [Beta]" selected={isModeler} />
+          <SideNavigationItem icon="write-new" text="Modeler" selected={isModeler} />
           <SideNavigationItem icon="SAP-icons-v4/customer-journey" text="Journey Models" />
           <SideNavigationItem icon="SAP-icons-v4/bpmn-type-service" text="Governance Workflows" />
         </SideNavigationGroup>
         <SideNavigationItem slot="fixedItems" icon="lab" text="Lab Space" />
         {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="SAP-icons-v4/report" text="Reporting" selected={isReporting} />}
-        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA} />}
+        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape} />}
       </SideNavigation>
 
-      {isRepository || isSearch || isReporting || isHome || isPCA || isModeler || isModelingAssetType ? (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'clip', position: 'relative' }}>
+      {isRepository || isSearch || isReporting || isHome || isPCA || isModeler || isModelingAssetType || isProcessLandscape ? (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
           <Outlet />
         </div>
       ) : (
@@ -930,7 +1018,19 @@ export default function Shell() {
             </div>
           </div>
           <div style={{ flex: 1, overflow: 'hidden', background: 'var(--sapBackgroundColor)' }}>
-            <Outlet />
+            {errorStateEnabled ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                <IllustratedMessage
+                  name="UnableToLoad"
+                  titleText="Something went wrong"
+                  subtitleText="There was a problem connecting to the service. Please try again or contact your administrator if the issue persists."
+                >
+                  <Button design="Emphasized" onClick={() => {}}>Retry</Button>
+                </IllustratedMessage>
+              </div>
+            ) : (
+              <Outlet />
+            )}
           </div>
         </div>
       )}
@@ -949,6 +1049,30 @@ export default function Shell() {
       isOpen={showWelcome}
       onClose={() => { localStorage.setItem('welcomeDismissed', 'true'); clearOverlay() }}
     />
+    {hotspotVisible && <HotspotTooltip onDismiss={() => setHotspotVisible(false)} />}
+    <MessageBox
+      open={unsavedChangesOpen}
+      type="Warning"
+      titleText="Unsaved Changes"
+      actions={['Save', 'Discard Changes', 'Cancel']}
+      emphasizedAction="Save"
+      onClose={(action) => {
+        setUnsavedChangesOpen(false)
+        if (action === 'Save') {
+          dirtyState.save()
+          if (pendingNavRef.current) navigate(pendingNavRef.current)
+          pendingNavRef.current = null
+        } else if (action === 'Discard Changes') {
+          dirtyState.reset()
+          if (pendingNavRef.current) navigate(pendingNavRef.current)
+          pendingNavRef.current = null
+        } else {
+          pendingNavRef.current = null
+        }
+      }}
+    >
+      <div style={{ padding: '1rem' }}>You have unsaved changes. What would you like to do?</div>
+    </MessageBox>
     </>
   )
 }

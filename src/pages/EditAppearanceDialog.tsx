@@ -333,7 +333,7 @@ export default function EditAppearanceDialog({ open, itemId, itemLabel, initialV
 
       <Bar slot="footer" design="Footer" endContent={
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Button design="Emphasized" onClick={handleApply}>Save</Button>
+          <Button design="Emphasized" onClick={handleApply}>Apply</Button>
           <Button design="Transparent" onClick={onClose}>Cancel</Button>
         </div>
       } />

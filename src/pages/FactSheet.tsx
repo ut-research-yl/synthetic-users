@@ -1,11 +1,10 @@
 import { useState, useRef } from 'react'
 import {
   Select, Option, CheckBox, Text, Button, Icon, Label, Card,
-  MultiComboBox, MultiComboBoxItem, Input,
+  MultiComboBox, MultiComboBoxItem, Input, List, ListItemCustom,
 } from '@ui5/webcomponents-react'
 import PageHeader from '../components/PageHeader'
 import AudienceSectionBar from '../components/AudienceSectionBar'
-import { useDragReorder } from '../utils/useDragReorder'
 import SettingsPageLayout, { SettingsSection } from '../components/SettingsPageLayout'
 import s from '../components/SettingsPage.module.css'
 
@@ -153,7 +152,23 @@ export default function FactSheet() {
     setIsDirty(true)
   }
 
-  const drag = useDragReorder(sections, setSections, () => setIsDirty(true))
+  const handleMove = (e: CustomEvent) => {
+    const sourceId = (e.detail.source.element as HTMLElement).dataset.id ?? ''
+    const destId = (e.detail.destination.element as HTMLElement).dataset.id ?? ''
+    const placement = e.detail.destination.placement as 'Before' | 'After' | 'On'
+    if (!sourceId || !destId || placement === 'On') return
+    setSections(prev => {
+      const from = prev.findIndex(s => s.id === sourceId)
+      const to = prev.findIndex(s => s.id === destId)
+      if (from === -1 || to === -1) return prev
+      const next = [...prev]
+      const [item] = next.splice(from, 1)
+      const insertAt = placement === 'Before' ? (to > from ? to - 1 : to) : (to < from ? to + 1 : to)
+      next.splice(insertAt, 0, item)
+      return next
+    })
+    setIsDirty(true)
+  }
 
   const isExpandable = (s: Section) => !!(s.attributeFields?.length || s.isCustomCard)
 
@@ -169,7 +184,7 @@ export default function FactSheet() {
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <div>
             <CheckBox checked={factSheetEnabled} text="Enable fact sheet" onChange={() => { setFactSheetEnabled(v => !v); setIsDirty(true) }} style={{ marginLeft: '-0.5rem' }} />
-            <div style={{ paddingLeft: '1.5rem', marginTop: '0.125rem' }}>
+            <div style={{ marginTop: '0.125rem' }}>
               <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                 The fact sheet serves as a high-level view on a process diagram displaying essential key information about it at a glance. Users can navigate to it via the tab navigation in the diagram page header. The fact sheet is only available for Business Process Diagrams (BPMN 2.0).
               </Text>
@@ -177,7 +192,7 @@ export default function FactSheet() {
           </div>
           <div>
             <CheckBox checked={defaultView} disabled={!factSheetEnabled} text="Display fact sheet as default view" onChange={() => { setDefaultView(v => !v); setIsDirty(true) }} style={{ marginLeft: '-0.5rem' }} />
-            <div style={{ paddingLeft: '1.5rem', marginTop: '0.125rem' }}>
+            <div style={{ marginTop: '0.125rem' }}>
               <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                 The fact sheet is displayed as the initial page when a BPMN 2.0 is opened.
               </Text>
@@ -187,137 +202,139 @@ export default function FactSheet() {
       </Card>
 
       {factSheetEnabled && (
-        <SettingsSection title="Factsheet configuration" subtitle="Manage which content is displayed as part of the fact sheet and how it is sorted.">
-          <div className={s.rowNoPad} style={{ gap: 0 }}>
-            {sections.map((section, index) => (
-              <div
+        <SettingsSection title="Factsheet Configuration" subtitle="Manage which content is displayed as part of the fact sheet and how it is sorted.">
+          <List
+            onMoveOver={e => e.preventDefault()}
+            onMove={handleMove}
+          >
+            {sections.map((section) => (
+              <ListItemCustom
                 key={section.id}
-                draggable
-                onDragStart={drag.onDragStart(index)}
-                onDragOver={drag.onDragOver(index)}
-                onDragEnd={drag.onDragEnd}
-                style={{
-                  background: drag.dragging === index ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapGroup_ContentBackground)',
-                  borderTop: index === 0 ? 'none' : '1px solid var(--sapList_BorderColor)',
-                  userSelect: 'none',
-                }}
+                movable
+                data-id={section.id}
+                type="Inactive"
+                style={{ padding: 0 }}
               >
-                {/* Section header row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem' }}>
-                  <Icon
-                    name="horizontal-grip"
-                    style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }}
-                  />
-                  <Text style={{ flex: 1 }}>{section.title}</Text>
-                  <CheckBox checked={section.showOnPage} text="Show on page" onChange={() => toggleSection(section.id)} />
-                  <Button
-                    icon={section.expanded ? 'slim-arrow-up' : 'slim-arrow-down'}
-                    design="Transparent"
-                    onClick={() => toggleExpand(section.id)}
-                    style={{ flexShrink: 0, visibility: isExpandable(section) ? 'visible' : 'hidden' }}
-                  />
-                </div>
-
-                {/* Named section: attribute multi-selects */}
-                {section.expanded && section.attributeFields && (
-                  <div style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    {section.attributeFields.map(field => (
-                      <div key={field.id}>
-                        <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.5rem', fontSize: 'var(--sapFontSmallSize)' }}>
-                          {field.description}
-                        </Text>
-                        <MultiComboBox
-                          placeholder="Attribute"
-                          style={{ maxWidth: '28rem', width: '100%' }}
-                          onSelectionChange={(e: CustomEvent) => updateAttrField(section.id, field.id, getSelected(e))}
-                        >
-                          {AVAILABLE_ATTRIBUTES.map(attr => (
-                            <MultiComboBoxItem key={attr} text={attr} selected={field.selected.includes(attr)} />
-                          ))}
-                        </MultiComboBox>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Custom card editor */}
-                {section.isCustomCard && section.expanded && (
-                  <div style={{ padding: '1rem 1.5rem' }}>
-                    {/* Card title */}
-                    <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.75rem', fontSize: 'var(--sapFontSmallSize)' }}>
-                      Choose a title for the card.
-                    </Text>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', maxWidth: '36rem', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <Label for={`card-lang-${section.id}`}>Language</Label>
-                        <Select
-                          id={`card-lang-${section.id}`}
-                          onChange={e => updateCard(section.id, { cardLanguage: (e.detail.selectedOption as HTMLElement).textContent ?? '' })}
-                        >
-                          {LANGUAGES.map(l => <Option key={l} selected={l === section.cardLanguage}>{l}</Option>)}
-                        </Select>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <Label for={`card-name-${section.id}`}>Card Name</Label>
-                        <Input
-                          id={`card-name-${section.id}`}
-                          value={section.cardName}
-                          onInput={(e: CustomEvent) => updateCard(section.id, { cardName: (e.target as HTMLInputElement).value })}
-                        />
-                      </div>
+                <div style={{ pointerEvents: 'none', width: '100%' }}>
+                  {/* Section header row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem' }}>
+                    <Icon
+                      name="horizontal-grip"
+                      style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }}
+                    />
+                    <Text style={{ flex: 1 }}>{section.title}</Text>
+                    <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <CheckBox checked={section.showOnPage} text="Show on page" onChange={() => toggleSection(section.id)} />
+                      <Button
+                        icon={section.expanded ? 'slim-arrow-up' : 'slim-arrow-down'}
+                        design="Transparent"
+                        onClick={() => toggleExpand(section.id)}
+                        style={{ flexShrink: 0, visibility: isExpandable(section) ? 'visible' : 'hidden' }}
+                      />
                     </div>
-                    <Button design="Transparent" icon="add" style={{ marginBottom: '1.5rem' }}>Add Translation</Button>
+                  </div>
 
-                    {/* Card sections */}
-                    {section.cardSections?.map((cs, i) => (
-                      <div key={cs.id} style={{ marginTop: i > 0 ? '1.5rem' : 0 }}>
-                        <Text style={{ display: 'block', fontWeight: '700', marginBottom: '0.25rem' }}>Section {i + 1}</Text>
-                        <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.75rem', fontSize: 'var(--sapFontSmallSize)' }}>
-                          Choose a title for section {i + 1}.
-                        </Text>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', maxWidth: '36rem', marginBottom: '0.75rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <Label for={`cs-lang-${cs.id}`}>Language</Label>
-                            <Select
-                              id={`cs-lang-${cs.id}`}
-                              onChange={e => updateCardSection(section.id, cs.id, { language: (e.detail.selectedOption as HTMLElement).textContent ?? '' })}
-                            >
-                              {LANGUAGES.map(l => <Option key={l} selected={l === cs.language}>{l}</Option>)}
-                            </Select>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <Label for={`cs-name-${cs.id}`}>Section Name</Label>
-                            <Input
-                              id={`cs-name-${cs.id}`}
-                              value={cs.name}
-                              onInput={(e: CustomEvent) => updateCardSection(section.id, cs.id, { name: (e.target as HTMLInputElement).value })}
-                            />
-                          </div>
+                  {/* Named section: attribute multi-selects */}
+                  {section.expanded && section.attributeFields && (
+                    <div style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', pointerEvents: 'auto' }}>
+                      {section.attributeFields.map(field => (
+                        <div key={field.id}>
+                          <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.5rem', fontSize: 'var(--sapFontSmallSize)' }}>
+                            {field.description}
+                          </Text>
+                          <MultiComboBox
+                            placeholder="Attribute"
+                            style={{ maxWidth: '28rem', width: '100%' }}
+                            onSelectionChange={(e: CustomEvent) => updateAttrField(section.id, field.id, getSelected(e))}
+                          >
+                            {AVAILABLE_ATTRIBUTES.map(attr => (
+                              <MultiComboBoxItem key={attr} text={attr} selected={field.selected.includes(attr)} />
+                            ))}
+                          </MultiComboBox>
                         </div>
-                        <Button design="Transparent" icon="add" style={{ marginBottom: '1rem' }}>Add Translation</Button>
-                        <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.5rem', fontSize: 'var(--sapFontSmallSize)' }}>
-                          {cs.field.description}
-                        </Text>
-                        <MultiComboBox
-                          placeholder="Attribute"
-                          style={{ maxWidth: '28rem', width: '100%' }}
-                          onSelectionChange={(e: CustomEvent) => updateCardSectionAttr(section.id, cs.id, getSelected(e))}
-                        >
-                          {AVAILABLE_ATTRIBUTES.map(attr => (
-                            <MultiComboBoxItem key={attr} text={attr} selected={cs.field.selected.includes(attr)} />
-                          ))}
-                        </MultiComboBox>
-                      </div>
-                    ))}
-
-                    <div style={{ marginTop: '1.5rem' }}>
-                      <Button design="Transparent" icon="add" onClick={() => addCardSection(section.id)}>Add Section</Button>
+                      ))}
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+
+                  {/* Custom card editor */}
+                  {section.isCustomCard && section.expanded && (
+                    <div style={{ padding: '1rem 1.5rem', pointerEvents: 'auto' }}>
+                      {/* Card title */}
+                      <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.75rem', fontSize: 'var(--sapFontSmallSize)' }}>
+                        Choose a title for the card.
+                      </Text>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', maxWidth: '36rem', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <Label for={`card-lang-${section.id}`}>Language</Label>
+                          <Select
+                            id={`card-lang-${section.id}`}
+                            onChange={e => updateCard(section.id, { cardLanguage: (e.detail.selectedOption as HTMLElement).textContent ?? '' })}
+                          >
+                            {LANGUAGES.map(l => <Option key={l} selected={l === section.cardLanguage}>{l}</Option>)}
+                          </Select>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <Label for={`card-name-${section.id}`}>Card Name</Label>
+                          <Input
+                            id={`card-name-${section.id}`}
+                            value={section.cardName}
+                            onInput={(e: CustomEvent) => updateCard(section.id, { cardName: (e.target as HTMLInputElement).value })}
+                          />
+                        </div>
+                      </div>
+                      <Button design="Transparent" icon="add" style={{ marginBottom: '1.5rem' }}>Add Translation</Button>
+
+                      {/* Card sections */}
+                      {section.cardSections?.map((cs, i) => (
+                        <div key={cs.id} style={{ marginTop: i > 0 ? '1.5rem' : 0 }}>
+                          <Text style={{ display: 'block', fontWeight: '700', marginBottom: '0.25rem' }}>Section {i + 1}</Text>
+                          <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.75rem', fontSize: 'var(--sapFontSmallSize)' }}>
+                            Choose a title for section {i + 1}.
+                          </Text>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', maxWidth: '36rem', marginBottom: '0.75rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <Label for={`cs-lang-${cs.id}`}>Language</Label>
+                              <Select
+                                id={`cs-lang-${cs.id}`}
+                                onChange={e => updateCardSection(section.id, cs.id, { language: (e.detail.selectedOption as HTMLElement).textContent ?? '' })}
+                              >
+                                {LANGUAGES.map(l => <Option key={l} selected={l === cs.language}>{l}</Option>)}
+                              </Select>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <Label for={`cs-name-${cs.id}`}>Section Name</Label>
+                              <Input
+                                id={`cs-name-${cs.id}`}
+                                value={cs.name}
+                                onInput={(e: CustomEvent) => updateCardSection(section.id, cs.id, { name: (e.target as HTMLInputElement).value })}
+                              />
+                            </div>
+                          </div>
+                          <Button design="Transparent" icon="add" style={{ marginBottom: '1rem' }}>Add Translation</Button>
+                          <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.5rem', fontSize: 'var(--sapFontSmallSize)' }}>
+                            {cs.field.description}
+                          </Text>
+                          <MultiComboBox
+                            placeholder="Attribute"
+                            style={{ maxWidth: '28rem', width: '100%' }}
+                            onSelectionChange={(e: CustomEvent) => updateCardSectionAttr(section.id, cs.id, getSelected(e))}
+                          >
+                            {AVAILABLE_ATTRIBUTES.map(attr => (
+                              <MultiComboBoxItem key={attr} text={attr} selected={cs.field.selected.includes(attr)} />
+                            ))}
+                          </MultiComboBox>
+                        </div>
+                      ))}
+
+                      <div style={{ marginTop: '1.5rem' }}>
+                        <Button design="Transparent" icon="add" onClick={() => addCardSection(section.id)}>Add Section</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ListItemCustom>
             ))}
-          </div>
+          </List>
         </SettingsSection>
       )}
       </SettingsPageLayout>

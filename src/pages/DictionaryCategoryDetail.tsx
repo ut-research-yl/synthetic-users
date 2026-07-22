@@ -8,37 +8,20 @@ import {
 } from '@ui5/webcomponents-react'
 import { useWorkspace } from '../contexts/WorkspaceContext'
 import { ASSET_TYPES } from './AssetTypes'
+import { SUB_ELEMENTS } from './AssetTypeDetail'
 import AttributeEditorPanel, { makeDictCategoryGroups, type AttrGroup } from '../components/AttributeEditorPanel'
+import { CAT_TYPE_ICON } from './Repository/dictionaryData'
+import type { DictCategoryType } from '../contexts/WorkspaceContext'
+
+const ACCENT_TEXT_TO_BG: Record<string, string> = {
+  '#a45d00': '#fff3b8', '#aa0808': '#ffd0e7', '#ba066c': '#ffdbe7',
+  '#a100c2': '#ffdcf3', '#552cff': '#ded3ff', '#0057d2': '#d1efff',
+  '#046c7a': '#c2fcee', '#256f3a': '#ebf5cb', '#6c32a9': '#ddccf0',
+  '#556b82': '#eaecee',
+}
 import { AddDictionaryCategoryDialog } from '../components/AddDictionaryCategoryDialog'
 import { DeleteCategoryDialog } from '../components/DeleteCategoryDialog'
 
-const TYPE_ICON_MAP: Record<string, string> = {
-  'Organization':  'SAP-icons-v4/organization',
-  'Document':      'document',
-  'Activity':      'SAP-icons-v4/activity',
-  'Event':         'SAP-icons-v4/start-event',
-  'IT System':     'SAP-icons-v4/computer',
-  'Goal':          'goal',
-  'Requirement':   'checklist',
-  'Risk':          'SAP-icons-v4/risk',
-  'Control':       'SAP-icons-v4/overlay-risk-control',
-  'Others':        'SAP-icons-v4/process-manager',
-  'Processes':     'SAP-icons-v4/process-manager',
-}
-
-const TYPE_COLOR_MAP: Record<string, string> = {
-  'Organization':  '#5b738b',
-  'Document':      '#0057d2',
-  'Activity':      '#046c7a',
-  'Event':         '#d27700',
-  'IT System':     '#5d36ff',
-  'Goal':          '#256f3a',
-  'Requirement':   '#6c32a9',
-  'Risk':          '#aa0808',
-  'Control':       '#ba066c',
-  'Others':        '#a100c2',
-  'Processes':     '#046c7a',
-}
 
 export default function DictionaryCategoryDetail() {
   const { id = '' } = useParams<{ id: string }>()
@@ -109,13 +92,13 @@ export default function DictionaryCategoryDetail() {
           <div slot="heading" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
             <div aria-hidden="true" style={{
               width: '2rem', height: '2rem', borderRadius: '8px',
-              background: TYPE_COLOR_MAP[category.type] ?? '#5b738b', flexShrink: 0,
+              background: category.color, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               opacity: isEnabled ? 1 : 0.4,
             }}>
               <Icon
-                name={TYPE_ICON_MAP[category.type] ?? 'SAP-icons-v4/activity'}
-                style={{ color: '#fff', width: '1rem', height: '1rem', fontSize: '1rem' }}
+                name={CAT_TYPE_ICON[category.type as DictCategoryType] ?? 'SAP-icons-v4/process-manager'}
+                style={{ color: ACCENT_TEXT_TO_BG[category.color] ?? '#fff', width: '1rem', height: '1rem', fontSize: '1rem' }}
               />
             </div>
             <Title level="H3" style={{ fontSize: 'var(--sapObjectHeader_Title_FontSize)', opacity: isEnabled ? 1 : 0.4 }}>{category.name}</Title>
@@ -144,6 +127,7 @@ export default function DictionaryCategoryDetail() {
             ...ASSET_TYPES.filter(t => t.notation).map(t => ({ id: t.id, name: t.name })),
             ...dictCategories.map(c => ({ id: c.id, name: c.name })),
           ]}
+          modelingSubElements={Object.values(SUB_ELEMENTS).flat().filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i)}
         />
       </DynamicPage>
 

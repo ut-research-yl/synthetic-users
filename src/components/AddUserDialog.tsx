@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog, Button, Bar, Label,
-  TextArea,
+  MultiInput, Token,
   MultiComboBox, MultiComboBoxItem,
   CheckBox, Text, MessageStrip,
+  type MultiInputDomRef,
 } from '@ui5/webcomponents-react'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -25,7 +26,7 @@ interface Props {
 }
 
 export function AddUserDialog({ open, availableLicenses, availableGroups, onClose, onAdd }: Props) {
-  const [emailInput, setEmailInput] = useState('')
+  const multiInputRef = useRef<MultiInputDomRef>(null)
   const [emailInputInvalid, setEmailInputInvalid] = useState(false)
   const [emails, setEmails] = useState<string[]>([])
   const [licenses, setLicenses] = useState<string[]>([])
@@ -37,7 +38,7 @@ export function AddUserDialog({ open, availableLicenses, availableGroups, onClos
 
   useEffect(() => {
     if (!open) return
-    setEmailInput('')
+    if (multiInputRef.current) multiInputRef.current.value = ''
     setEmailInputInvalid(false)
     setEmails([])
     setLicenses([])
@@ -54,7 +55,7 @@ export function AddUserDialog({ open, availableLicenses, availableGroups, onClos
     const invalid = parts.some(p => !EMAIL_RE.test(p))
     if (fresh.length > 0) {
       setEmails(prev => [...prev, ...fresh])
-      setEmailInput('')
+      if (multiInputRef.current) multiInputRef.current.value = ''
       setEmailInputInvalid(false)
       return
     }
@@ -62,17 +63,17 @@ export function AddUserDialog({ open, availableLicenses, availableGroups, onClos
   }
 
   const handleEmailInput = (e: Event) => {
-    const val = (e.target as HTMLTextAreaElement).value
-    if (val.endsWith(',') || val.endsWith(';') || val.endsWith('\n')) {
+    const val = (e.target as HTMLInputElement).value ?? ''
+    if (val.endsWith(',') || val.endsWith(';')) {
       commitEmails(val.slice(0, -1))
     } else {
-      setEmailInput(val)
       if (emailInputInvalid && EMAIL_RE.test(val.trim())) setEmailInputInvalid(false)
     }
   }
 
   const handleEmailChange = (e: Event) => {
-    const val = (e.target as HTMLTextAreaElement).value.trim()
+    // fires on Enter or focusout — commit whatever is in the field
+    const val = (e.target as HTMLInputElement).value?.trim() ?? ''
     if (val) commitEmails(val)
   }
 
@@ -118,50 +119,30 @@ export function AddUserDialog({ open, availableLicenses, availableGroups, onClos
         {/* Email addresses */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           <Label required for="add-user-emails">Email Addresses</Label>
-          <TextArea
+          <MultiInput
+            ref={multiInputRef}
             id="add-user-emails"
             accessibleName="Email Addresses"
-            placeholder="name@company.com — separate with commas, semicolons, or new lines"
-            value={emailInput}
+            placeholder={emails.length === 0 ? 'name@company.com' : undefined}
             valueState={emailInputInvalid ? 'Negative' : 'None'}
-            rows={3}
-            growing
-            growingMaxRows={8}
             style={{ width: '100%' }}
             onInput={handleEmailInput}
             onChange={handleEmailChange}
           >
+            {emails.map(em => (
+              <Token
+                key={em}
+                text={em}
+                slot="tokens"
+                {...{ onDelete: () => setEmails(prev => prev.filter(e => e !== em)) } as any}
+              />
+            ))}
             {emailInputInvalid && (
-              <span slot="valueStateMessage">Enter valid email addresses.</span>
+              <span slot="valueStateMessage">Enter a valid email address.</span>
             )}
-          </TextArea>
-          {emails.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.25rem' }}>
-              {emails.map(em => (
-                <span key={em} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                  padding: '0.125rem 0.375rem',
-                  background: 'var(--sapButton_TokenBackground)',
-                  border: '1px solid var(--sapButton_TokenBorderColor)',
-                  borderRadius: '0.25rem',
-                  fontSize: 'var(--sapFontSmallSize)',
-                  color: 'var(--sapTextColor)',
-                }}>
-                  {em}
-                  <button
-                    onClick={() => setEmails(prev => prev.filter(e => e !== em))}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                      lineHeight: 1, color: 'var(--sapContent_LabelColor)', fontSize: '0.75rem',
-                    }}
-                    aria-label={`Remove ${em}`}
-                  >✕</button>
-                </span>
-              ))}
-            </div>
-          )}
+          </MultiInput>
           <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
-            Add one or more addresses separated by commas, semicolons, or new lines.
+            Separate addresses with commas, semicolons, or Enter.
           </Text>
         </div>
 
@@ -216,7 +197,7 @@ export function AddUserDialog({ open, availableLicenses, availableGroups, onClos
               checked={skipInviteEmail}
               onChange={e => setSkipInviteEmail((e.target as unknown as { checked: boolean }).checked)}
             />
-            <div style={{ paddingLeft: '2rem' }}>
+            <div>
               <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                 No invitation email is sent. A change-password email will still be delivered.
               </Text>
@@ -229,7 +210,7 @@ export function AddUserDialog({ open, availableLicenses, availableGroups, onClos
               checked={skipPasswordEmail}
               onChange={e => setSkipPasswordEmail((e.target as unknown as { checked: boolean }).checked)}
             />
-            <div style={{ paddingLeft: '2rem' }}>
+            <div>
               <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                 No email is sent at all. Without SSO, users must use "Forgot password" to sign in for the first time.
               </Text>

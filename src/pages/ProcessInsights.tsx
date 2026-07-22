@@ -221,7 +221,7 @@ export default function ProcessInsights() {
       >
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <Text>
-            Are you sure you want to disconnect <strong>{disconnectTarget?.name}</strong>? Users will no longer be able
+            Do you want to disconnect <strong>{disconnectTarget?.name}</strong>? Users will no longer be able
             to view process flows from the connected SAP Signavio Process Insights tenant.
           </Text>
           <Text style={{ color: 'var(--sapCriticalColor)', fontSize: 'var(--sapFontSmallSize)' }}>

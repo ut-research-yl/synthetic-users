@@ -182,25 +182,6 @@ const TREE_DATA: ResourceNode[] = [
     ]),
   },
   {
-    id: 'private-modeling', name: 'Private Modeling Files', objectType: 'Folder' as never, typeName: 'Folder',
-    subRows: sortSubRows([
-      {
-        id: 'pm-processes', name: 'My Processes', objectType: 'Folder' as never, typeName: 'Folder',
-        subRows: sortSubRows([
-          { id: 'pm-onboarding', name: 'Onboarding Drafts', objectType: 'Folder' as never, typeName: 'Folder' },
-          { id: 'pm-approvals', name: 'Approval Workflows', objectType: 'Folder' as never, typeName: 'Folder' },
-        ]),
-      },
-      {
-        id: 'pm-sandbox', name: 'Sandbox', objectType: 'Folder' as never, typeName: 'Folder',
-        subRows: sortSubRows([
-          { id: 'pm-experiments', name: 'Experiments', objectType: 'Folder' as never, typeName: 'Folder' },
-        ]),
-      },
-      { id: 'pm-draft-order', name: 'Draft – Order Process', objectType: 'Process Model' as never, typeName: 'Process Model' },
-    ]),
-  },
-  {
     id: 'objectives', name: 'Objectives', objectType: 'Business Goal' as never, typeName: '',
     subRows: sortSubRows([
       { id: 'obj-reduce-cost', name: 'Reduce Operational Cost', objectType: 'Business Goal' as never, typeName: 'Objective' },
@@ -457,7 +438,7 @@ function LimitAccessDialog({ open, folderName, items, preSelected, onLimit, onCl
     <Dialog open={open} onClose={onClose} style={{ width: '800px' }} headerText={`Limit Access Rights for ${isFolder ? 'Folder ' : ''}${folderName}`}>
       <div style={{ padding: '16px 16px 0' }}>
         <MessageStrip design="Information" hideCloseButton>
-          Limiting allows you to remove the access right from {isFolder ? <>the folder <strong>{folderName}</strong></> : <strong>{folderName}</strong>} and limit it to the below selected items for the {entryIsGroup ? 'user group' : 'user'} <strong>{entryName}</strong>.
+          Limiting allows you to remove the access right from {isFolder ? <>the folder <strong>{folderName}</strong></> : <strong>{folderName}</strong>} and limit access to the items selected below for the {entryIsGroup ? 'user group' : 'user'} <strong>{entryName}</strong>.
         </MessageStrip>
       </div>
       <div style={{ marginTop: '16px' }}>
@@ -524,8 +505,8 @@ function LimitAccessDialog({ open, folderName, items, preSelected, onLimit, onCl
         <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <Text>
             {isFolder
-              ? <>Are you sure you want to remove the access from the folder <strong>{folderName}</strong> and limit it to the selected items for {entryIsGroup ? 'user group' : 'user'} <strong>{entryName}</strong>?</>
-              : <>Are you sure you want to remove the access from <strong>{folderName}</strong> and limit it to the selected items for {entryIsGroup ? 'user group' : 'user'} <strong>{entryName}</strong>?</>
+              ? <>Do you want to remove the access from the folder <strong>{folderName}</strong> and limit it to the selected items for {entryIsGroup ? 'user group' : 'user'} <strong>{entryName}</strong>?</>
+              : <>Do you want to remove the access from <strong>{folderName}</strong> and limit it to the selected items for {entryIsGroup ? 'user group' : 'user'} <strong>{entryName}</strong>?</>
             }
           </Text>
           {isDictionary && DICT_REMOVE_WARNING}
@@ -1064,8 +1045,8 @@ export default function ContentAccess() {
         <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <Text>
             {removeConfirm?.isGroup
-              ? `Are you sure you want to remove the access from the user group "${removeConfirm?.name}"?`
-              : `Are you sure you want to remove the access from the user "${removeConfirm?.name}"?`
+              ? `Do you want to remove the access from the user group "${removeConfirm?.name}"?`
+              : `Do you want to remove the access from the user "${removeConfirm?.name}"?`
             }
           </Text>
           {isDictionaryNode && DICT_REMOVE_WARNING}
