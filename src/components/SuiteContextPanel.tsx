@@ -104,6 +104,33 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
     )
   }
 
+  // element-detail with nothing selected — show diagram attributes as fallback
+  if (activePanel === 'element-detail') {
+    const asset = makeMockAsset(assetId)
+    return (
+      <div className={s.panelContent}>
+        <AssetInfoPanel
+          selectedAsset={null}
+          selectedDictEntry={null}
+          dictCategories={[]}
+          externalSelectedAsset={asset}
+          pageTitle={asset.name}
+          selectionCount={0}
+          zoomViewport={null}
+          subscriptions={{}}
+          onSubscriptionChange={() => {}}
+          onThumbnailEnter={() => {}}
+          onThumbnailLeave={() => {}}
+          onThumbnailMove={() => {}}
+          onClose={() => onTogglePanel(null)}
+          onOpenModelDetail={() => {}}
+          hideHeaderActions
+          hideThumbnailAndRevision
+        />
+      </div>
+    )
+  }
+
   // diagram-attributes uses the existing AssetInfoPanel which owns its own SigRightSidePanel
   if (activePanel === 'diagram-attributes') {
     const asset = makeMockAsset(assetId)

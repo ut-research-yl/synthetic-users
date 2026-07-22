@@ -288,10 +288,8 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
               </div>
               <div style={{ width: '32rem', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--sapPageSection_Background, #f5f6f7)', borderRadius: '0.75rem', marginBottom: '1rem' }}>
                 {!selectedSearchWidget ? (
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', textAlign: 'center', gap: '0.5rem' }}>
-                    <svg width="120" height="96" viewBox="0 0 120 96" fill="none"><rect x="10" y="20" width="100" height="66" rx="6" fill="#e8ecf0"/><rect x="18" y="44" width="16" height="34" rx="2" fill="#b0bec5"/><rect x="42" y="32" width="16" height="46" rx="2" fill="#b0bec5"/><rect x="66" y="38" width="16" height="40" rx="2" fill="#b0bec5"/><rect x="90" y="50" width="16" height="28" rx="2" fill="#b0bec5"/></svg>
-                    <Text style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: 700, color: 'var(--sapTextColor)' } as React.CSSProperties}>No widget selected</Text>
-                    <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select a widget from the list to preview it</Text>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <IllustratedMessage name="NoData" titleText="No widget selected" subtitleText="Select a widget from the list to preview it" />
                   </div>
                 ) : (
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.5rem', overflow: 'hidden' }}>

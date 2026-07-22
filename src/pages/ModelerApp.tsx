@@ -1231,11 +1231,21 @@ function BpmnCanvas({
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
     const hit = hitTestElement(svgPt.x, svgPt.y, elementsRef.current)
     if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'li-shape' || hit.type === 'data' || hit.type === 'artifact')) {
-      if (!selectedIds.has(hit.id)) {
-        setSelectedIds(new Set([hit.id]))
+      if (e.shiftKey) {
+        // Shift+click: toggle element in/out of selection
+        setSelectedIds(prev => {
+          const next = new Set(prev)
+          if (next.has(hit.id)) next.delete(hit.id)
+          else next.add(hit.id)
+          return next
+        })
+      } else {
+        if (!selectedIds.has(hit.id)) {
+          setSelectedIds(new Set([hit.id]))
+        }
+        onElementSelect?.(hit.id)
+        dragState.current = { id: hit.id, startX: e.clientX, startY: e.clientY, origCx: hit.cx, origCy: hit.cy }
       }
-      onElementSelect?.(hit.id)
-      dragState.current = { id: hit.id, startX: e.clientX, startY: e.clientY, origCx: hit.cx, origCy: hit.cy }
     } else if (!hit) {
       setSelectedIds(new Set())
       onElementSelect?.(null)
@@ -1245,8 +1255,17 @@ function BpmnCanvas({
       panState.current = { startX: e.clientX, startY: e.clientY, origPanX: panX, origPanY: panY }
       setRubberBand({ x1: svgPt.x, y1: svgPt.y, x2: svgPt.x, y2: svgPt.y })
     } else {
-      setSelectedIds(new Set([hit.id]))
-      onElementSelect?.(hit.id)
+      if (e.shiftKey) {
+        setSelectedIds(prev => {
+          const next = new Set(prev)
+          if (next.has(hit.id)) next.delete(hit.id)
+          else next.add(hit.id)
+          return next
+        })
+      } else {
+        setSelectedIds(new Set([hit.id]))
+        onElementSelect?.(hit.id)
+      }
     }
   }
 
@@ -1734,7 +1753,7 @@ function BpmnCanvas({
 
         {/* BPMN elements */}
         {elements.map(el => {
-          const selected = selectedIds.has(el.id)
+          const selected = selectedIds.has(el.id) && selectedIds.size === 1
           const hovered = el.id === hoveredId && !selected
           const isDropTarget = el.id === dropTargetId
           const hw = el.hw, hh = el.hh
@@ -1902,7 +1921,7 @@ function BpmnCanvas({
               onLiShapeSelect?.(ls)
             }}
           >
-            {selectedIds.has(ls.id) && (() => {
+            {selectedIds.has(ls.id) && selectedIds.size === 1 && (() => {
               const sw = 2 / (zoom / 100)
               if (ls.shapeType === 'Value') {
                 const MOCK: Record<string, string> = {
@@ -1954,6 +1973,39 @@ function BpmnCanvas({
             }
           })
           return lines
+        })()}
+
+        {/* Group selection bounding box */}
+        {selectedIds.size > 1 && (() => {
+          const pad = 1 / (zoom / 100)
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+          elementsRef.current.forEach(el => {
+            if (!selectedIds.has(el.id)) return
+            minX = Math.min(minX, el.cx - el.hw)
+            maxX = Math.max(maxX, el.cx + el.hw)
+            minY = Math.min(minY, el.cy - el.hh)
+            maxY = Math.max(maxY, el.cy + el.hh)
+          })
+          liShapesRef.current.forEach(ls => {
+            if (!selectedIds.has(ls.id)) return
+            const r = 17
+            minX = Math.min(minX, ls.cx - r); maxX = Math.max(maxX, ls.cx + r)
+            minY = Math.min(minY, ls.cy - r); maxY = Math.max(maxY, ls.cy + r)
+          })
+          if (!isFinite(minX)) return null
+          const x = minX - pad, y = minY - pad
+          const w = (maxX - minX) + pad * 2, h = (maxY - minY) + pad * 2
+          const dr = 4 / (zoom / 100)
+          const fontSize = 12 / (zoom / 100)
+          const corners: [number, number][] = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]
+          return (
+            <g style={{ pointerEvents: 'none' }}>
+              <rect x={x} y={y} width={w} height={h} fill="var(--sapHighlightColor)" fillOpacity={0.05} stroke="var(--sapHighlightColor)" strokeWidth={2 / (zoom / 100)} />
+              {corners.map(([cx, cy], i) => (
+                <circle key={i} cx={cx} cy={cy} r={dr} fill="white" stroke="var(--sapHighlightColor)" strokeWidth={2 / (zoom / 100)} />
+              ))}
+            </g>
+          )
         })()}
 
         {/* Rubber-band selection rect */}

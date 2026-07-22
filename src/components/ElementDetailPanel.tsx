@@ -275,7 +275,6 @@ export default function ElementDetailPanel({ elementId, onClose }: Props) {
           >
             <Tab text="Attributes" selected={activeTab === 'Attributes'} />
             <Tab text="Relations"  selected={activeTab === 'Relations'}  />
-            <Tab text="Comments"   selected={activeTab === 'Comments'}   />
           </TabContainer>
         </div>
       </div>
@@ -346,11 +345,6 @@ export default function ElementDetailPanel({ elementId, onClose }: Props) {
       {activeTab === 'Relations' && (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
           <Text>No relations</Text>
-        </div>
-      )}
-      {activeTab === 'Comments' && (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
-          <Text>No comments</Text>
         </div>
       )}
     </div>

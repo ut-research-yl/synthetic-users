@@ -840,7 +840,7 @@ export default function AssetInfoPanel({
       })()}
     </Tab>,
     <Tab text="Relations" key="relations"><RelationsTab /></Tab>,
-    <Tab text="Comments" key="comments"><CommentsTab /></Tab>,
+
     <Tab text="Activity" key="activity"><ActivityFeed assetType={selectedAsset.type} /></Tab>,
   ] : selectedDictEntry ? [
     <Tab text="Attributes" key="attributes">
@@ -997,7 +997,7 @@ export default function AssetInfoPanel({
           </div>
         </Tab>,
         <Tab text="Details" key="details"><div /></Tab>,
-        <Tab text="Comments" key="comments"><CommentsTab /></Tab>,
+    
       ]
     }
     return [
@@ -1010,8 +1010,9 @@ export default function AssetInfoPanel({
         return <ModelAttributesTab description={externalSelectedAsset.description} />
       })()}
     </Tab>,
+    <Tab text="Details" key="details"><div /></Tab>,
     <Tab text="Relations" key="relations"><RelationsTab /></Tab>,
-    <Tab text="Comments" key="comments"><CommentsTab /></Tab>,
+
     <Tab text="Activity" key="activity"><ActivityFeed assetType={externalSelectedAsset.objectType} /></Tab>,
   ]
   })() : []

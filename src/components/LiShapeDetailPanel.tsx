@@ -4,6 +4,7 @@ import { SigChipV2, SigInlineEdit } from '@signavio/sap-signavio-uixtension'
 import type { LiShape } from '../pages/ModelerApp'
 import ConnectWidgetDialog from './ConnectWidgetDialog'
 import ConnectWidgetSearchDialog from './ConnectWidgetSearchDialog'
+import { RelationsTab } from '../pages/Repository/RelationsTab'
 
 const WIDGET_MOCK: Record<string, { value: string; label: string; trend: string; trendColor: string; chartSvg: string }> = {
   'value-D-001': { value: '4,218', label: 'Total Cases',      trend: '↑ 12.3%', trendColor: '#27a65a', chartSvg: '<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="200" y="75" text-anchor="middle" font-size="52" font-weight="700" fill="#0064d9" font-family="72,Arial">4,218</text><text x="200" y="105" text-anchor="middle" font-size="13" fill="#556b82" font-family="72,Arial">Total Cases</text><line x1="80" y1="130" x2="320" y2="130" stroke="#e8ecf0" stroke-width="1.5"/><rect x="148" y="148" width="12" height="12" rx="2" fill="#27a65a"/><text x="166" y="159" font-size="13" fill="#27a65a" font-family="72,Arial" font-weight="600">↑ 12.3%</text><text x="200" y="185" text-anchor="middle" font-size="11" fill="#8c9bab" font-family="72,Arial">vs. last period</text></svg>' },
@@ -49,7 +50,7 @@ const SHAPE_TYPE_ICON: Record<string, string> = {
   'Sentiment':     'SAP-icons-v4/emotion-positive',
 }
 
-const STATUS_OPTIONS = ['Green', 'Yellow', 'Red', 'No data']
+const STATUS_OPTIONS = ['No data', 'Green', 'Yellow', 'Red']
 
 const WIDGET_ID_TO_CHART_ICON: Record<string, string> = {
   'value':      'SAP-icons-v4/number',
@@ -128,7 +129,6 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
           >
             <Tab text="Attributes" selected={activeTab === 'Attributes'} />
             <Tab text="Relations"  selected={activeTab === 'Relations'}  />
-            <Tab text="Comments"   selected={activeTab === 'Comments'}   />
           </TabContainer>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
                   </div>
                 </>
               ) : (
-                <Button design="Default" icon="add" style={{ alignSelf: 'flex-start' } as React.CSSProperties} onClick={() => setConnectDialogOpen(true)} />
+                <Button design="Default" icon="add" style={{ alignSelf: 'flex-start' } as React.CSSProperties} onClick={() => setSearchDialogOpen(true)} />
               )}
             </div>
 
@@ -265,14 +265,8 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
       )}
 
       {activeTab === 'Relations' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-          <Text style={{ color: 'var(--sapContent_LabelColor)' }}>No relations</Text>
-        </div>
-      )}
-
-      {activeTab === 'Comments' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-          <Text style={{ color: 'var(--sapContent_LabelColor)' }}>No comments</Text>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <RelationsTab />
         </div>
       )}
 

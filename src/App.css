@@ -507,3 +507,8 @@ ui5-wizard-step {
 ui5-illustrated-message {
   --_ui5_illustrated_message_padding: 1rem 1rem 0 1rem;
 }
+
+/* Remove diagram-attributes panel sub-header divider line */
+[class*="subHeaderSlot"] {
+  display: none;
+}
