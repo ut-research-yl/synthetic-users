@@ -7,7 +7,8 @@ const STORAGE_KEY = 'releaseScope'
 
 function loadRelease(): Release {
   const stored = localStorage.getItem(STORAGE_KEY)
-  return (stored as Release) ?? DEFAULT_RELEASE
+  if (stored === 'Vision' || stored === 'MVP') return stored
+  return DEFAULT_RELEASE
 }
 
 interface ReleaseContextType {

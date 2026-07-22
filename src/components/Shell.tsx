@@ -902,14 +902,14 @@ export default function Shell() {
 
       <SideNavigation slot="sideContent" onSelectionChange={handleOuterNavChange}>
         <SideNavigationItem icon="home" text="Home" selected={isHome} />
-        {isAvailable('R27Q1') && <SideNavigationItem icon="SAP-icons-v4/pca" text="Process Consulting Agent" selected={isPCA} />}
+        {isAvailable('MVP') && <SideNavigationItem icon="SAP-icons-v4/pca" text="Process Consulting Agent" selected={isPCA} />}
         <SideNavigationItem icon="SAP-icons-v4/news" text="Newsfeed" />
         <SideNavigationItem icon="unfavorite" text="Favorites" />
         <SideNavigationItem icon="history" text="Recent" />
         <SideNavigationItem icon="task" text="Tasks" />
         <SideNavigationGroup text="Browse and Manage" expanded>
           <SideNavigationItem icon="folder-blank" text="Repository" selected={isRepository} />
-          {isAvailable('R27Q2') && <SideNavigationItem icon="SAP-icons-v4/navigation-map" text="Process Landscape" selected={isProcessLandscape} />}
+          {isAvailable('Vision') && <SideNavigationItem icon="SAP-icons-v4/navigation-map" text="Process Landscape" selected={isProcessLandscape} />}
           <SideNavigationItem icon="SAP-icons-v4/company-memory" text="Company Memory" />
           <SideNavigationItem icon="SAP-icons-v4/rocket" text="Value Accelerator Library" />
         </SideNavigationGroup>
