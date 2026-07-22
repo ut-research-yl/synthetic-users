@@ -15,10 +15,11 @@ const QUICK_ITEMS: QuickItem[] = [
   { title: 'Association',            type: 'association',          icon: 'SAP-icons-v4/association-undirected' },
   { title: 'XOR Gateway',            type: 'xor-gateway',          subtype: 'Exclusive',           icon: 'SAP-icons-v4/exclusive-xor-gateway' },
   { title: 'IT System',              type: 'it-system',            subtype: 'ITSystem',            icon: 'SAP-icons-v4/computer' },
+  { title: 'End Event',              type: 'end-event',            subtype: 'End',                 icon: 'SAP-icons-v4/end-event' },
   { title: 'Message Flow',           type: 'message-flow',         icon: 'SAP-icons-v4/association-unidirectional' },
   { title: 'Text Annotation',        type: 'text-annotation',      subtype: 'TextAnnotation',      icon: 'SAP-icons-v4/text-annotation' },
   { title: 'Data Object',            type: 'data-object',          subtype: 'DataObject',          icon: 'document' },
-  { title: 'End Event',              type: 'end-event',            subtype: 'End',                 icon: 'SAP-icons-v4/end-event' },
+  { title: 'Start Event',            type: 'start-event',          subtype: 'Start',               icon: 'SAP-icons-v4/start-event' },
   { title: 'Pool',                   type: 'pool',                 icon: 'SAP-icons-v4/pool-lane' },
   { title: 'Expanded Subprocess',    type: 'expanded-subprocess',  subtype: 'ExpandedSubprocess',  icon: 'SAP-icons-v4/collapsed-subprocess' },
 ]
