@@ -246,6 +246,7 @@ type Props = {
   onEmbed?: () => void
   hideHeaderActions?: boolean
   hideRevisionInfo?: boolean
+  hideThumbnailAndRevision?: boolean
   isFavorite?: boolean
   onToggleFavorite?: () => void
   isDictView?: boolean
@@ -537,6 +538,7 @@ export default function AssetInfoPanel({
   onProcessAtomSaved,
   onDictEntrySaved,
   hideRevisionInfo,
+  hideThumbnailAndRevision,
   isFavorite,
   onToggleFavorite,
   isDictView,
@@ -658,7 +660,7 @@ export default function AssetInfoPanel({
   ) : externalSelectedAsset && externalSelectedAsset.objectType !== 'Process Atoms' && externalSelectedAsset.objectType !== 'Initiative' && externalSelectedAsset.objectType !== 'Business Goal' && externalSelectedAsset.objectType !== 'Dashboard' && externalSelectedAsset.objectType !== 'Dictionary Entry' ? (
     <>
       <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--sapPageHeader_BorderColor)', marginBottom: '0.75rem' }}>
-        <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />
+        {!hideThumbnailAndRevision && <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />}
       </div>
       {(() => {
         const isPublished = externalSelectedAsset.chips.some(c => c.value === 'Published')
@@ -667,13 +669,14 @@ export default function AssetInfoPanel({
           const icon = status === 'Published' ? 'SAP-icons-v4/published' : status === 'Draft' ? 'write-new-document' : status === 'On Track' ? 'trend-up' : status === 'At Risk' ? 'message-warning' : status === 'Modified' ? 'SAP-icons-v4/published-changed' : undefined
           return { value: status, design, icon }
         }
-        const rows: { label: string; value: string; chips?: { value: string; design: string; icon?: string }[] }[] = [
+        const allRows: { label: string; value: string; chips?: { value: string; design: string; icon?: string }[] }[] = [
           { label: 'Latest Revision:', value: externalSelectedAsset.version ?? '1.0', chips: externalSelectedAsset.chips.slice(0, 1).map(c => chipFor2(c.value)) },
           { label: 'Published Revision:', value: isPublished ? (externalSelectedAsset.version ?? '—') : '—', chips: isPublished ? [chipFor2('Published')] : [] },
           { label: 'Published:', value: externalSelectedAsset.lastPublished ? `${externalSelectedAsset.lastPublished} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
           { label: 'Changed:', value: externalSelectedAsset.lastUpdateDate ? `${externalSelectedAsset.lastUpdateDate} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
           { label: 'Created:', value: (externalSelectedAsset as any).createdDate ? `${(externalSelectedAsset as any).createdDate} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
         ]
+        const rows = hideThumbnailAndRevision ? allRows.filter(r => r.label !== 'Latest Revision:' && r.label !== 'Published Revision:' && r.label !== 'Published:' && r.label !== 'Changed:' && r.label !== 'Created:') : allRows
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', paddingBottom: '0.5rem' }}>
             {rows.map(row => (

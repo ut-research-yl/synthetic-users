@@ -108,6 +108,7 @@ import '@signavio/icons/dist/source-data.js'
 // Re-register after UI5 icons to win the SAP-icons-v4/group name conflict
 import '@signavio/icons/dist/group.js'
 import '@ui5/webcomponents-icons/dist/full-screen.js'
+import '@signavio/icons/dist/zoom-fit.js'
 import '@ui5/webcomponents-icons/dist/detail-view.js'
 import '@ui5/webcomponents-icons/dist/document-text.js'
 import '@ui5/webcomponents-icons/dist/write-new.js'
