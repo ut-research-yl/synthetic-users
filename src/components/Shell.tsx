@@ -342,7 +342,7 @@ export default function Shell() {
       guardedNavigate('/users')
       setNavExpanded(false)
     } else if (text === 'Modeler') {
-      guardedNavigate('/modeler')
+      navigate('/modeler')
       setNavExpanded(false)
     }
   }
@@ -930,7 +930,7 @@ export default function Shell() {
         )}
         <SideNavigationGroup text="Model and Govern" expanded>
           <SideNavigationItem icon="SAP-icons-v4/process-manager" text="Process Manager" />
-          <SideNavigationItem icon="write-new" text="Modeler" selected={isModeler} />
+          <SideNavigationItem icon="write-new" text="Modeler" selected={isModeler} onClick={() => { navigate('/modeler') }} />
           <SideNavigationItem icon="SAP-icons-v4/customer-journey" text="Journey Models" />
           <SideNavigationItem icon="SAP-icons-v4/bpmn-type-service" text="Governance Workflows" />
         </SideNavigationGroup>

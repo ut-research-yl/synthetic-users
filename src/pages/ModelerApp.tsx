@@ -549,14 +549,31 @@ function EventShape({ el, selected, hovered, ringW }: { el: CanvasElement; selec
   )
 }
 
-function SystemShape({ el, selected, hovered, ringW }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number }) {
+function SystemShape({ el, selected, hovered, ringW, editing }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; editing?: boolean }) {
   const x = el.cx - el.hw, y = el.cy - el.hh
   const w = el.hw * 2, h = el.hh * 2
   return (
     <g>
       {hovered && !selected && <rect x={x - ringW / 2 - 0.5} y={y - ringW / 2 - 0.5} width={w + ringW + 1} height={h + ringW + 1} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} style={{ pointerEvents: 'none' }} />}
       <rect x={x} y={y} width={w} height={h} rx={8} fill="#d1efff" stroke={selected ? 'var(--sapHighlightColor)' : 'none'} strokeWidth={selected ? 2 : 0} />
-      <text x={el.cx} y={el.cy + el.hh + 14} fontSize={11} fill="#0057D2" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>
+      {!editing && (() => {
+        const words = el.name.split(' ')
+        const mid = Math.ceil(words.length / 2)
+        const line1 = words.slice(0, mid).join(' ')
+        const line2 = words.length > 2 ? words.slice(mid).join(' ') : null
+        const pillW = Math.max(line1.length, line2?.length ?? 0) * 6.2 + 16
+        const pillH = line2 ? 32 : 20
+        const pillY = el.cy + el.hh + 4
+        return (
+          <g>
+            <rect x={el.cx - pillW / 2} y={pillY} width={pillW} height={pillH} rx={8} fill="#f5f6f7" />
+            {line2 ? <>
+              <text x={el.cx} y={pillY + 12} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line1}</text>
+              <text x={el.cx} y={pillY + 25} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line2}</text>
+            </> : <text x={el.cx} y={pillY + 14} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>}
+          </g>
+        )
+      })()}
       {selected && <rect x={x - ringW / 2 - 0.5} y={y - ringW / 2 - 0.5} width={w + ringW + 1} height={h + ringW + 1} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />}
     </g>
   )
@@ -870,7 +887,7 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
 
 // ── LI connector line ─────────────────────────────────────────────────────────
 
-function ArtifactShape({ el, selected, hovered, ringW }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number }) {
+function ArtifactShape({ el, selected, hovered, ringW, editing }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; editing?: boolean }) {
   const { cx, cy } = el
   const w = el.hw * 2, h = el.hh * 2
   const x = cx - el.hw, y = cy - el.hh
@@ -905,12 +922,20 @@ function ArtifactShape({ el, selected, hovered, ringW }: { el: CanvasElement; se
     const ic = 'var(--sapAvatar_6_TextColor)'
     const r = el.hw  // 28.5
     const scale = 0.98
+    const pillW = Math.max(el.name.length * 6.2 + 16, 60)
+    const pillY = cy + r + 4
     return (
       <g>
         <rect x={cx - r} y={cy - r} width={r * 2} height={r * 2} rx={r} fill={bg} />
         <g transform={`translate(${cx}, ${cy}) scale(${scale}) translate(-28.55, -28.85)`}>
           <path d="M42.3896 11.2412C44.8748 11.2414 46.8896 13.256 46.8896 15.7412V35.4912C46.8895 37.9763 44.8747 39.991 42.3896 39.9912H33.4521V43.96H38.8486C39.539 43.96 40.0986 44.5196 40.0986 45.21C40.0985 45.9002 39.5389 46.46 38.8486 46.46H19.0566C18.3665 46.4598 17.8068 45.9001 17.8066 45.21C17.8066 44.5197 18.3664 43.9601 19.0566 43.96H24.4521V39.9912H14.7227C12.2375 39.9912 10.2228 37.9764 10.2227 35.4912V15.7412C10.2227 13.2559 12.2374 11.2412 14.7227 11.2412H42.3896ZM26.9521 43.8242H30.9521V40.8242H26.9521V43.8242ZM14.5186 13.752C13.5099 13.8542 12.7227 14.7056 12.7227 15.7412V35.4912C12.7228 36.5268 13.51 37.3782 14.5186 37.4805L14.7227 37.4912H42.3896L42.5938 37.4805C43.5351 37.3849 44.2834 36.6367 44.3789 35.6953L44.3896 35.4912V15.7412C44.3896 14.7057 43.6023 13.8544 42.5938 13.752L42.3896 13.7412H14.7227L14.5186 13.752Z" fill={ic} />
         </g>
+        {!editing && (
+          <g>
+            <rect x={cx - pillW / 2} y={pillY} width={pillW} height={20} rx={8} fill="#f5f6f7" />
+            <text x={cx} y={pillY + 14} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>
+          </g>
+        )}
         {(hovered || selected) && selectionEl}
       </g>
     )
@@ -1477,7 +1502,7 @@ function BpmnCanvas({
           id: newId,
           type,
           subtype,
-          name: shape.name ?? shape.title ?? subtype,
+          name: '',
           description: '',
           cx: svgPt.x,
           cy: svgPt.y,
@@ -1486,6 +1511,7 @@ function BpmnCanvas({
         }
         setElements(els => [...els, newEl])
         setSelectedId(newId)
+        setEditingId(newId)
       } catch {}
     }
   }
@@ -1751,9 +1777,9 @@ function BpmnCanvas({
               {el.type === 'task'    && <TaskShape    el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {el.type === 'gateway' && <GatewayShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
               {el.type === 'event'   && <EventShape   el={el} selected={selected} hovered={hovered} ringW={ringW} />}
-              {el.type === 'system'  && <SystemShape  el={el} selected={selected} hovered={hovered} ringW={ringW} />}
+              {el.type === 'system'  && <SystemShape  el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
-              {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} />}
+              {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {(el.type as string) === 'pool' && (() => {
                 const x = el.cx - el.hw, y = el.cy - el.hh
                 const w = el.hw * 2, h = el.hh * 2
@@ -1839,20 +1865,27 @@ function BpmnCanvas({
               {/* Inline text editor on double-click — rendered outside SVG as absolute input */}
 
               {/* Element name label pill for events/gateways */}
-              {(el.type === 'event' || el.type === 'gateway') && el.name && editingId !== el.id && (
+              {(el.type === 'event' || el.type === 'gateway') && el.name && (
                 <g>
-                  <rect x={el.cx - 54} y={el.cy + el.hh + 4} width={108} height={el.name.length > 14 ? 32 : 20} rx={8} fill={selectedIds.has(el.id) ? '#e8f3ff' : '#f5f6f7'} />
-                  {el.name.split(' ').length > 2
-                    ? <>
-                        <text x={el.cx} y={el.cy + el.hh + 16} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">
-                          {el.name.split(' ').slice(0, Math.ceil(el.name.split(' ').length / 2)).join(' ')}
-                        </text>
-                        <text x={el.cx} y={el.cy + el.hh + 29} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">
-                          {el.name.split(' ').slice(Math.ceil(el.name.split(' ').length / 2)).join(' ')}
-                        </text>
-                      </>
-                    : <text x={el.cx} y={el.cy + el.hh + 16} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>
-                  }
+                  {(() => {
+                    const words = el.name.split(' ')
+                    const multiLine = words.length > 2
+                    const mid = Math.ceil(words.length / 2)
+                    const line1 = multiLine ? words.slice(0, mid).join(' ') : el.name
+                    const line2 = multiLine ? words.slice(mid).join(' ') : null
+                    const charW = 6.2
+                    const pad = 16
+                    const w = Math.max(line1.length, line2?.length ?? 0) * charW + pad
+                    const h = multiLine ? 32 : 20
+                    const pillY = el.cy + el.hh + 4
+                    return <>
+                      <rect x={el.cx - w / 2} y={pillY} width={w} height={h} rx={8} fill="#f5f6f7" />
+                      {editingId !== el.id && (multiLine ? <>
+                        <text x={el.cx} y={pillY + 13} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line1}</text>
+                        <text x={el.cx} y={pillY + 26} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line2}</text>
+                      </> : <text x={el.cx} y={pillY + 14} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>)}
+                    </>
+                  })()}
                 </g>
               )}
             </g>
@@ -1939,11 +1972,14 @@ function BpmnCanvas({
       {editingId && (() => {
         const el = elements.find(e => e.id === editingId)
         if (!el) return null
-        const isBelow = el.type === 'gateway' || el.type === 'event'
-        const svgX = isBelow ? el.cx - 80 : el.cx - el.hw
-        const svgY = isBelow ? el.cy + el.hh + 4 : el.cy - el.hh
-        const svgW = isBelow ? 160 : el.hw * 2
-        const svgH = isBelow ? 28 : el.hh * 2
+        const isBelow = el.type === 'gateway' || el.type === 'event' || el.type === 'system' || el.type === 'data' || el.type === 'artifact'
+        const charW = 6.2, pad = 24
+        const dynW = Math.max(el.name.length * charW + pad, 80)
+        const inputH = 28
+        const svgX = isBelow ? el.cx - dynW / 2 : el.cx - el.hw
+        const svgY = isBelow ? el.cy + el.hh + 6 : el.cy - el.hh
+        const svgW = isBelow ? dynW : el.hw * 2
+        const svgH = isBelow ? inputH : el.hh * 2
         const s2p = (v: number, base: number) => (v - base) * (zoom / 100)
         const px = s2p(svgX, panX)
         const py = s2p(svgY, panY)
@@ -1970,9 +2006,14 @@ function BpmnCanvas({
                 }
               }}
               style={{
-                width: '100%', border: 'none', outline: 'none', background: 'transparent',
+                width: '100%', height: '100%', padding: `0 ${6 * (zoom / 100)}px`,
+                border: '2px solid var(--sapField_Focus_BorderColor)',
+                borderRadius: '0.25rem',
+                outline: 'none',
+                background: 'var(--sapField_Hover_Background)',
+                boxSizing: 'border-box',
                 textAlign: 'center', fontSize: `${12 * (zoom / 100)}px`,
-                fontFamily: "'72',Arial,sans-serif", color: 'var(--sapTextColor)', fontWeight: 500,
+                fontFamily: "'72',Arial,sans-serif", color: 'var(--sapTextColor)', fontWeight: 400,
               }}
             />
           </div>
