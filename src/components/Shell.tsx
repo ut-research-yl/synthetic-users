@@ -936,7 +936,7 @@ export default function Shell() {
         </SideNavigationGroup>
         <SideNavigationItem slot="fixedItems" icon="lab" text="Lab Space" />
         {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="SAP-icons-v4/report" text="Reporting" selected={isReporting} />}
-        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape} />}
+        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape && !isModeler} />}
       </SideNavigation>
 
       {isRepository || isSearch || isReporting || isHome || isPCA || isModeler || isModelingAssetType || isProcessLandscape ? (
