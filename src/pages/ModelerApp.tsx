@@ -19,7 +19,7 @@ import s from './ModelerApp.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; panelOffset?: number }
+type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; panelOffset?: number }
 
 type SaveState = 'draft' | 'saved' | 'saving' | 'offline' | 'error'
 
@@ -38,7 +38,9 @@ export type LiShape = {
   shapeType: string
   widgetId: string
   widgetName: string
+  label?: string
   linkedBpmnId?: string
+  linkedBpmnName?: string
   manualValue?: string
 }
 
@@ -134,23 +136,32 @@ function hitTestElement(x: number, y: number, elements: CanvasElement[]): Canvas
 function findLiShapePosition(
   bpmnEl: CanvasElement,
   existingElements: CanvasElement[],
-  liShapes: LiShape[]
+  liShapes: LiShape[],
+  shapeType?: string
 ): { cx: number; cy: number } {
+  const liR = shapeType === 'Value' ? 14 : 30
+  const gap = shapeType === 'Value' ? 20 : 40
   const offsets = [
-    { dx: -90, dy: 0 }, { dx: 0, dy: 100 }, { dx: 90, dy: 0 }, { dx: 0, dy: -100 },
-    { dx: -90, dy: 80 }, { dx: 90, dy: 80 }, { dx: -90, dy: -80 }, { dx: 90, dy: -80 }, { dx: 0, dy: 160 },
+    { dx: -(bpmnEl.hw + liR + gap), dy: 0 },
+    { dx: bpmnEl.hw + liR + gap, dy: 0 },
+    { dx: 0, dy: bpmnEl.hh + liR + gap },
+    { dx: 0, dy: -(bpmnEl.hh + liR + gap) },
+    { dx: -(bpmnEl.hw + liR + gap), dy: bpmnEl.hh + liR + gap },
+    { dx: bpmnEl.hw + liR + gap, dy: bpmnEl.hh + liR + gap },
+    { dx: -(bpmnEl.hw + liR + gap), dy: -(bpmnEl.hh + liR + gap) },
+    { dx: bpmnEl.hw + liR + gap, dy: -(bpmnEl.hh + liR + gap) },
   ]
   for (const off of offsets) {
     const cx = bpmnEl.cx + off.dx
     const cy = bpmnEl.cy + off.dy
     const collision = existingElements.some(e =>
-      Math.abs(e.cx - cx) < 60 && Math.abs(e.cy - cy) < 50
+      Math.abs(e.cx - cx) < e.hw + liR + 10 && Math.abs(e.cy - cy) < e.hh + liR + 10
     ) || liShapes.some(ls =>
-      Math.abs(ls.cx - cx) < 60 && Math.abs(ls.cy - cy) < 50
+      Math.abs(ls.cx - cx) < liR * 2 + 10 && Math.abs(ls.cy - cy) < liR * 2 + 10
     )
     if (!collision) return { cx, cy }
   }
-  return { cx: bpmnEl.cx - 90, cy: bpmnEl.cy + 160 }
+  return { cx: bpmnEl.cx - (bpmnEl.hw + liR + 20), cy: bpmnEl.cy + bpmnEl.hh + liR + 40 }
 }
 
 // ── SVG shape renderers ───────────────────────────────────────────────────────
@@ -645,7 +656,7 @@ function DataObjectShape({ el, selected, hovered, ringW }: { el: CanvasElement; 
   )
 }
 
-function LiShapeComp({ shape }: { shape: LiShape }) {
+function LiShapeComp({ shape, editing = false }: { shape: LiShape; editing?: boolean }) {
   const { cx, cy, shapeType } = shape
   const color = '#0064d9'
 
@@ -674,7 +685,10 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
           <path d="M13 13L21 21M21 13L13 21" stroke="white" strokeWidth={2.5} strokeLinecap="round"/>
         )}
       </svg>
-      <text x={cx} y={sy + 46} fontSize={9} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.widgetName ?? ''}</text>
+      {!editing && <>
+  <rect x={cx - 40} y={sy + 46 - 10} width={80} height={20} rx={8} fill="var(--sapPageSection_Background, #f5f6f7)" style={{ pointerEvents: 'none' }} />
+  <text x={cx} y={sy + 50} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.label ?? shape.widgetName ?? ''}</text>
+</>}
     </g>
   }
 
@@ -698,7 +712,10 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
         <rect fill={mid} x={6} y={26} width={16} height={16} rx={2}/>
         <rect fill={bot} x={6} y={46} width={16} height={16} rx={2}/>
       </svg>
-      <text x={cx} y={sy + 82} fontSize={9} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.widgetName ?? ''}</text>
+      {!editing && <>
+  <rect x={cx - 40} y={sy + 82 - 10} width={80} height={20} rx={8} fill="var(--sapPageSection_Background, #f5f6f7)" style={{ pointerEvents: 'none' }} />
+  <text x={cx} y={sy + 86} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.label ?? shape.widgetName ?? ''}</text>
+</>}
     </g>
   }
 
@@ -732,7 +749,10 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
         {needle && <line x1={20} y1={20} x2={needle[0]} y2={needle[1]} stroke={c} strokeWidth={2} strokeLinecap="round"/>}
         <circle cx={20} cy={20} r={3} fill={c}/>
       </svg>
-      <text x={cx} y={sy + 51} fontSize={9} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.widgetName ?? ''}</text>
+      {!editing && <>
+  <rect x={cx - 40} y={sy + 51 - 10} width={80} height={20} rx={8} fill="var(--sapPageSection_Background, #f5f6f7)" style={{ pointerEvents: 'none' }} />
+  <text x={cx} y={sy + 54} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.label ?? shape.widgetName ?? ''}</text>
+</>}
     </g>
   }
 
@@ -785,7 +805,10 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
           <path fill={trendColor} transform="rotate(45, 19, 19)" d="M 6 16 L 25 16 L 25 13 L 32 19 L 25 25 L 25 22 L 6 22 Z"/>
         )}
       </svg>
-      <text x={cx} y={sy + 48} fontSize={9} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.widgetName ?? ''}</text>
+      {!editing && <>
+  <rect x={cx - 40} y={sy + 48 - 10} width={80} height={20} rx={8} fill="var(--sapPageSection_Background, #f5f6f7)" style={{ pointerEvents: 'none' }} />
+  <text x={cx} y={sy + 52} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.label ?? shape.widgetName ?? ''}</text>
+</>}
     </g>
   }
 
@@ -807,7 +830,10 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
         <path fill={c2} d="M22.5294 30.1111L22.5294 7.8889L15.4706 7.8889L15.4706 30.1111L22.5294 30.1111Z"/>
         <path fill={c3} d="M31.9412 10.1111L31.9412 27.8889C31.9412 29.1162 30.8877 30.1111 29.5882 30.1111L24.8823 30.1111L24.8823 7.8889L29.5882 7.8889C30.8877 7.8889 31.9412 8.8838 31.9412 10.1111Z"/>
       </svg>
-      <text x={cx} y={sy + 48} fontSize={9} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.widgetName ?? ''}</text>
+      {!editing && <>
+  <rect x={cx - 40} y={sy + 48 - 10} width={80} height={20} rx={8} fill="var(--sapPageSection_Background, #f5f6f7)" style={{ pointerEvents: 'none' }} />
+  <text x={cx} y={sy + 52} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.label ?? shape.widgetName ?? ''}</text>
+</>}
     </g>
   }
 
@@ -835,7 +861,10 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
         <path fill="#DEE0E3" d="M32 19C32 26.1797 26.1797 32 19 32C11.8203 32 6 26.1797 6 19C6 11.8203 11.8203 6 19 6C26.1797 6 32 11.8203 32 19ZM12.5 19C12.5 22.5899 15.4101 25.5 19 25.5C22.5899 25.5 25.5 22.5899 25.5 19C25.5 15.4101 22.5899 12.5 19 12.5C15.4101 12.5 12.5 15.4101 12.5 19Z"/>
         {arcColor && arcPath && <path fill={arcColor} d={arcPath}/>}
       </svg>
-      <text x={cx} y={sy + 48} fontSize={9} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.widgetName ?? ''}</text>
+      {!editing && <>
+  <rect x={cx - 40} y={sy + 48 - 10} width={80} height={20} rx={8} fill="var(--sapPageSection_Background, #f5f6f7)" style={{ pointerEvents: 'none' }} />
+  <text x={cx} y={sy + 52} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.label ?? shape.widgetName ?? ''}</text>
+</>}
     </g>
   }
 
@@ -872,7 +901,10 @@ function LiShapeComp({ shape }: { shape: LiShape }) {
         <circle cx={26.25} cy={14.375} r={1.25} fill="none" stroke={fc} strokeWidth={1.5}/>
         <path d={mouth} stroke={fc} strokeWidth={1.5} fill="none" strokeLinecap="round"/>
       </svg>
-      <text x={cx} y={sy + 54} fontSize={9} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.widgetName ?? ''}</text>
+      {!editing && <>
+  <rect x={cx - 40} y={sy + 54 - 10} width={80} height={20} rx={8} fill="var(--sapPageSection_Background, #f5f6f7)" style={{ pointerEvents: 'none' }} />
+  <text x={cx} y={sy + 58} fontSize={11} fill="var(--sapTextColor)" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{shape.label ?? shape.widgetName ?? ''}</text>
+</>}
     </g>
   }
 
@@ -969,8 +1001,8 @@ function LiConnector({ liShape, geomMap }: { liShape: LiShape; geomMap: Record<s
   if (dist < 1) return null
   const nx = dx / dist, ny = dy / dist
   const x1 = tg.cx + nx * (tg.hw + 4), y1 = tg.cy + ny * (tg.hh + 4)
-  const x2 = liShape.cx - nx * 34, y2 = liShape.cy - ny * 24
-  return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#0064d9" strokeWidth={1.5} strokeDasharray="5 4" opacity={0.7} />
+  const x2 = liShape.cx - nx * 42, y2 = liShape.cy - ny * 42
+  return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--sapHighlightColor, #0064d9)" strokeWidth={1.5} strokeDasharray="3 3" strokeLinecap="round" />
 }
 
 // ── BpmnCanvas ─────────────────────────────────────────────────────────────────
@@ -988,6 +1020,8 @@ function BpmnCanvas({
   onLiShapeSelect,
   onLiShapeUpdate,
   onRegisterLiShapeUpdater,
+  onSelectElementById,
+  onLiShapesChange,
   panelOffset = 0,
 }: {
   assetName: string
@@ -1002,6 +1036,8 @@ function BpmnCanvas({
   onLiShapeSelect?: (shape: LiShape | null) => void
   onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void
   onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void
+  onSelectElementById?: (fn: (id: string) => void) => void
+  onLiShapesChange?: (shapes: LiShape[]) => void
   panelOffset?: number
 }) {
   const [lang, setLang] = useState('ENG')
@@ -1019,6 +1055,8 @@ function BpmnCanvas({
   const setSelectedId = (id: string | null) => setSelectedIds(id ? new Set([id]) : new Set())
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingLiId, setEditingLiId] = useState<string | null>(null)
+  const [editingLiLabel, setEditingLiLabel] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [connHover, setConnHover] = useState<{ id: string; x: number; y: number } | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
@@ -1039,6 +1077,17 @@ function BpmnCanvas({
   useEffect(() => {
     onRegisterLiShapeUpdater?.(handleLiShapeUpdate)
   }, [handleLiShapeUpdate, onRegisterLiShapeUpdater])
+
+  useEffect(() => {
+    onLiShapesChange?.(liShapes)
+  }, [liShapes, onLiShapesChange])
+
+  useEffect(() => {
+    onSelectElementById?.((id: string) => {
+      setSelectedIds(new Set([id]))
+      onElementSelect?.(id)
+    })
+  }, [onSelectElementById, onElementSelect])
 
   const pushHistory = (els: CanvasElement[], ls: LiShape[]) => {
     setHistory(h => [...h.slice(-49), { elements: els, liShapes: ls }])
@@ -1306,6 +1355,10 @@ function BpmnCanvas({
       ? { ...el, cx: (el.id === id ? origCx : el.cx) + dx, cy: (el.id === id ? origCy : el.cy) + dy }
       : el
     ))
+    setLiShapes(ls => ls.map(s => selectedIds.has(s.id)
+      ? { ...s, cx: (s.id === id ? origCx : s.cx) + dx, cy: (s.id === id ? origCy : s.cy) + dy }
+      : s
+    ))
   }
 
   const handleSvgMouseUp = () => {
@@ -1374,11 +1427,62 @@ function BpmnCanvas({
       pushHistory(elements, liShapes)
       const hit = hitTestElement(svgPt.x, svgPt.y, elements)
       if (hit && (hit.type === 'task' || hit.type === 'system')) {
-        // Connect widget to existing element
-        setElements(els => els.map(el => el.id === hit.id
-          ? { ...el, drivingWidget: diWidgetId, drivingWidgetName: diWidgetName }
-          : el
-        ))
+        // Create LI shape next to the element, linked via dashed connector
+        const ID_TO_TYPE2: Record<string, string> = {
+          'value': 'Value', 'bar': 'Bar Chart', 'line': 'Line Chart', 'area': 'Area Chart',
+          'dual': 'Dual Axis Chart', 'pie': 'Pie Chart', 'treemap': 'Treemap', 'heat': 'Heat Map',
+          'sankey': 'Sankey Chart', 'hist': 'Histogram', 'ring': 'Ring Chart', 'cockpit': 'Cockpit',
+          'sentiment': 'Sentiment', 'ext': 'Indicator',
+        }
+        const WIDGET_TYPE_TO_LI_SHAPE2: Record<string, string> = {
+          'Value': 'Value', 'Bar Chart': 'Indicator', 'Line Chart': 'Trend', 'Area Chart': 'Trend',
+          'Dual Axis Chart': 'Trend', 'Pie Chart': 'Ring Chart', 'Treemap': 'Progress Bar',
+          'Heat Map': 'Traffic Light', 'Sankey Chart': 'Trend', 'Histogram': 'Progress Bar',
+          'Ring Chart': 'Ring Chart', 'Cockpit': 'Cockpit', 'Sentiment': 'Sentiment', 'Indicator': 'Indicator',
+        }
+        const EXT_SHAPE_OVERRIDE2: Record<string, string> = {
+          'ext-001': 'Indicator', 'ext-002': 'Value', 'ext-003': 'Ring Chart',
+          'ext-004': 'Traffic Light', 'ext-005': 'Indicator',
+        }
+        const WIDGET_STATUS2: Record<string, string> = {
+          'value-I-001': 'Green',  'value-I-002': 'Yellow',
+          'value-D-001': 'Green',  'value-D-002': 'Red',    'value-D-003': 'Green',
+          'value-D-004': 'Yellow', 'value-D-005': 'Green',  'value-D-006': 'Yellow',
+          'bar-chart-I-001': 'Green',  'bar-chart-I-002': 'Yellow',
+          'bar-chart-D-001': 'Green',  'bar-chart-D-002': 'Red',
+          'bar-chart-D-003': 'Yellow', 'bar-chart-D-004': 'Green',
+          'line-I-001': 'Green',  'line-I-002': 'Yellow',
+          'line-I-003': 'Green',  'line-D-001': 'Green',  'line-D-002': 'Yellow',
+          'area-I-001': 'Green',  'area-D-001': 'Yellow',
+          'area-D-002': 'Green',  'area-D-003': 'Red',
+          'dual-I-001': 'Yellow', 'dual-I-002': 'Green',  'dual-D-001': 'Green', 'dual-D-002': 'Red',
+          'pie-D-001': 'Green',  'pie-D-002': 'Yellow', 'pie-D-003': 'Red',
+          'treemap-I-001': 'Green',  'treemap-I-002': 'Yellow', 'treemap-I-003': 'Green',
+          'ring-I-001': 'Green',  'ring-I-002': 'Yellow', 'ring-I-003': 'Green', 'ring-D-001': 'Red',
+          'heat-D-001': 'Red',    'heat-D-002': 'Yellow', 'heat-D-003': 'Green',
+          'sankey-I-001': 'Green',  'sankey-I-002': 'Yellow',
+          'hist-I-001': 'Yellow', 'hist-I-002': 'Green',
+          'cockpit-I-001': 'Green',  'cockpit-I-002': 'Yellow', 'cockpit-D-001': 'Red',
+          'sentiment-I-001': 'Green', 'sentiment-I-002': 'Yellow', 'sentiment-D-001': 'Red',
+          'ext-001': 'Green',  'ext-002': 'Yellow', 'ext-003': 'Yellow',
+          'ext-004': 'Red',    'ext-005': 'Green',
+        }
+        const prefix2 = diWidgetId.split('-')[0]
+        const widgetType2 = ID_TO_TYPE2[prefix2] ?? 'Value'
+        const shapeType2 = diWidgetShape || (EXT_SHAPE_OVERRIDE2[diWidgetId] ?? WIDGET_TYPE_TO_LI_SHAPE2[widgetType2] ?? 'Indicator')
+        const pos = findLiShapePosition(hit, elements, liShapesRef.current, shapeType2)
+        const newShape: LiShape = {
+          id: `li-${Date.now()}`,
+          cx: pos.cx,
+          cy: pos.cy,
+          shapeType: shapeType2,
+          widgetId: diWidgetId,
+          widgetName: diWidgetName,
+          manualValue: WIDGET_STATUS2[diWidgetId] ?? 'No data',
+          linkedBpmnId: hit.id,
+          linkedBpmnName: hit.name,
+        }
+        setLiShapes(ls => [...ls, newShape])
       } else {
         // Create LI shape on empty canvas
         const ID_TO_TYPE: Record<string, string> = {
@@ -1915,10 +2019,17 @@ function BpmnCanvas({
         {liShapes.map(ls => (
           <g key={ls.id}
             style={{ cursor: 'grab' }}
-            onClick={e => {
+            onMouseDown={e => {
               e.stopPropagation()
+              if (!svgRef.current) return
               setSelectedIds(new Set([ls.id]))
               onLiShapeSelect?.(ls)
+              dragState.current = { id: ls.id, startX: e.clientX, startY: e.clientY, origCx: ls.cx, origCy: ls.cy }
+            }}
+            onDoubleClick={e => {
+              e.stopPropagation()
+              setEditingLiId(ls.id)
+              setEditingLiLabel(ls.label ?? ls.widgetName)
             }}
           >
             {selectedIds.has(ls.id) && selectedIds.size === 1 && (() => {
@@ -1953,7 +2064,7 @@ function BpmnCanvas({
                 style={{ pointerEvents: 'none' }}
               />
             })()}
-            <LiShapeComp shape={ls} />
+            <LiShapeComp shape={ls} editing={editingLiId === ls.id} />
           </g>
         ))}
 
@@ -2027,11 +2138,11 @@ function BpmnCanvas({
         const isBelow = el.type === 'gateway' || el.type === 'event' || el.type === 'system' || el.type === 'data' || el.type === 'artifact'
         const charW = 6.2, pad = 24
         const dynW = Math.max(el.name.length * charW + pad, 80)
-        const inputH = 28
+        const inputH = isBelow ? 20 : el.hh * 2
         const svgX = isBelow ? el.cx - dynW / 2 : el.cx - el.hw
         const svgY = isBelow ? el.cy + el.hh + 6 : el.cy - el.hh
         const svgW = isBelow ? dynW : el.hw * 2
-        const svgH = isBelow ? inputH : el.hh * 2
+        const svgH = inputH
         const s2p = (v: number, base: number) => (v - base) * (zoom / 100)
         const px = s2p(svgX, panX)
         const py = s2p(svgY, panY)
@@ -2065,6 +2176,62 @@ function BpmnCanvas({
                 background: 'var(--sapField_Hover_Background)',
                 boxSizing: 'border-box',
                 textAlign: 'center', fontSize: `${12 * (zoom / 100)}px`,
+                fontFamily: "'72',Arial,sans-serif", color: 'var(--sapTextColor)', fontWeight: 400,
+              }}
+            />
+          </div>
+        )
+      })()}
+
+      {editingLiId && (() => {
+        const ls = liShapes.find(s => s.id === editingLiId)
+        if (!ls) return null
+        const LABEL_OFFSET: Record<string, number> = {
+          'Indicator':    34,
+          'Traffic Light':52,
+          'Cockpit':      36,
+          'Value':        20,
+          'Trend':        35,
+          'Progress Bar': 35,
+          'Ring Chart':   35,
+          'Sentiment':    41,
+        }
+        const labelOffsetY = LABEL_OFFSET[ls.shapeType] ?? 23
+        const charW = 6.2, pad = 24
+        const dynW = Math.max(editingLiLabel.length * charW + pad, 80)
+        const inputH = 20
+        const svgX = ls.cx - dynW / 2
+        const svgY = ls.cy + labelOffsetY - inputH / 2
+        const s2p = (v: number, base: number) => (v - base) * (zoom / 100)
+        const px = s2p(svgX, panX)
+        const py = s2p(svgY, panY)
+        const pw = dynW * (zoom / 100)
+        const ph = inputH * (zoom / 100)
+        return (
+          <div style={{ position: 'absolute', left: px, top: py, width: pw, height: ph, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'all', zIndex: 20 }}>
+            <input
+              autoFocus
+              value={editingLiLabel}
+              onChange={e => setEditingLiLabel(e.target.value)}
+              onBlur={() => {
+                setLiShapes(ls2 => ls2.map(s => s.id === editingLiId ? { ...s, label: editingLiLabel } : s))
+                setEditingLiId(null)
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  setLiShapes(ls2 => ls2.map(s => s.id === editingLiId ? { ...s, label: editingLiLabel } : s))
+                  setEditingLiId(null)
+                } else if (e.key === 'Escape') {
+                  setEditingLiId(null)
+                }
+              }}
+              style={{
+                width: '100%', height: '100%', padding: `0 ${6 * (zoom / 100)}px`,
+                border: '2px solid var(--sapField_Focus_BorderColor)',
+                borderRadius: '0.25rem', outline: 'none',
+                background: 'var(--sapField_Hover_Background)',
+                boxSizing: 'border-box', textAlign: 'center',
+                fontSize: `${11 * (zoom / 100)}px`,
                 fontFamily: "'72',Arial,sans-serif", color: 'var(--sapTextColor)', fontWeight: 400,
               }}
             />
@@ -2163,7 +2330,7 @@ function BpmnCanvas({
 
 // ── ModelerApp ─────────────────────────────────────────────────────────────────
 
-export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, panelOffset = 0 }: Props) {
+export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onSelectElementById, onLiShapesChange, panelOffset = 0 }: Props) {
   const navigate = useNavigate()
   const [dictOpen, setDictOpen] = useState(false)
   const [dataOpen, setDataOpen] = useState(false)
@@ -2196,6 +2363,8 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onLiShapeSelect={onLiShapeSelect}
         onLiShapeUpdate={onLiShapeUpdate}
         onRegisterLiShapeUpdater={onRegisterLiShapeUpdater}
+        onSelectElementById={onSelectElementById}
+        onLiShapesChange={onLiShapesChange}
         panelOffset={panelOffset}
       />
       {dataOpen && <DataPanel onClose={() => setDataOpen(false)} />}

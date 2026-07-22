@@ -13,6 +13,8 @@ export default function ModelerLayout() {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
   const [selectedLiShape, setSelectedLiShape] = useState<LiShape | null>(null)
   const liShapeUpdateRef = React.useRef<((id: string, changes: Partial<LiShape>) => void) | null>(null)
+  const selectElementByIdRef = React.useRef<((id: string) => void) | null>(null)
+  const [liShapes, setLiShapes] = React.useState<LiShape[]>([])
   const [panelWidth, setPanelWidth] = useState(420)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
@@ -73,6 +75,8 @@ export default function ModelerLayout() {
           }}
           onRegisterLiShapeUpdater={(fn) => { liShapeUpdateRef.current = fn }}
           onLiShapeUpdate={(id, changes) => liShapeUpdateRef.current?.(id, changes)}
+          onSelectElementById={(fn) => { selectElementByIdRef.current = fn }}
+          onLiShapesChange={(shapes) => setLiShapes(shapes)}
         />
         {activePanel && (
           <>
@@ -128,6 +132,18 @@ export default function ModelerLayout() {
                 onLiShapeUpdate={(id, changes) => {
                   liShapeUpdateRef.current?.(id, changes)
                   setSelectedLiShape(prev => prev && prev.id === id ? { ...prev, ...changes } : prev)
+                }}
+                onSelectElement={(id) => {
+                  setSelectedLiShape(null)
+                  setSelectedElementId(id)
+                  setActivePanel('element-detail')
+                  selectElementByIdRef.current?.(id)
+                }}
+                liShapes={liShapes}
+                onSelectLiShape={(shape) => {
+                  setSelectedLiShape(shape)
+                  setSelectedElementId(null)
+                  setActivePanel('element-detail')
                 }}
               />
             </div>

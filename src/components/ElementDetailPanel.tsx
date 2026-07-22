@@ -6,6 +6,8 @@ import { elementData } from '../data/liveInsightsData'
 type Props = {
   elementId: string
   onClose: () => void
+  linkedShapes?: { id: string; widgetName: string; widgetId?: string; label?: string; shapeType: string }[]
+  onSelectLinkedShape?: (shapeId: string) => void
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -208,7 +210,7 @@ function EditableAttrRow({ label, values, assets, type, onRemove, onRemoveAsset 
   )
 }
 
-export default function ElementDetailPanel({ elementId, onClose }: Props) {
+export default function ElementDetailPanel({ elementId, onClose, linkedShapes, onSelectLinkedShape }: Props) {
   const [activeTab, setActiveTab] = useState('Attributes')
   const el = elementData[elementId]
 
@@ -291,6 +293,66 @@ export default function ElementDetailPanel({ elementId, onClose }: Props) {
               <Icon slot="icon" name="search" />
             </Input>
           </div>
+
+          {/* ── Live Insights Data ── */}
+          {linkedShapes && linkedShapes.length > 0 && (
+            <AttrGroup title="Live Insights Data" count={linkedShapes.length}>
+              <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block', paddingBottom: '0.5rem' } as React.CSSProperties}>
+                Process data connected to this step
+              </Text>
+              {linkedShapes.map(ls => {
+                const LI_ICON: Record<string, string> = {
+                  'Indicator': 'SAP-icons-v4/data-indicator', 'Value': 'record',
+                  'Progress Bar': 'SAP-icons-v4/progress-bar', 'Trend': 'SAP-icons-v4/data-trend',
+                  'Ring Chart': 'SAP-icons-v4/ring-chart', 'Traffic Light': 'SAP-icons-v4/traffic-light',
+                  'Cockpit': 'SAP-icons-v4/gauge-cockpit', 'Sentiment': 'SAP-icons-v4/emotion-positive',
+                }
+                const WIDGET_MOCK: Record<string, { value: string; label: string; trend: string; trendColor: string }> = {
+                  'value-D-001': { value: '4,218', label: 'Total Cases',     trend: '+12%', trendColor: '#256F3A' },
+                  'value-D-002': { value: '1,042', label: 'Open Cases',      trend: '-3%',  trendColor: '#BB0000' },
+                  'value-D-003': { value: '892',   label: 'Resolved Cases',  trend: '+8%',  trendColor: '#256F3A' },
+                  'value-D-004': { value: '94.2%', label: 'SLA Compliance',  trend: '-1%',  trendColor: '#E9730C' },
+                  'value-D-005': { value: '3,156', label: 'Processed Items', trend: '+5%',  trendColor: '#256F3A' },
+                  'value-I-001': { value: '2,847', label: 'Active Cases',    trend: '+12%', trendColor: '#256F3A' },
+                  'value-I-002': { value: '28.5d', label: 'Avg. Duration',   trend: '-4%',  trendColor: '#BB0000' },
+                }
+                const mock = ls.widgetId ? WIDGET_MOCK[ls.widgetId] : undefined
+                const shapeIcon = LI_ICON[ls.shapeType] ?? 'SAP-icons-v4/data-indicator'
+                return (
+                  <div key={ls.id} style={{ border: '1px solid var(--sapList_BorderColor, #d9d9d9)', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                    <div onClick={() => onSelectLinkedShape?.(ls.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.75rem', background: 'var(--sapPageSection_Background, #f5f6f7)', cursor: 'pointer' }}
+                    >
+                      <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name={shapeIcon} style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>
+                          {ls.label ?? ls.widgetName}
+                        </Text>
+                        <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>
+                          {ls.shapeType} · {ls.widgetName}
+                        </Text>
+                      </div>
+                      <Icon name="slim-arrow-right" style={{ width: '1rem', height: '1rem', color: '#0064d9', flexShrink: 0 } as React.CSSProperties} />
+                    </div>
+                    {mock && (
+                      <div style={{ display: 'flex', borderTop: '1px solid var(--sapList_BorderColor, #d9d9d9)' }}>
+                        <div style={{ flex: 1, padding: '0.625rem 0.75rem', borderRight: '1px solid var(--sapList_BorderColor, #d9d9d9)' }}>
+                          <Text style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--sapTextColor)', display: 'block' } as React.CSSProperties}>{mock.value}</Text>
+                          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>{mock.label}</Text>
+                        </div>
+                        <div style={{ flex: 1, padding: '0.625rem 0.75rem' }}>
+                          <Text style={{ fontSize: '1.25rem', fontWeight: 700, color: mock.trendColor, display: 'block' } as React.CSSProperties}>{mock.trend}</Text>
+                          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>vs. last month</Text>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </AttrGroup>
+          )}
 
           {/* ── Main Attributes ── */}
           <AttrGroup title="Main Attributes" count={totalAttrs}>

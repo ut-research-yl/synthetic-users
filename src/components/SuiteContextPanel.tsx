@@ -74,7 +74,7 @@ function makeMockAsset(assetId?: string): SelectedAssetInfo {
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void }) {
   if (!activePanel) return null
 
   // li shape detail
@@ -86,6 +86,7 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
           shape={selectedLiShape}
           onClose={() => onTogglePanel(null)}
           onUpdate={onLiShapeUpdate}
+          onSelectLinkedElement={onSelectElement}
         />
       </div>
     )
@@ -93,12 +94,18 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
 
   // element-detail: shows selected canvas element attributes
   if (activePanel === 'element-detail' && selectedElementId) {
+    const connectedShapes = (liShapes ?? []).filter(ls => ls.linkedBpmnId === selectedElementId)
     return (
       <div className={s.panelContent}>
         <ElementDetailPanel
           key={selectedElementId}
           elementId={selectedElementId}
           onClose={() => onTogglePanel(null)}
+          linkedShapes={connectedShapes.map(ls => ({ id: ls.id, widgetName: ls.widgetName, widgetId: ls.widgetId, label: ls.label, shapeType: ls.shapeType }))}
+          onSelectLinkedShape={(id) => {
+            const ls = (liShapes ?? []).find(s => s.id === id)
+            if (ls) onSelectLiShape?.(ls)
+          }}
         />
       </div>
     )

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Button, Icon, Input, Label, Select, Option, TabContainer, Tab, Text } from '@ui5/webcomponents-react'
+import { Button, Icon, Input, Label, Select, Option, TabContainer, Tab, Text, Popover, List, ListItemStandard, ListItemCustom } from '@ui5/webcomponents-react'
 import { SigChipV2, SigInlineEdit } from '@signavio/sap-signavio-uixtension'
 import type { LiShape } from '../pages/ModelerApp'
 import ConnectWidgetDialog from './ConnectWidgetDialog'
@@ -22,10 +22,27 @@ const WIDGET_MOCK: Record<string, { value: string; label: string; trend: string;
   'ext-005':     { value: '8,310', label: 'Total Count',      trend: '↑ 6.7%',  trendColor: '#27a65a', chartSvg: '<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="200" y="75" text-anchor="middle" font-size="52" font-weight="700" fill="#0064d9" font-family="72,Arial">8,310</text><text x="200" y="105" text-anchor="middle" font-size="13" fill="#556b82" font-family="72,Arial">Total Count</text><line x1="80" y1="130" x2="320" y2="130" stroke="#e8ecf0" stroke-width="1.5"/><rect x="148" y="148" width="12" height="12" rx="2" fill="#27a65a"/><text x="166" y="159" font-size="13" fill="#27a65a" font-family="72,Arial" font-weight="600">↑ 6.7%</text><text x="200" y="185" text-anchor="middle" font-size="11" fill="#8c9bab" font-family="72,Arial">vs. last period</text></svg>' },
 }
 
+const WIDGET_PATH: Record<string, string> = {
+  'value-D-001': 'Order to Cash / O2C Dashboard / Overview',
+  'value-D-002': 'SAP O2C Onboarding / Onboarding Dashboard / Overview',
+  'value-D-003': 'Record to Report / R2R Dashboard / Overview',
+  'value-D-004': 'Plan to Produce / Production Dashboard / Overview',
+  'value-D-005': 'Order to Cash / O2C Dashboard / Summary',
+  'value-D-006': 'Order to Cash / O2C Dashboard / Overview',
+  'value-I-001': 'Order to Cash / O2C Analysis / Overview',
+  'value-I-002': 'SAP O2C Onboarding / Onboarding Analysis / Main',
+  'ext-001': 'Order to Cash / O2C Analysis / Overview',
+  'ext-002': 'Order to Cash / O2C Dashboard / Overview',
+  'ext-003': 'SAP O2C Onboarding / Onboarding Dashboard / Overview',
+  'ext-004': 'Plan to Produce / Production Dashboard / Overview',
+  'ext-005': 'Order to Cash / O2C Analysis / Overview',
+}
+
 type Props = {
   shape: LiShape
   onClose: () => void
   onUpdate?: (id: string, changes: Partial<LiShape>) => void
+  onSelectLinkedElement?: (elementId: string) => void
 }
 
 const SHAPE_OPTIONS = [
@@ -69,7 +86,7 @@ const WIDGET_ID_TO_CHART_ICON: Record<string, string> = {
   'ext':        'SAP-icons-v4/link',
 }
 
-export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) {
+export default function LiShapeDetailPanel({ shape, onClose, onUpdate, onSelectLinkedElement }: Props) {
   const [activeTab, setActiveTab] = useState('Attributes')
   const [manualValue, setManualValue] = useState(shape.manualValue ?? 'No data')
   const [shapeType, setShapeType] = useState(shape.shapeType)
@@ -80,8 +97,21 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
   const panelRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const [previewTop, setPreviewTop] = useState(0)
+  const [shapeDropdownOpen, setShapeDropdownOpen] = useState(false)
+  const shapeDropdownRef = useRef<HTMLDivElement>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [searchDialogOpen, setSearchDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (!shapeDropdownOpen) return
+    function handleClick(e: MouseEvent) {
+      if (shapeDropdownRef.current && !shapeDropdownRef.current.contains(e.target as Node)) {
+        setShapeDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [shapeDropdownOpen])
 
   useEffect(() => {
     if (!previewOpen) return
@@ -114,9 +144,30 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
           }}>
             <Icon name={currentShapeIcon} style={{ width: '0.875rem', height: '0.875rem', color: '#0064d9' } as React.CSSProperties} />
           </div>
-          <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap', flex: 1 }}>
-            {shapeType}
-          </Text>
+          <div ref={shapeDropdownRef} style={{ position: 'relative', flex: 1 }}>
+            <button
+              onClick={() => setShapeDropdownOpen(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--sapFontFamily)', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapPageHeader_TextColor)' }}
+            >
+              <span>{shapeType}</span>
+              <Icon name="slim-arrow-down" style={{ width: '0.75rem', height: '0.75rem', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties} />
+            </button>
+            {shapeDropdownOpen && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 0.25rem)', left: '-2rem', zIndex: 300, background: '#fff', borderRadius: '0.5rem', boxShadow: '0 0 0 1px rgba(34,53,72,0.2), 0 4px 12px rgba(34,53,72,0.15)', minWidth: '10rem', width: 'max-content', overflow: 'hidden' }}>
+                <List selectionMode="Single" onSelectionChange={(e: any) => {
+                  const val = e.detail?.selectedItems?.[0]?.dataset?.value
+                  if (val) { setShapeType(val); onUpdate?.(shape.id, { shapeType: val }) }
+                  setShapeDropdownOpen(false)
+                }}>
+                  {SHAPE_OPTIONS.map(t => (
+                    <ListItemStandard key={t.value} data-value={t.value} icon={t.icon} selected={shapeType === t.value}>
+                      {t.label}
+                    </ListItemStandard>
+                  ))}
+                </List>
+              </div>
+            )}
+          </div>
           <Button design="Transparent" icon="decline" onClick={onClose} />
         </div>
         <div style={{ padding: '0.25rem 1rem 1rem' }}>
@@ -136,7 +187,7 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
       {/* ── Attributes tab ── */}
       {activeTab === 'Attributes' && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 1rem 1rem' }}>
-          <div style={{ marginBottom: 4 }}>
+          <div style={{ marginBottom: '0.25rem' }}>
             <Input
               placeholder="Search for attributes"
               type={'Search' as any}
@@ -159,32 +210,33 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
               </Text>
             </div>
 
+            {/* Connected shape card */}
+            {shape.linkedBpmnId && shape.linkedBpmnName && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
+                <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Connected to</Label>
+                <div
+                  onClick={() => shape.linkedBpmnId && onSelectLinkedElement?.(shape.linkedBpmnId)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', cursor: 'pointer' }}
+                >
+                  <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="SAP-icons-v4/task-activity" style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
+                  </div>
+                  <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>
+                    {shape.linkedBpmnName}
+                  </Text>
+                  <Icon name="slim-arrow-right" style={{ width: '1rem', height: '1rem', color: '#0064d9', flexShrink: 0 } as React.CSSProperties} />
+                </div>
+              </div>
+            )}
+
             {/* Documentation */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
               <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Documentation</Label>
               <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} />
             </div>
 
-            {/* Element Type */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
-              <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Element Type</Label>
-              <Select
-                style={{ width: 'fit-content', minWidth: '8.75rem' } as React.CSSProperties}
-                onChange={(e: any) => {
-                  const val = e.detail?.selectedOption?.dataset?.value ?? shape.shapeType
-                  setShapeType(val)
-                  onUpdate?.(shape.id, { shapeType: val })
-                }}
-              >
-                {SHAPE_OPTIONS.map(t => (
-                  <Option key={t.value} data-value={t.value} icon={t.icon} selected={shapeType === t.value}>
-                    {t.label}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Manual value */}
+            {/* Manual value — hidden for Value shape (driven by widget data) */}
+            {shapeType !== 'Value' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
               <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Manual value</Label>
               <Select
@@ -200,6 +252,7 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
                 ))}
               </Select>
             </div>
+            )}
 
             {/* Driving widget */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
@@ -219,6 +272,11 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate }: Props) 
                         <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', display: 'block' } as React.CSSProperties}>
                           {shape.widgetName}
                         </Text>
+                        {WIDGET_PATH[widgetId] && (
+                          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>
+                            {WIDGET_PATH[widgetId]}
+                          </Text>
+                        )}
                       </div>
                       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                         <Button design="Transparent" icon="hint" ref={previewAnchorRef} onClick={() => {
