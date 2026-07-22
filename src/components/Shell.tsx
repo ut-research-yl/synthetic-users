@@ -433,17 +433,9 @@ export default function Shell() {
         <img slot="logo" src="https://www.sap.com/content/dam/application/shared/logos/sap-logo-svg.svg" alt="SAP" style={{ height: 32 }} />
         <div slot="content" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SigChipV2
-            value={workspaceName}
+            value="NGM Prototype"
             design="none"
             className="shellbar-chip--transparent"
-          />
-          <SigChipV2
-            id="release-chip"
-            value={RELEASES.find(r => r.id === currentRelease)?.label ?? currentRelease}
-            design="none"
-            className="shellbar-chip--outline"
-            trailingIcon="slim-arrow-down"
-            onClick={() => setReleaseSelectorOpen(true)}
           />
         </div>
         <Avatar id="shellbar-profile" slot="profile" initials="CW" colorScheme="Accent6" size="XS" interactive />
