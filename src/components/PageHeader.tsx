@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   DynamicPage, DynamicPageTitle, Title, Text, Toolbar, ToolbarButton,
   Bar, Button, Toast,
 } from '@ui5/webcomponents-react'
 import { DuplicateSettingsDialog } from './DuplicateSettingsDialog'
+import { useDirtyState } from '../contexts/DirtyStateContext'
 
 interface Props {
   title: string
@@ -19,6 +20,20 @@ interface Props {
 export default function PageHeader({ title, subtitle, children, onSave, onReset, onDuplicate, duplicateSourceAudience, isDirty }: Props) {
   const [toastOpen, setToastOpen] = useState(false)
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
+  const dirtyState = useDirtyState()
+  const isDirtyRef = useRef(isDirty)
+  isDirtyRef.current = isDirty
+
+  useEffect(() => {
+    if (onSave && onReset) {
+      dirtyState.register({
+        isDirty: () => isDirtyRef.current ?? false,
+        onSave: () => { onSave(); setToastOpen(true) },
+        onReset: () => onReset(),
+      })
+      return () => dirtyState.unregister()
+    }
+  }, [onSave, onReset]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = () => {
     onSave?.()

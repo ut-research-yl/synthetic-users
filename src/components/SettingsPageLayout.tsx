@@ -1,15 +1,18 @@
 import { Children, type ReactNode, type CSSProperties } from 'react'
+import { Title } from '@ui5/webcomponents-react'
 import s from './SettingsPage.module.css'
 
 interface SettingsPageLayoutProps {
   children: ReactNode
   gap?: CSSProperties['gap']
   flush?: boolean
+  wide?: boolean
 }
 
-export default function SettingsPageLayout({ children, gap, flush }: SettingsPageLayoutProps) {
+export default function SettingsPageLayout({ children, gap, flush, wide }: SettingsPageLayoutProps) {
+  const cls = [s.layout, flush ? s.layoutFlush : '', wide ? s.layoutWide : ''].filter(Boolean).join(' ')
   return (
-    <div className={flush ? `${s.layout} ${s.layoutFlush}` : s.layout} style={gap ? { gap } : undefined}>
+    <div className={cls} style={gap ? { gap } : undefined}>
       {children}
     </div>
   )
@@ -20,17 +23,19 @@ interface SettingsSectionProps {
   subtitle?: string
   children: ReactNode
   action?: ReactNode
+  headerExtra?: ReactNode
 }
 
-export function SettingsSection({ title, subtitle, children, action }: SettingsSectionProps) {
+export function SettingsSection({ title, subtitle, children, action, headerExtra }: SettingsSectionProps) {
   const childArray = Children.toArray(children).filter(Boolean)
   return (
     <div className={s.section}>
-      {(title || action) && (
+      {(title || action || headerExtra) && (
         <div className={s.sectionHeader}>
           <div className={s.sectionHeaderText}>
-            {title && <div className={s.sectionTitle}>{title}</div>}
+            {title && <Title level="H4" className={s.sectionTitle}>{title}</Title>}
             {subtitle && <div className={s.sectionSubtitle}>{subtitle}</div>}
+            {headerExtra}
           </div>
           {action}
         </div>

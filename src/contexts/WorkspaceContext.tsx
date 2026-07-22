@@ -23,50 +23,75 @@ export type DictCategoryType = 'Organization' | 'Document' | 'Activity' | 'Event
 export type DictCategory = { id: string; name: string; description?: string; color: string; parentId?: string; enabled: boolean; type: DictCategoryType; createdAt: string; changedAt: string; hasVariants?: boolean }
 
 const INITIAL_DICT_CATEGORIES: DictCategory[] = [
-  // BPA Process
-  { id: 'c1',  name: 'BPA Process',             description: 'Top-level container for all business process architecture entries.',                                   color: '#046c7a', enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025', hasVariants: true },
-  { id: 'c2',  name: 'Core Processes',           description: 'End-to-end business processes that directly deliver value to customers.',                             color: '#046c7a', parentId: 'c1',  enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
-  { id: 'c8',  name: 'Order-to-Cash',            description: 'Processes from customer order intake through delivery, invoicing, and revenue collection.',           color: '#046c7a', parentId: 'c1',  enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
-  { id: 'c9',  name: 'Procure-to-Pay',           description: 'Processes covering purchasing, goods receipt, vendor invoice verification, and payment.',             color: '#046c7a', parentId: 'c1',  enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
-  { id: 'c10', name: 'Hire-to-Retire',           description: 'Processes spanning the full employee lifecycle from recruitment to offboarding.',                     color: '#046c7a', parentId: 'c1',  enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
-  { id: 'c3',  name: 'Support Processes',        description: 'Internal processes that enable and sustain the core business operations.',                            color: '#046c7a', parentId: 'c1',  enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Apr 1, 2025' },
-  { id: 'c11', name: 'IT Operations',            description: 'Processes for managing IT services, infrastructure, incidents, and changes.',                         color: '#046c7a', parentId: 'c1',  enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Apr 1, 2025' },
-  { id: 'c12', name: 'Facilities Management',    description: 'Processes for maintaining physical workspaces, building services, and site operations.',              color: '#046c7a', parentId: 'c1',  enabled: true,  type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Apr 1, 2025' },
-  { id: 'c41', name: 'Finance Operations',       description: 'Financial support processes including month-end closing, reporting, and cost controlling.',           color: '#046c7a', parentId: 'c1',  enabled: false, type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Apr 1, 2025' },
-  // Risk & Control
-  { id: 'c4',  name: 'Risk & Control',           description: 'Entries covering organizational risk identification, assessment, and internal control measures.',     color: '#aa0808', enabled: true,  type: 'Risk',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  { id: 'c13', name: 'Operational Risk',         description: 'Risks arising from people, processes, systems failures, or external disruptions.',                   color: '#aa0808', parentId: 'c4',  enabled: true,  type: 'Risk',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  { id: 'c14', name: 'Process Risk',             description: 'Risks caused by breakdowns, inefficiencies, or deviations in business process execution.',           color: '#aa0808', parentId: 'c4',  enabled: true,  type: 'Risk',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  { id: 'c15', name: 'Technology Risk',          description: 'Risks associated with IT system failures, data breaches, and digital infrastructure vulnerabilities.',color: '#aa0808', parentId: 'c4',  enabled: true,  type: 'Risk',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  { id: 'c16', name: 'Compliance Risk',          description: 'Risks of failing to meet legal, regulatory, or internal policy obligations.',                         color: '#ba066c', parentId: 'c4',  enabled: true,  type: 'Control',      createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  { id: 'c17', name: 'Regulatory Compliance',    description: 'Controls and obligations required to adhere to external laws and industry regulations.',              color: '#ba066c', parentId: 'c4',  enabled: true,  type: 'Control',      createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  { id: 'c18', name: 'Data Privacy',             description: 'Controls and obligations for lawful handling and protection of personal data (GDPR and similar).',   color: '#ba066c', parentId: 'c4',  enabled: true,  type: 'Control',      createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  { id: 'c19', name: 'Strategic Risk',           description: 'Risks affecting long-term organizational objectives, market position, and strategic direction.',      color: '#aa0808', parentId: 'c4',  enabled: false, type: 'Risk',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
-  // Organization
-  { id: 'c5',  name: 'Organization',             description: 'Organizational units, roles, and responsibilities that make up the company structure.',               color: '#6c32a9', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c6',  name: 'Finance',                  description: 'Finance department units responsible for accounting, controlling, and financial reporting.',           color: '#6c32a9', parentId: 'c5',  enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c20', name: 'Accounts Payable',         description: 'Team managing verification and settlement of incoming vendor invoices.',                              color: '#6c32a9', parentId: 'c5',  enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c21', name: 'Accounts Receivable',      description: 'Team responsible for invoicing customers and collecting outstanding payments.',                       color: '#6c32a9', parentId: 'c5',  enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c22', name: 'Controlling',              description: 'Unit overseeing cost management, profitability analysis, and financial performance monitoring.',      color: '#6c32a9', parentId: 'c5',  enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c7',  name: 'Human Resources',          description: 'HR department units managing recruiting, development, payroll, and employee relations.',              color: '#6c32a9', parentId: 'c5',  enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c23', name: 'Recruiting',               description: 'Unit responsible for sourcing, attracting, and hiring new employees.',                                color: '#6c32a9', parentId: 'c5',  enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c24', name: 'Learning & Development',   description: 'Unit managing employee training programs, skill development, and knowledge management.',              color: '#6c32a9', parentId: 'c5',  enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c25', name: 'Payroll',                  description: 'Unit processing employee compensation, statutory deductions, and pay disbursement.',                  color: '#6c32a9', parentId: 'c5',  enabled: false, type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c26', name: 'Information Technology',   description: 'IT department units managing systems, infrastructure, and digital services for the organization.',    color: '#552cff', parentId: 'c5',  enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c27', name: 'Enterprise Architecture',  description: 'Unit defining IT landscape structure, technology standards, and integration patterns.',               color: '#552cff', parentId: 'c5',  enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  { id: 'c28', name: 'IT Security',              color: '#552cff', description: 'Unit responsible for information security policies, access controls, and incident response.', parentId: 'c5',  enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
-  // Document Type
-  { id: 'c29', name: 'Document Type',            description: 'Classification of formal documents used to govern and guide business operations.',                    color: '#256f3a', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024', hasVariants: true },
-  { id: 'c30', name: 'Policy',                   description: 'Company-wide rules and guidelines governing conduct in a specific domain.',                           color: '#256f3a', parentId: 'c29', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
-  { id: 'c31', name: 'Process Guideline',        description: 'Instructions and best practices for executing specific business processes correctly.',                 color: '#256f3a', parentId: 'c29', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
-  { id: 'c32', name: 'Technical Specification',  description: 'Detailed technical requirements and design parameters for systems or components.',                    color: '#256f3a', parentId: 'c29', enabled: false, type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
-  // IT System
-  { id: 'c33', name: 'IT System',                description: 'Software applications and platforms supporting business processes across the organization.',          color: '#552cff', enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
-  { id: 'c34', name: 'ERP',                      description: 'Enterprise resource planning systems for integrated financial and operational management.',            color: '#552cff', parentId: 'c33', enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
-  { id: 'c35', name: 'SAP S/4HANA',             description: "SAP's core ERP suite deployed for finance, procurement, manufacturing, and sales operations.",        color: '#552cff', parentId: 'c33', enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
-  { id: 'c36', name: 'Legacy ERP',               description: 'Older ERP systems being maintained in parallel or actively phased out.',                             color: '#552cff', parentId: 'c33', enabled: false, type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
-  { id: 'c37', name: 'CRM',                      description: 'Customer relationship management platforms used for sales pipeline, service, and account management.',color: '#552cff', parentId: 'c33', enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
-  { id: 'c38', name: 'Middleware',               description: 'Integration platforms and message brokers connecting enterprise applications and services.',          color: '#552cff', parentId: 'c33', enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Initiatives
+  { id: 'c1',  name: 'Initiatives',                                                              description: 'Strategic initiatives tracked across the organization.',                                      color: '#256f3a', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  // Transformation Steps
+  { id: 'c2',  name: 'Transformation Steps',                                                     description: 'Categories of transformation activities used in SAP-driven transformation programs.',        color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c3',  name: 'Transformation Step - S/4HANA',           parentId: 'c2',                 description: 'Transformation activities specific to S/4HANA migration and adoption.',                      color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c4',  name: 'Transformation Step - Continuous BPT',    parentId: 'c2',                 description: 'Continuous business process transformation steps.',                                          color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c5',  name: 'Transformation Step - OPEX',              parentId: 'c2',                 description: 'Operational excellence transformation activities.',                                          color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c6',  name: 'Process Excellence - H2R',                parentId: 'c2',                 description: 'Process excellence activities for the Hire-to-Retire domain.',                              color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c7',  name: 'Plug and Gain approach',                  parentId: 'c2',                 description: 'Adoption approach leveraging pre-configured best practices.',                               color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c8',  name: 'Business Transformation Steps',           parentId: 'c2',                 description: 'General business transformation activities.',                                                color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c9',  name: '2024 SP - ERP Transformation [only SAP Signavio]', parentId: 'c2',        description: 'ERP transformation steps available exclusively in SAP Signavio (2024 Service Pack).',      color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c10', name: '2024 SP - ERP Transformation',            parentId: 'c2',                 description: 'ERP transformation activities introduced in the 2024 Service Pack.',                        color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c11', name: '2024 SP - Continuous Improvement [only SAP Signavio]', parentId: 'c2',    description: 'Continuous improvement steps exclusive to SAP Signavio (2024 Service Pack).',             color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c12', name: '2024 SP - Continuous Improvement',        parentId: 'c2',                 description: 'Continuous improvement activities from the 2024 Service Pack.',                             color: '#556b82', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  // Organizational Units
+  { id: 'c13', name: 'Organizational Units',                                                     description: 'Organizational entities including regions, departments, roles, and personas.',              color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
+  { id: 'c14', name: 'Region',                                  parentId: 'c13',                description: 'Geographic or organizational region.',                                                      color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024', hasVariants: true },
+  { id: 'c15', name: 'Departments',                             parentId: 'c13',                description: 'Organizational departments across the enterprise.',                                         color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
+  { id: 'c16', name: 'Roles',                                   parentId: 'c13',                description: 'Job roles and functional responsibilities within the organization.',                        color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024', hasVariants: true },
+  { id: 'c17', name: 'Department',                              parentId: 'c13',                description: 'Individual department entity with variant management support.',                            color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024', hasVariants: true },
+  { id: 'c18', name: 'Personas',                                parentId: 'c13',                description: 'Representative user personas for process and product design.',                             color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
+  { id: 'c19', name: 'Staff Name List',                         parentId: 'c13',                description: 'Named individuals and staff assignments.',                                                  color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
+  { id: 'c20', name: 'Externals',                               parentId: 'c13',                description: 'External parties, contractors, and third-party stakeholders.',                             color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
+  // Value Drivers
+  { id: 'c21', name: 'Value Drivers',                                                            description: 'Strategic value drivers that guide business priorities and investments.',                   color: '#a45d00', enabled: true,  type: 'Goal',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
+  // PPI
+  { id: 'c22', name: 'PPI Process Performance Indicators',                                       description: 'Key performance indicators used to measure and track process performance.',                 color: '#a45d00', enabled: true,  type: 'Goal',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
+  // SAP Reference Business Architecture - Business Capability Model
+  { id: 'c23', name: 'SAP - Reference Business Architecture - Business Capability Model',        description: 'SAP reference model mapping business capabilities to organizational functions.',            color: '#0057d2', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  // Documents
+  { id: 'c24', name: 'Documents',                                                                description: 'Formal documents governing and guiding business operations.',                               color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c25', name: 'Data Objects',                            parentId: 'c24',                description: 'Structured data entities and master data objects used in processes.',                       color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c26', name: 'Law',                                     parentId: 'c24',                description: 'Legal regulations and statutory requirements affecting business processes.',                color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c27', name: 'Procedures',                              parentId: 'c24',                description: 'Step-by-step instructions for executing specific operational tasks.',                       color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c28', name: 'Policies',                                parentId: 'c24',                description: 'Company-wide rules and guidelines governing conduct in a specific domain.',                 color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c29', name: 'Certifications',                          parentId: 'c24',                description: 'Industry and regulatory certifications relevant to business processes.',                    color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c30', name: 'Sustainability Regulations',              parentId: 'c24',                description: 'Environmental and sustainability compliance requirements.',                                  color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c31', name: 'Regulatory Requirement',                  parentId: 'c24',                description: 'Mandatory regulatory obligations the organization must fulfill.',                           color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  // Objectives
+  { id: 'c32', name: 'Objectives',                                                               description: 'Business objectives that processes and activities are designed to achieve.',                color: '#aa0808', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // SAP Reference Business Architecture - Business Process Model
+  { id: 'c33', name: 'SAP - Reference Business Architecture - Business Process Model',           description: 'SAP reference model describing standard business process flows.',                           color: '#0057d2', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Activities
+  { id: 'c34', name: 'Activities',                                                               description: 'Individual work activities performed within business processes.',                           color: '#a45d00', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Suppliers / Customers
+  { id: 'c35', name: 'Suppliers',                                                                description: 'External suppliers and vendors providing goods or services.',                               color: '#a45d00', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  { id: 'c36', name: 'Customers',                                                                description: 'End customers and client organizations receiving products or services.',                    color: '#a45d00', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // SAP Reference Solution Architecture - Solution Capability Model
+  { id: 'c37', name: 'SAP - Reference Solution Architecture - Solution Capability Model',        description: 'SAP reference model mapping solution capabilities to technology components.',              color: '#046c7a', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // End-to-End Processes
+  { id: 'c38', name: 'End-to-End Processes',                                                     description: 'Cross-functional processes spanning multiple departments and systems.',                     color: '#256f3a', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Events
+  { id: 'c39', name: 'Events',                                                                   description: 'Business events that trigger or result from process execution.',                           color: '#556b82', enabled: true,  type: 'Event',        createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // SAP Reference Solution Architecture - Solution Process Model
+  { id: 'c40', name: 'SAP - Reference Solution Architecture - Solution Process Model',           description: 'SAP reference model describing solution-level process flows.',                             color: '#046c7a', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Business Capabilities
+  { id: 'c41', name: 'Business Capabilities',                                                    description: 'High-level abilities the organization needs to deliver value.',                             color: '#046c7a', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // IT Systems
+  { id: 'c42', name: 'IT Systems',                                                               description: 'Software applications and platforms supporting business processes.',                        color: '#556b82', enabled: true,  type: 'IT System',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Business Architecture
+  { id: 'c43', name: 'Business Architecture',                                                    description: 'Architectural artifacts describing how the business is structured and operates.',          color: '#6c32a9', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Requirements (disabled)
+  { id: 'c44', name: 'Requirements',                                                             description: 'Functional and non-functional requirements linked to process or system design.',           color: '#556b82', enabled: false, type: 'Requirement',  createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Processes (disabled)
+  { id: 'c45', name: 'Processes',                                                                description: 'General process entries not covered by more specific categories.',                          color: '#556b82', enabled: false, type: 'Processes',    createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Others
+  { id: 'c46', name: 'Others',                                                                   description: 'Miscellaneous dictionary entries that do not fit a specific category.',                    color: '#556b82', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
+  // Risks
+  { id: 'c47', name: 'Risks',                                                                    description: 'Risk entries identifying potential threats to business operations or objectives.',          color: '#aa0808', enabled: true,  type: 'Risk',         createdAt: 'Feb 12, 2024', changedAt: 'Oct 22, 2024' },
 ]
 
 const INITIAL_AUDIENCES: Audience[] = [
@@ -99,6 +124,7 @@ type WorkspaceContextType = {
   moveContentLanguage: (code: string, direction: 'up' | 'down') => void
   reorderContentLanguage: (draggedCode: string, targetCode: string, placement: 'Before' | 'After') => void
   setDefaultLanguage: (code: string) => void
+  setContentLanguages: Dispatch<SetStateAction<ContentLanguage[]>>
   ownerId: string
   setOwnerId: (v: string) => void
   additionalInfo: string
@@ -135,6 +161,7 @@ const WorkspaceContext = createContext<WorkspaceContextType>({
   moveContentLanguage: () => {},
   reorderContentLanguage: () => {},
   setDefaultLanguage: () => {},
+  setContentLanguages: () => {},
   ownerId: '1',
   setOwnerId: () => {},
   additionalInfo: DEFAULT_ADDITIONAL_INFO,
@@ -175,7 +202,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [smartFolders, setSmartFolders] = useState<SmartFolder[]>(INITIAL_SMART_FOLDERS)
   const [privateFolder, setPrivateFolder] = useState(true)
   const [homeTitle, setHomeTitle] = useState('')
-  const [homeWelcomeMessage, setHomeWelcomeMessage] = useState('')
+  const [homeWelcomeMessage, setHomeWelcomeMessage] = useState('Your starting point for everything process')
   const [audiences, setAudiences] = useState<Audience[]>(INITIAL_AUDIENCES)
   const [dictCategories, setDictCategories] = useState<DictCategory[]>(INITIAL_DICT_CATEGORIES)
 
@@ -300,7 +327,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   return (
     <WorkspaceContext.Provider value={{
       workspaceName, setWorkspaceName,
-      contentLanguages, addContentLanguage, removeContentLanguage, moveContentLanguage, reorderContentLanguage, setDefaultLanguage,
+      contentLanguages, addContentLanguage, removeContentLanguage, moveContentLanguage, reorderContentLanguage, setDefaultLanguage, setContentLanguages,
       ownerId, setOwnerId,
       additionalInfo, setAdditionalInfo,
       helpLinks, setHelpLinks,

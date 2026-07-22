@@ -9,19 +9,19 @@
   padding-bottom: 1rem;
 }
 
+.layoutWide {
+  max-width: none;
+}
+
 /* ── Narrow wrapper — same max-width as .layout, for elements outside SettingsPageLayout ── */
 .narrowContent {
   max-width: 48rem;
   width: 100%;
   margin: 0 auto;
+  padding-inline: var(--inline-padding, 0rem);
 }
 
 @container (max-width: 600px) {
-  .layout,
-  .narrowContent {
-    padding: 0 1rem;
-  }
-
   .layoutFlush {
     padding: 0;
   }
@@ -32,6 +32,7 @@
   background: var(--sapGroup_ContentBackground);
   border-radius: var(--sapElement_BorderCornerRadius);
   overflow: hidden;
+  margin-inline: var(--inline-padding, 0rem);
 }
 
 .sectionHeader {
@@ -47,13 +48,11 @@
 }
 
 .sectionTitle {
-  font-weight: 600;
-  font-size: var(--sapFontHeader5Size);
   color: var(--sapTextColor);
 }
 
 .sectionSubtitle {
-  font-size: var(--sapFontSmallSize);
+  font-size: var(--sapFontSize);
   color: var(--sapContent_LabelColor);
   margin-top: 0.2rem;
 }

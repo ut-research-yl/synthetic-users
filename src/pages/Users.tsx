@@ -29,7 +29,7 @@ import {
 } from '@ui5/webcomponents-react'
 import { SigTableWrapper, SigChipV2, SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
 import PageHeader from '../components/PageHeader'
-import { AddUserDialog } from '../components/AddUserDialog'
+import { AddUserDialog, type AddUserData } from '../components/AddUserDialog'
 import { USERS as INITIAL_USERS, ALL_LICENSES, ALL_FEATURES, GROUP_FEATURES, type User, type License } from '../data/users'
 
 // ── Data ────────────────────────────────────────────────────────────────────
@@ -43,6 +43,20 @@ const GROUP_COLOR_MAP: Record<string, string> = {
   'Analysts':        'Accent3',
   'Human Resources': 'Accent8',
   'Modelers':        'Accent2',
+}
+
+const LS_USERS_KEY = 'sig_mockup_users'
+
+function loadUsers(): User[] {
+  try {
+    const raw = localStorage.getItem(LS_USERS_KEY)
+    if (raw) return JSON.parse(raw) as User[]
+  } catch { /* ignore */ }
+  return INITIAL_USERS
+}
+
+function saveUsers(users: User[]) {
+  try { localStorage.setItem(LS_USERS_KEY, JSON.stringify(users)) } catch { /* ignore */ }
 }
 
 // ── PermissionsSection ──────────────────────────────────────────────────────
@@ -97,10 +111,11 @@ function PermissionsSection({ groups }: { groups: string[] }) {
 
 // ── UserDetailPanel ──────────────────────────────────────────────────────────
 
-function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
+function UserDetailPanel({ user, onClose, onRemoveUser, onUpdate, migrationState }: {
   user: User
   onClose: () => void
   onRemoveUser: (id: string) => void
+  onUpdate: (updated: User) => void
   migrationState: 'pre' | 'post'
 }) {
   const [userLicenses, setUserLicenses] = useState<License[]>(user.licenses)
@@ -134,6 +149,8 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
   const addGroupPopoverRef   = useRef<PopoverDomRef>(null)
   const addGroupBtnId        = useRef('add-group-btn-' + user.id).current
 
+  const isInvited = user.status === 'Invited'
+
   const availableLicenses = ALL_LICENSES.filter(l => !userLicenses.includes(l))
   const availableGroups   = ALL_GROUPS.filter(g => !userGroups.includes(g))
   const filteredAvailableGroups = availableGroups.filter(g => !groupSearch || g.toLowerCase().includes(groupSearch.toLowerCase()))
@@ -145,20 +162,46 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
       addLicensePopoverRef.current.open = true
     }
   }
+
   const confirmAddLicenses = () => {
-    setUserLicenses(prev => [...prev, ...Array.from(pendingLicenses)])
+    const next = [...userLicenses, ...Array.from(pendingLicenses)]
+    setUserLicenses(next)
+    onUpdate({ ...user, licenses: next })
     if (addLicensePopoverRef.current) addLicensePopoverRef.current.open = false
+    showToast('Licenses updated.')
   }
 
   const confirmAddGroups = () => {
-    setUserGroups(prev => [...prev, ...Array.from(pendingGroups)])
+    const next = [...userGroups, ...Array.from(pendingGroups)]
+    setUserGroups(next)
+    onUpdate({ ...user, groups: next })
     if (addGroupPopoverRef.current) addGroupPopoverRef.current.open = false
+    showToast('Group membership updated.')
+  }
+
+  const removeLicense = (license: License) => {
+    const next = userLicenses.filter(l => l !== license)
+    setUserLicenses(next)
+    onUpdate({ ...user, licenses: next })
+    showToast('License removed.')
+  }
+
+  const removeGroup = (group: string) => {
+    const next = userGroups.filter(g => g !== group)
+    setUserGroups(next)
+    onUpdate({ ...user, groups: next })
+    showToast('Removed from group.')
   }
 
   const confirmRemoveUser = () => { setRemoveUserOpen(false); onRemoveUser(user.id); onClose() }
 
   const headerActions: FunctionComponent[] = [
-    () => migrationState === 'post' ? (
+    () => isInvited ? (
+      <>
+        <Button design="Transparent" onClick={() => showToast('Invitation resent to ' + user.email)}>Resend Invite</Button>
+        <Button design="Negative" onClick={() => setCancelInviteOpen(true)}>Cancel Invitation</Button>
+      </>
+    ) : migrationState === 'post' ? (
       <Button design="Transparent" icon="action-external-link" tooltip="Edit User in SCI"
         onClick={() => window.open('https://as5u4itfg.accounts400.ondemand.com/saml2/idp/sso?sp=oac.accounts.sap.com&RelayState=https%3A%2F%2Fas5u4itfg.accounts400.ondemand.com%2Fadmin%2F', '_blank')}>
         Edit User in SCI
@@ -171,25 +214,51 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
     )
   ]
 
-  const subHeader = user.isAdmin ? (
-    <div style={{ marginTop: '-0.25rem', paddingBottom: '0.25rem' }}>
-      <Tag design="Set2" colorScheme="6" hideStateIcon>Administrator</Tag>
+  const subHeader = (isInvited || user.isAdmin) ? (
+    <div style={{ marginTop: '-0.25rem', paddingBottom: '0.25rem', display: 'flex', gap: '0.25rem' }}>
+      {isInvited && <Tag design="Set1" colorScheme="2" hideStateIcon>Invited</Tag>}
+      {user.isAdmin && !isInvited && <Tag design="Set2" colorScheme="6" hideStateIcon>Administrator</Tag>}
     </div>
   ) : undefined
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <SigRightSidePanel
-        headerTitle={user.name}
+        headerTitle={isInvited ? user.email : user.name}
         isOpen={true}
         toggleRightSidePanel={onClose}
         contentActionsSlot={headerActions}
-        elementBeforeTitle={<Avatar initials={user.initials} colorScheme={user.colorScheme as never} size="S" />}
+        elementBeforeTitle={
+          isInvited
+            ? <Avatar icon="mail" size="S" colorScheme="Accent4" />
+            : <Avatar initials={user.initials} colorScheme={user.colorScheme as never} size="S" />
+        }
         subHeaderSlot={subHeader}
         wrappingType="Wrap"
         style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)' }}
       >
-        {/* ── Details ── */}
+        {/* ── Invited user: limited info ── */}
+        {isInvited && (
+          <div style={{ paddingBottom: '1.5rem' }}>
+            <div style={{ border: '1px solid var(--sapList_BorderColor)', borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden', padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '7rem 1fr', gap: '0.5rem 1rem', alignItems: 'center' }}>
+                <Label showColon>Email</Label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <Text>{user.email}</Text>
+                  <Button design="Transparent" icon="copy" tooltip="Copy email address" onClick={() => navigator.clipboard.writeText(user.email)} />
+                </div>
+                <Label showColon>Invited</Label>
+                <Text>{user.memberSince}</Text>
+              </div>
+              <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
+                This user has not yet accepted the invitation. Profile details will be available once they sign in for the first time.
+              </Text>
+            </div>
+          </div>
+        )}
+
+        {/* ── Details (active/suspended users only) ── */}
+        {!isInvited && (
         <div style={{ paddingBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
             <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapPageHeader_TextColor)' }}>
@@ -215,7 +284,7 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
               <Label showColon>Phone</Label>
               {migrationState === 'pre' && editingDetails ? <Input value={phone} onInput={e => setPhone((e.target as unknown as HTMLInputElement).value)} /> : <Text>{phone || '—'}</Text>}
               <Label showColon>Company</Label>
-              {migrationState === 'pre' && editingDetails ? <Input value={company} onInput={e => setCompany((e.target as unknown as HTMLInputElement).value)} /> : <Text>{company}</Text>}
+              {migrationState === 'pre' && editingDetails ? <Input value={company} onInput={e => setCompany((e.target as unknown as HTMLInputElement).value)} /> : <Text>{company || '—'}</Text>}
             </div>
             {migrationState === 'pre' && editingDetails && (
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -225,6 +294,7 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
             )}
           </div>
         </div>
+        )}
 
         {/* ── Licenses ── */}
         <div style={{ paddingBottom: '1.5rem' }}>
@@ -248,7 +318,7 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0', width: '100%' }}>
                       <Text style={{ flex: 1 }}>{l}</Text>
                       <Button design="Transparent" icon="decline" accessibleName={`Remove ${l}`}
-                        onClick={() => setUserLicenses(prev => prev.filter(license => license !== l))} />
+                        onClick={() => removeLicense(l)} />
                     </div>
                   </ListItemCustom>
                 ))}
@@ -281,7 +351,7 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0', width: '100%' }}>
                       <Text style={{ flex: 1 }}>{g}</Text>
                       <Button design="Transparent" icon="decline" accessibleName={`Remove from ${g}`}
-                        onClick={() => setUserGroups(prev => prev.filter(group => group !== g))} />
+                        onClick={() => removeGroup(g)} />
                     </div>
                   </ListItemCustom>
                 ))}
@@ -410,7 +480,7 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
       {/* ── Remove User / Delete User confirmation dialog ── */}
       <Dialog open={removeUserOpen} headerText="Delete User" state="Critical" onClose={() => setRemoveUserOpen(false)}>
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '400px', maxWidth: '480px' }}>
-          <Text>Are you sure you want to delete <strong>{user.name}</strong> from this workspace?</Text>
+          <Text>Do you want to delete <strong>{user.name}</strong> from this workspace?</Text>
           <Text>Their assigned licenses and group memberships will be revoked.</Text>
           <Text style={{ color: 'var(--sapCriticalColor)', fontSize: 'var(--sapFontSmallSize)' }}>This action cannot be undone.</Text>
         </div>
@@ -424,7 +494,7 @@ function UserDetailPanel({ user, onClose, onRemoveUser, migrationState }: {
       <Dialog open={cancelInviteOpen} headerText="Cancel Invitation" state="Critical" onClose={() => setCancelInviteOpen(false)}>
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '400px', maxWidth: '480px' }}>
           <Text>
-            {`Are you sure you want to cancel the invitation for ${user.email}? They will no longer be able to join the workspace using the invitation link.`}
+            {`Do you want to cancel the invitation for ${user.email}? They will no longer be able to join the workspace using the invitation link.`}
           </Text>
         </div>
         <Bar slot="footer" design="Footer">
@@ -448,27 +518,49 @@ function UsersListColumn({ users, selectedUser, onSelectUser, migrationState, on
   const filtered = users.filter(u => {
     const q = search.toLowerCase()
     return !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-  }).sort((a, b) => a.name.localeCompare(b.name))
+  }).sort((a, b) => {
+    // Invited users always sort to the top
+    if (a.status === 'Invited' && b.status !== 'Invited') return -1
+    if (a.status !== 'Invited' && b.status === 'Invited') return 1
+    return a.name.localeCompare(b.name)
+  })
+
+  const renderUserRow = (user: User) => {
+    const isInvited = user.status === 'Invited'
+    return (
+      <TableRow key={user.id} interactive rowKey={user.id}
+        style={selectedUser?.id === user.id ? { background: 'var(--sapList_SelectionBackgroundColor)', borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties : { borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties}>
+        <TableCell>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {isInvited
+              ? <Avatar icon="mail" colorScheme="Accent4" size="XS" />
+              : <Avatar initials={user.initials} colorScheme={user.colorScheme as never} size="XS" />
+            }
+            <Text style={isInvited ? { color: 'var(--sapContent_LabelColor)' } : undefined}>
+              {isInvited ? user.email : user.name}
+            </Text>
+            {isInvited && <Tag design="Set1" colorScheme="2" hideStateIcon>Invited</Tag>}
+            {user.isAdmin && !isInvited && <Tag design="Set2" colorScheme="6" hideStateIcon>Administrator</Tag>}
+          </div>
+        </TableCell>
+        <TableCell>
+          <Text style={{ color: 'var(--sapContent_LabelColor)' }}>
+            {isInvited ? '—' : user.email}
+          </Text>
+        </TableCell>
+      </TableRow>
+    )
+  }
 
   const renderRows = () => {
     if (!groupByStatus) {
-      return filtered.map(user => (
-        <TableRow key={user.id} interactive rowKey={user.id}
-          style={selectedUser?.id === user.id ? { background: 'var(--sapList_SelectionBackgroundColor)', borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties : { borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties}>
-          <TableCell>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Avatar initials={user.initials} colorScheme={user.colorScheme as never} size="XS" />
-              <Text>{user.name}</Text>
-              {user.isAdmin && <Tag design="Set2" colorScheme="6" hideStateIcon>Administrator</Tag>}
-            </div>
-          </TableCell>
-          <TableCell><Text style={{ color: 'var(--sapContent_LabelColor)' }}>{user.email}</Text></TableCell>
-        </TableRow>
-      ))
+      return filtered.map(renderUserRow)
     }
 
-    const admins = filtered.filter(u => u.isAdmin)
-    const normalUsers = filtered.filter(u => !u.isAdmin)
+    const admins = filtered.filter(u => u.isAdmin && u.status !== 'Invited')
+    const normalUsers = filtered.filter(u => !u.isAdmin && u.status !== 'Invited')
+    const invited = filtered.filter(u => u.status === 'Invited')
+
     const renderGroup = (label: string, groupUsers: User[]) => {
       if (groupUsers.length === 0) return null
       return [
@@ -479,23 +571,12 @@ function UsersListColumn({ users, selectedUser, onSelectUser, migrationState, on
             </Text>
           </TableCell>
         </TableRow>,
-        ...groupUsers.map(user => (
-          <TableRow key={user.id} interactive rowKey={user.id}
-            style={selectedUser?.id === user.id ? { background: 'var(--sapList_SelectionBackgroundColor)', borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties : { borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties}>
-            <TableCell>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Avatar initials={user.initials} colorScheme={user.colorScheme as never} size="XS" />
-                <Text>{user.name}</Text>
-                {user.isAdmin && <Tag design="Set2" colorScheme="6" hideStateIcon>Administrator</Tag>}
-              </div>
-            </TableCell>
-            <TableCell><Text style={{ color: 'var(--sapContent_LabelColor)' }}>{user.email}</Text></TableCell>
-          </TableRow>
-        )),
+        ...groupUsers.map(renderUserRow),
       ]
     }
 
     return [
+      renderGroup('Invited', invited),
       renderGroup('Administrators', admins),
       renderGroup('Users', normalUsers),
     ]
@@ -571,15 +652,25 @@ function UsersListColumn({ users, selectedUser, onSelectUser, migrationState, on
 export default function Users() {
   const [searchParams] = useSearchParams()
   const initialUserId  = searchParams.get('userId')
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS)
+  const [users, setUsers] = useState<User[]>(loadUsers)
   const [selectedUser, setSelectedUser] = useState<User | null>(
-    initialUserId ? (INITIAL_USERS.find(u => u.id === initialUserId) ?? null) : null
+    initialUserId ? (loadUsers().find(u => u.id === initialUserId) ?? null) : null
   )
   const [layout, setLayout] = useState<'OneColumn' | 'TwoColumnsMidExpanded'>(
     initialUserId ? 'TwoColumnsMidExpanded' : 'OneColumn'
   )
-  const [migrationState, setMigrationState] = useState<'pre' | 'post'>('post')
+  const [migrationState, setMigrationState] = useState<'pre' | 'post'>('pre')
   const [addUserOpen, setAddUserOpen] = useState(false)
+  const [inviteToastOpen, setInviteToastOpen] = useState(false)
+  const [inviteToastMessage, setInviteToastMessage] = useState('')
+
+  const updateUsers = (updater: (prev: User[]) => User[]) => {
+    setUsers(prev => {
+      const next = updater(prev)
+      saveUsers(next)
+      return next
+    })
+  }
 
   const handleSelectUser = (user: User) => {
     setSelectedUser(user)
@@ -592,7 +683,41 @@ export default function Users() {
   }
 
   const handleRemoveUser = (id: string) => {
-    setUsers(prev => prev.filter(u => u.id !== id))
+    updateUsers(prev => prev.filter(u => u.id !== id))
+  }
+
+  const handleUpdateUser = (updated: User) => {
+    updateUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
+    setSelectedUser(updated)
+  }
+
+  const handleAddUser = (data: AddUserData) => {
+    const now = new Date().toISOString().slice(0, 10)
+    const newUsers: User[] = data.emails.map((email, i) => ({
+      id: `invited-${Date.now()}-${i}`,
+      initials: '',
+      colorScheme: 'Accent4',
+      name: email,
+      email,
+      title: '', firstName: '', lastName: '', phone: '', company: '',
+      lastLogin: '—',
+      memberSince: now,
+      status: 'Invited' as const,
+      authMethod: 'Local' as const,
+      isAdmin: false,
+      licenses: data.licenses as License[],
+      groups: data.groups,
+      accessRights: [],
+    }))
+    updateUsers(prev => [...prev, ...newUsers])
+    setAddUserOpen(false)
+    const count = data.emails.length
+    setInviteToastMessage(
+      data.skipInviteEmail
+        ? count === 1 ? 'User added. No invitation email was sent.' : `${count} users added. No invitation emails were sent.`
+        : count === 1 ? 'Invitation sent successfully.' : `Invitations sent to ${count} users.`
+    )
+    setInviteToastOpen(true)
   }
 
   const layoutsConfiguration = {
@@ -619,23 +744,28 @@ export default function Users() {
         }
         midColumn={
           selectedUser
-            ? <div style={{ height: '100%', overflow: 'hidden' }}><UserDetailPanel key={selectedUser.id} user={selectedUser} onClose={handleClose} onRemoveUser={handleRemoveUser} migrationState={migrationState} /></div>
+            ? <div style={{ height: '100%', overflow: 'hidden' }}><UserDetailPanel key={selectedUser.id} user={selectedUser} onClose={handleClose} onRemoveUser={handleRemoveUser} onUpdate={handleUpdateUser} migrationState={migrationState} /></div>
             : <div />
         }
       />
+      {false && (
       <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 100, background: 'var(--sapButton_Emphasized_Background)', border: 'none', borderRadius: '0.5rem', boxShadow: 'var(--sapContent_Shadow2)', padding: '0.25rem' }}>
         <SegmentedButton onSelectionChange={(e: any) => setMigrationState(e.detail.selectedItems[0]?.dataset.key ?? 'post')}>
           <SegmentedButtonItem data-key="pre" selected={migrationState === 'pre'}>Pre-migration</SegmentedButtonItem>
           <SegmentedButtonItem data-key="post" selected={migrationState === 'post'}>Post-migration (SCI)</SegmentedButtonItem>
         </SegmentedButton>
       </div>
+      )}
       <AddUserDialog
         open={addUserOpen}
         availableLicenses={ALL_LICENSES}
         availableGroups={ALL_GROUPS}
         onClose={() => setAddUserOpen(false)}
-        onAdd={() => setAddUserOpen(false)}
+        onAdd={handleAddUser}
       />
+      <Toast open={inviteToastOpen} placement="BottomCenter" onClose={() => setInviteToastOpen(false)}>
+        {inviteToastMessage}
+      </Toast>
     </>
   )
 }

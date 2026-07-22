@@ -1,12 +1,11 @@
-import { useState, useRef } from 'react'
-import { Button, CheckBox, Switch, Text, Title, Menu, MenuItem, Icon, Dialog, Input, Label, Toast, MessageStrip, Panel, ObjectPage, ObjectPageTitle, ObjectPageSection, ObjectPageMode, Bar } from '@ui5/webcomponents-react'
+import { useState, useRef, useCallback } from 'react'
+import { Button, CheckBox, Text, Title, Menu, MenuItem, Icon, Dialog, Input, Label, Toast, MessageStrip, Panel, ObjectPage, ObjectPageTitle, ObjectPageSection, ObjectPageMode, Bar, VariantManagement, VariantItem, ListItemGroup } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 import { clone, ITEM_ICONS, BASE_GROUPS, INITIAL_LANG_GROUPS, type Language, type LangGroup } from './modelingLanguagesData'
 import EditAppearanceDialog from './EditAppearanceDialog'
 
 type Tool = 'pm-legacy' | 'modeler'
 
-// Per-item appearance state
 type AppearanceState = 'default' | 'style-updated' | 'custom-graphics' | 'both'
 
 const ItemIcon = ({ id, size = 20 }: { id: string; size?: number }) => {
@@ -42,6 +41,8 @@ export default function ModelingLanguages() {
   const [tool, setTool] = useState<Tool>('modeler')
   const [langGroups, setLangGroups] = useState<LangGroup[]>(INITIAL_LANG_GROUPS)
   const [selectedId, setSelectedId] = useState('bpmn-basic')
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
   const [rightView, setRightView] = useState<'elements' | 'appearance'>('elements')
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [isDirty, setIsDirty] = useState(false)
@@ -64,18 +65,39 @@ export default function ModelingLanguages() {
     'event-based-gateway': 'both',
   })
 
+  const [isNarrow, setIsNarrow] = useState(false)
+  const [elementSearch, setElementSearch] = useState('')
+  const roRef = useRef<ResizeObserver | null>(null)
+  const layoutRef = useCallback((el: HTMLDivElement | null) => {
+    if (roRef.current) { roRef.current.disconnect(); roRef.current = null }
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      setIsNarrow(entry.contentRect.width < 900)
+    })
+    ro.observe(el)
+    roRef.current = ro
+  }, [])
+
   const savedLangGroupsRef = useRef<LangGroup[]>(clone(INITIAL_LANG_GROUPS))
   const rightPanelRef = useRef<HTMLDivElement>(null)
 
   const selectLang = (id: string) => {
     setSelectedId(id)
+    setSelectedGroupId(null)
+    setSelectedElementId(null)
     setRightView('elements')
+    if (rightPanelRef.current) rightPanelRef.current.scrollTop = 0
+  }
+
+  const selectGroup = (groupId: string) => {
+    setSelectedGroupId(groupId)
+    setRightView('appearance')
     if (rightPanelRef.current) rightPanelRef.current.scrollTop = 0
   }
 
   const allLangs = langGroups.flatMap(g => g.languages)
   const selected = allLangs.find(l => l.id === selectedId)!
-  const selectedGroup = langGroups.find(g => g.languages.some(l => l.id === selectedId))!
+  const selectedGroup = langGroups.find(g => g.id === selectedGroupId) ?? langGroups.find(g => g.languages.some(l => l.id === selectedId))!
 
   const updateLang = (langId: string, fn: (l: Language) => Language) =>
     setLangGroups(prev => prev.map(g => ({ ...g, languages: g.languages.map(l => l.id === langId ? fn(l) : l) })))
@@ -134,13 +156,43 @@ export default function ModelingLanguages() {
   const BORDER = '1px solid var(--sapList_BorderColor)'
 
   const body = (
-      <div style={{ paddingBottom: '1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', border: BORDER, borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden', flex: 1, minHeight: 0 }}>
+      <div ref={layoutRef} style={{ paddingBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start', width: '100%' }}>
 
-        {/* Left panel */}
-        <div style={{ width: '26rem', flexShrink: 0, borderRight: BORDER, background: 'var(--sapList_Background)', overflowY: 'auto' }}>
+        {/* Left panel — hidden on narrow viewports */}
+        {!isNarrow && (
+        <div style={{
+          width: '26rem',
+          flexShrink: 0,
+          borderRadius: 'var(--sapElement_BorderCornerRadius)',
+          background: 'var(--sapList_Background)',
+          overflowY: 'auto',
+          position: 'sticky',
+          top: 0,
+          maxHeight: 'calc(100vh - 10rem)',
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderBottom: BORDER }}>
             <Title level="H5">Modeling Languages</Title>
+            <div>
+              <Button
+                id="wide-create-lang-btn"
+                design="Emphasized"
+                endIcon="slim-arrow-down"
+                onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'wide-create-lang' ? null : 'wide-create-lang') }}
+              >Create Subset</Button>
+              <Menu
+                opener="wide-create-lang-btn"
+                open={openMenu === 'wide-create-lang'}
+                onClose={() => setOpenMenu(null)}
+                onItemClick={(e: any) => {
+                  const text = e.detail?.item?.text
+                  setOpenMenu(null)
+                  const group = langGroups.find(g => g.label === text)
+                  if (group) { setAddElementSetGroupId(group.id); setNewElementSetName('') }
+                }}
+              >
+                {langGroups.map(g => <MenuItem key={g.id} text={g.label} />)}
+              </Menu>
+            </div>
           </div>
 
           {langGroups.map(group => {
@@ -152,11 +204,10 @@ export default function ModelingLanguages() {
                 tabIndex={0}
                 className="lang-list-item"
                 onClick={() => {
-                  setRightView('appearance')
-                  if (rightPanelRef.current) rightPanelRef.current.scrollTop = 0
+                  selectGroup(group.id)
                 }}
-                onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRightView('appearance'); if (rightPanelRef.current) rightPanelRef.current.scrollTop = 0 } }}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.25rem 0.5rem 1rem', borderBottom: BORDER, opacity: allDisabled ? 0.4 : 1, cursor: 'pointer', userSelect: 'none', background: rightView === 'appearance' ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapList_Background)' }}
+                onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectGroup(group.id) } }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.25rem 0.5rem 1rem', borderBottom: BORDER, opacity: allDisabled ? 0.4 : 1, cursor: 'pointer', userSelect: 'none', background: (rightView === 'appearance' && selectedGroupId === group.id) ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapList_Background)' }}
               >
                 <Icon
                   name={group.expanded ? 'navigation-down-arrow' : 'navigation-right-arrow'}
@@ -169,33 +220,33 @@ export default function ModelingLanguages() {
                   icon="overflow"
                   design="Transparent"
                   accessibleName={`Options for ${group.label}`}
-                  onClick={(e: any) => { e.stopPropagation(); setOpenMenu(openMenu === group.id ? null : group.id) }}
+                  onClick={(e: any) => { e.stopPropagation(); setOpenMenu(openMenu === `group-overflow-${group.id}` ? null : `group-overflow-${group.id}`) }}
                 />
                 <Menu
                   opener={`group-overflow-${group.id}`}
-                  open={openMenu === group.id}
+                  open={openMenu === `group-overflow-${group.id}`}
                   onClose={() => setOpenMenu(null)}
                   onItemClick={(e: any) => {
                     const text = e.detail?.item?.text
                     setOpenMenu(null)
-                    if (text === 'Add Element Set') {
-                      setAddElementSetGroupId(group.id)
-                      setNewElementSetName('')
-                    } else if (text === 'Disable') {
+                    if (text === 'Create Subset') {
+                      setAddElementSetGroupId(group.id); setNewElementSetName('')
+                    } else if (text === 'Disable Modeling Language') {
                       setLangGroups(prev => prev.map(g => g.id === group.id
                         ? { ...g, languages: g.languages.map(l => ({ ...l, active: false })) } : g))
                       setIsDirty(true)
                       setGroupDisabledToast(group.label)
-                    } else if (text === 'Enable') {
+                    } else if (text === 'Enable Modeling Language') {
                       setLangGroups(prev => prev.map(g => g.id === group.id
                         ? { ...g, languages: g.languages.map(l => ({ ...l, active: true })) } : g))
                       setIsDirty(true)
                     }
                   }}
                 >
+                  <MenuItem text="Create Subset" />
                   {allDisabled
-                    ? <MenuItem text="Enable" />
-                    : <><MenuItem text="Add Element Set" /><MenuItem text="Disable" /></>
+                    ? <MenuItem text="Enable Modeling Language" />
+                    : <MenuItem text="Disable Modeling Language" />
                   }
                 </Menu>
               </div>
@@ -218,9 +269,16 @@ export default function ModelingLanguages() {
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px', opacity: lang.active ? 1 : 0.4 }}>
-                    <Text style={{ display: 'block', fontWeight: (rightView === 'elements' && lang.id === selectedId) ? '600' : undefined, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {lang.label}
-                    </Text>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Text style={{ display: 'block', fontWeight: (rightView === 'elements' && lang.id === selectedId) ? '600' : undefined, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {lang.label}
+                      </Text>
+                      {!lang.active && (
+                        <Text style={{ display: 'block', fontStyle: 'italic', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)', whiteSpace: 'nowrap' }}>
+                          Disabled
+                        </Text>
+                      )}
+                    </div>
                     <Text style={{ display: 'block', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                       {lang.variant} · {countEnabled(lang)}/{countTotal(lang)} Elements
                     </Text>
@@ -257,23 +315,16 @@ export default function ModelingLanguages() {
                     }}
                   >
                     {lang.active ? (
-                      lang.variant === 'Default' ? (
-                        <>
-                          <MenuItem text="Duplicate" />
-                          <MenuItem text="Delete" />
-                        </>
-                      ) : (
-                        <>
-                          <MenuItem text="Rename" />
-                          <MenuItem text="Duplicate" />
-                          <MenuItem text="Disable" />
-                          <MenuItem text="Delete" />
-                        </>
-                      )
-                    ) : lang.variant === 'Default' ? (
-                      <MenuItem text="Enable" />
+                      <>
+                        <MenuItem text="Rename" disabled={lang.variant === 'Default'} />
+                        <MenuItem text="Duplicate" />
+                        <MenuItem text="Disable" />
+                        <MenuItem text="Delete" />
+                      </>
                     ) : (
                       <>
+                        <MenuItem text="Rename" disabled={lang.variant === 'Default'} />
+                        <MenuItem text="Duplicate" />
                         <MenuItem text="Enable" />
                         <MenuItem text="Delete" />
                       </>
@@ -284,16 +335,117 @@ export default function ModelingLanguages() {
             </div>
           )})}
         </div>
+        )}
 
         {/* Right panel */}
-        <div ref={rightPanelRef} style={{ flex: 1, background: 'var(--sapList_Background)', minWidth: 0, overflowY: 'auto' }}>
+        <div ref={rightPanelRef} style={{ flex: 1, background: 'var(--sapList_Background)', minWidth: 0, overflowY: 'auto', borderRadius: 'var(--sapElement_BorderCornerRadius)' }}>
 
           {rightView === 'elements' ? (
             <>
               <div style={{ padding: '0.75rem 1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                  <Title level="H5" style={{ fontStyle: selected.label ? 'normal' : 'italic' } as React.CSSProperties}>{selected.label}</Title>
-                  <Switch checked={selected.active} onChange={() => toggleLangActive(selected.id)} />
+                  {isNarrow ? (
+                    <VariantManagement
+                      closeOnItemSelect
+                      hideSaveAs
+                      hideManageVariants
+                      level="H5"
+                      size="H5"
+                      titleText="Modeling Languages"
+                      onSelect={(e: any) => {
+                        const key = (e.detail.selectedVariant as any).children as string
+                        const lang = allLangs.find(l => l.label === key)
+                        if (lang) selectLang(lang.id)
+                      }}
+                    >
+                      {langGroups.map(group => (
+                        <ListItemGroup key={group.id} headerText={group.label}>
+                          {group.languages.map(lang => (
+                            <VariantItem key={lang.id} selected={lang.id === selectedId} labelReadOnly hideDelete readOnly>
+                              {lang.label}
+                            </VariantItem>
+                          ))}
+                        </ListItemGroup>
+                      ))}
+                    </VariantManagement>
+                  ) : (
+                    <Title level="H5" style={{ fontStyle: selected.label ? 'normal' : 'italic' } as React.CSSProperties}>{selected.label}</Title>
+                  )}
+                  {!selected.active && <SigChipV2 value="Disabled" design="indication2" condensed />}
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {isNarrow && (
+                      <>
+                        <Button
+                          id="narrow-create-lang-btn"
+                          design="Emphasized"
+                          endIcon="slim-arrow-down"
+                          onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'narrow-create-lang' ? null : 'narrow-create-lang') }}
+                        >Create Subset</Button>
+                        <Menu
+                          opener="narrow-create-lang-btn"
+                          open={openMenu === 'narrow-create-lang'}
+                          onClose={() => setOpenMenu(null)}
+                          onItemClick={(e: any) => {
+                            const text = e.detail?.item?.text
+                            setOpenMenu(null)
+                            const group = langGroups.find(g => g.label === text)
+                            if (group) { setAddElementSetGroupId(group.id); setNewElementSetName('') }
+                          }}
+                        >
+                          {langGroups.map(g => <MenuItem key={g.id} text={g.label} />)}
+                        </Menu>
+                      </>
+                    )}
+                    <Button
+                      design="Transparent"
+                      onClick={() => toggleLangActive(selected.id)}
+                    >{selected.active ? 'Disable' : 'Enable'}</Button>
+                    <Button
+                      id="right-panel-lang-overflow-btn"
+                      icon="overflow"
+                      design="Transparent"
+                      accessibleName={`Options for ${selected.label}`}
+                      onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'right-panel-lang-overflow' ? null : 'right-panel-lang-overflow') }}
+                    />
+                    <Menu
+                      opener="right-panel-lang-overflow-btn"
+                      open={openMenu === 'right-panel-lang-overflow'}
+                      onClose={() => setOpenMenu(null)}
+                      onItemClick={(e: any) => {
+                        const text = e.detail?.item?.text
+                        setOpenMenu(null)
+                        if (text === 'Delete') {
+                          setDeleteLang(selected)
+                        } else if (text === 'Duplicate') {
+                          setDuplicateLang(selected)
+                          setDuplicateName(`${selected.label}_copy`)
+                        }
+                      }}
+                    >
+                      {selected.active ? (
+                        selected.variant === 'Default' ? (
+                          <>
+                            <MenuItem text="Duplicate" />
+                            <MenuItem text="Delete" />
+                          </>
+                        ) : (
+                          <>
+                            <MenuItem text="Rename" />
+                            <MenuItem text="Duplicate" />
+                            <MenuItem text="Delete" />
+                          </>
+                        )
+                      ) : selected.variant === 'Default' ? (
+                        <MenuItem text="Duplicate" />
+                      ) : (
+                        <>
+                          <MenuItem text="Rename" />
+                          <MenuItem text="Duplicate" />
+                          <MenuItem text="Delete" />
+                        </>
+                      )}
+                    </Menu>
+                  </div>
                 </div>
                 <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: '14px' }}>
                   {'Usage: '}
@@ -304,9 +456,56 @@ export default function ModelingLanguages() {
               </div>
 
               <div style={{ borderTop: BORDER }}>
+              {/* Search + select-all bar */}
+              {(() => {
+                const allItems = selected.groups.flatMap(g => g.items)
+                const filteredItems = elementSearch
+                  ? allItems.filter(i => i.label.toLowerCase().includes(elementSearch.toLowerCase()))
+                  : allItems
+                const allFilteredEnabled = filteredItems.length > 0 && filteredItems.every(i => i.enabled)
+                const someFilteredEnabled = filteredItems.some(i => i.enabled)
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem 0.5rem 1rem', borderBottom: BORDER }}>
+                    {/* spacer matches the expand chevron width so checkbox aligns with group checkboxes */}
+                    <div style={{ width: '1rem', flexShrink: 0 }} />
+                    <CheckBox
+                      checked={allFilteredEnabled || (!allFilteredEnabled && someFilteredEnabled)}
+                      indeterminate={!allFilteredEnabled && someFilteredEnabled}
+                      accessibleName="Toggle all elements"
+                      onChange={() => {
+                        filteredItems.forEach(item => {
+                          const group = selected.groups.find(g => g.items.some(i => i.id === item.id))
+                          if (group && item.enabled === allFilteredEnabled) {
+                            toggleItem(selected.id, group.id, item.id)
+                          }
+                        })
+                      }}
+                      style={{ opacity: selected.active ? 1 : 0.4 }}
+                    />
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Button design="Transparent" onClick={() => setLangGroups(prev => prev.map(g => ({ ...g, languages: g.languages.map(l => l.id === selected.id ? { ...l, groups: l.groups.map(gr => ({ ...gr, expanded: true })) } : l) })))}>Expand all</Button>
+                      <Button design="Transparent" onClick={() => setLangGroups(prev => prev.map(g => ({ ...g, languages: g.languages.map(l => l.id === selected.id ? { ...l, groups: l.groups.map(gr => ({ ...gr, expanded: false })) } : l) })))}>Collapse all</Button>
+                      <Input
+                        placeholder="Search…"
+                        value={elementSearch}
+                        onInput={(e: any) => setElementSearch(e.target.value)}
+                        icon={elementSearch
+                          ? <Icon slot="icon" name="decline" style={{ cursor: 'pointer' }} onClick={() => setElementSearch('')} />
+                          : <Icon slot="icon" name="search" />
+                        }
+                        style={{ width: '14rem' }}
+                      />
+                    </div>
+                  </div>
+                )
+              })()}
               {selected.groups.map((group, groupIdx) => {
-                const enabledCount = group.items.filter(i => i.enabled).length
-                const allEnabled = enabledCount === group.items.length
+                const visibleItems = elementSearch
+                  ? group.items.filter(i => i.label.toLowerCase().includes(elementSearch.toLowerCase()))
+                  : group.items
+                if (visibleItems.length === 0) return null
+                const enabledCount = visibleItems.filter(i => i.enabled).length
+                const allEnabled = enabledCount === visibleItems.length
                 const noneEnabled = enabledCount === 0
                 const isLastGroup = groupIdx === selected.groups.length - 1
 
@@ -315,39 +514,51 @@ export default function ModelingLanguages() {
                     <div
                       className="element-row"
                       onClick={() => toggleGroupExpand(selected.id, group.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderBottom: (!group.expanded && isLastGroup) ? 'none' : BORDER, cursor: 'pointer', userSelect: 'none' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderBottom: (!(group.expanded || elementSearch) && isLastGroup) ? 'none' : BORDER, cursor: 'pointer', userSelect: 'none' }}
                     >
                       <Icon
-                        name={group.expanded ? 'navigation-down-arrow' : 'navigation-right-arrow'}
+                        name={(group.expanded || elementSearch) ? 'navigation-down-arrow' : 'navigation-right-arrow'}
                         style={{ width: '1rem', height: '1rem', color: 'var(--sapContent_IconColor)', flexShrink: 0, opacity: selected.active ? 1 : 0.4 }}
                       />
                       <CheckBox
                         checked={allEnabled || (!allEnabled && !noneEnabled)}
                         indeterminate={!allEnabled && !noneEnabled}
                         accessibleName={`Toggle all items in ${group.label}`}
-                        onChange={() => toggleGroupAll(selected.id, group.id)}
+                        onChange={() => {
+                          if (elementSearch) {
+                            visibleItems.forEach(item => {
+                              if (item.enabled === allEnabled) toggleItem(selected.id, group.id, item.id)
+                            })
+                          } else {
+                            toggleGroupAll(selected.id, group.id)
+                          }
+                        }}
                         onClick={(e: any) => e.stopPropagation()}
                         style={{ opacity: selected.active ? 1 : 0.4 }}
                       />
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', opacity: selected.active ? 1 : 0.4 }}>
-                        <Text style={{ display: 'block', fontWeight: '600' }}>{group.label} ({group.items.length})</Text>
+                        <Text style={{ display: 'block', fontWeight: '600' }}>{group.label} ({visibleItems.length})</Text>
                         <Text style={{ display: 'block', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
-                          {allEnabled ? `${enabledCount} enabled` : noneEnabled ? `${group.items.length} disabled` : `${enabledCount} enabled · ${group.items.length - enabledCount} disabled`}
+                          {allEnabled ? `${enabledCount} enabled` : noneEnabled ? `${visibleItems.length} disabled` : `${enabledCount} enabled · ${visibleItems.length - enabledCount} disabled`}
                         </Text>
                       </div>
                     </div>
 
-                    {group.expanded && group.items.map((item, itemIdx) => {
-                      const isLastItem = itemIdx === group.items.length - 1
+                    {(group.expanded || elementSearch) && visibleItems.map((item, itemIdx) => {
+                      const isLastItem = itemIdx === visibleItems.length - 1
+                      const isItemSelected = selectedElementId === item.id
                       return (
                         <div
                           key={item.id}
                           className="element-row"
-                          onClick={() => toggleItem(selected.id, group.id, item.id)}
+                          onClick={() => {
+                            setSelectedElementId(isItemSelected ? null : item.id)
+                            toggleItem(selected.id, group.id, item.id)
+                          }}
                           style={{
                             display: 'flex', alignItems: 'center', gap: '0.75rem',
                             padding: '0.5rem 1rem 0.5rem 5.5rem',
-                            background: 'var(--sapList_Background)',
+                            background: isItemSelected ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapList_Background)',
                             borderBottom: (!isLastItem || !isLastGroup) ? BORDER : 'none',
                             cursor: 'pointer',
                             userSelect: 'none',
@@ -377,18 +588,87 @@ export default function ModelingLanguages() {
             <>
               <div style={{ padding: '0.75rem 1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                  <Title level="H5">{selectedGroup.label}</Title>
-                  <Switch
-                    checked={!selectedGroup.languages.every(l => !l.active)}
-                    onChange={() => {
-                      const allActive = selectedGroup.languages.every(l => l.active)
-                      setLangGroups(prev => prev.map(g => g.id === selectedGroup.id
-                        ? { ...g, languages: g.languages.map(l => ({ ...l, active: !allActive })) }
-                        : g
-                      ))
-                      setIsDirty(true)
-                    }}
-                  />
+                  {isNarrow ? (
+                    <VariantManagement
+                      closeOnItemSelect
+                      hideSaveAs
+                      hideManageVariants
+                      level="H5"
+                      size="H5"
+                      titleText="Modeling Languages"
+                      onSelect={(e: any) => {
+                        const key = (e.detail.selectedVariant as any).children as string
+                        const group = langGroups.find(g => g.label === key)
+                        if (group) selectGroup(group.id)
+                      }}
+                    >
+                      {langGroups.map(group => (
+                        <VariantItem key={group.id} selected={group.id === selectedGroupId} labelReadOnly hideDelete readOnly>
+                          {group.label}
+                        </VariantItem>
+                      ))}
+                    </VariantManagement>
+                  ) : (
+                    <Title level="H5">{selectedGroup.label}</Title>
+                  )}
+                  {selectedGroup.languages.every(l => !l.active) && <SigChipV2 value="Disabled" design="indication2" condensed />}
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {isNarrow && (
+                      <>
+                        <Button
+                          id="narrow-create-lang-btn-appearance"
+                          design="Emphasized"
+                          endIcon="slim-arrow-down"
+                          onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'narrow-create-lang-appearance' ? null : 'narrow-create-lang-appearance') }}
+                        >Create Subset</Button>
+                        <Menu
+                          opener="narrow-create-lang-btn-appearance"
+                          open={openMenu === 'narrow-create-lang-appearance'}
+                          onClose={() => setOpenMenu(null)}
+                          onItemClick={(e: any) => {
+                            const text = e.detail?.item?.text
+                            setOpenMenu(null)
+                            const group = langGroups.find(g => g.label === text)
+                            if (group) { setAddElementSetGroupId(group.id); setNewElementSetName('') }
+                          }}
+                        >
+                          {langGroups.map(g => <MenuItem key={g.id} text={g.label} />)}
+                        </Menu>
+                      </>
+                    )}
+                    <Button
+                      design="Transparent"
+                      onClick={() => {
+                        const allActive = selectedGroup.languages.every(l => l.active)
+                        setLangGroups(prev => prev.map(g => g.id === selectedGroup.id
+                          ? { ...g, languages: g.languages.map(l => ({ ...l, active: !allActive })) }
+                          : g
+                        ))
+                        setIsDirty(true)
+                      }}
+                    >{selectedGroup.languages.every(l => l.active) ? 'Disable' : 'Enable'}</Button>
+                    <Button
+                      id="appearance-overflow-btn"
+                      icon="overflow"
+                      design="Transparent"
+                      accessibleName={`Options for ${selectedGroup.label}`}
+                      onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'appearance-overflow' ? null : 'appearance-overflow') }}
+                    />
+                    <Menu
+                      opener="appearance-overflow-btn"
+                      open={openMenu === 'appearance-overflow'}
+                      onClose={() => setOpenMenu(null)}
+                      onItemClick={(e: any) => {
+                        const text = e.detail?.item?.text
+                        setOpenMenu(null)
+                        if (text === 'Create Subset') {
+                          setAddElementSetGroupId(selectedGroup.id); setNewElementSetName('')
+                        }
+                      }}
+                    >
+                      <MenuItem text="Create Subset" />
+                    </Menu>
+                  </div>
                 </div>
                 <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: '14px' }}>
                   {'Last Modified: '}
@@ -399,7 +679,7 @@ export default function ModelingLanguages() {
               {/* Info strip */}
               <div style={{ padding: '0.75rem 1rem' }}>
                 <MessageStrip design="Information" hideCloseButton>
-                  Customize the appearance of all shapes in this modeling language, including custom graphics. Changes apply across the entire modeling language.
+                  Customize the appearance of all shapes in this modeling language, including custom graphics. Changes apply to all configured modeling language subsets.
                 </MessageStrip>
               </div>
 
@@ -463,10 +743,22 @@ export default function ModelingLanguages() {
                               </Menu>
                             </div>
 
-                            {/* Icon */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <ItemIcon id={item.id} size={42} />
-                            </div>
+                            {/* Icon — styled preview reflecting saved appearance */}
+                            {(() => {
+                              const appearance = itemAppearanceValues[item.id]
+                              const bgColor = appearance?.bgColor ?? '#FFFFFF'
+                              const fontColor = appearance?.fontColor
+                              return (
+                                <div style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  width: '64px', height: '64px',
+                                  background: bgColor,
+                                  ...(fontColor ? { color: fontColor } : {}),
+                                }}>
+                                  <ItemIcon id={item.id} size={42} />
+                                </div>
+                              )
+                            })()}
 
                             {/* Label */}
                             <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)', textAlign: 'center', lineHeight: '1.3', paddingBottom: '0.5rem' }}>
@@ -482,7 +774,6 @@ export default function ModelingLanguages() {
             </>
           )}
         </div>
-      </div>
       </div>
   )
 
@@ -528,10 +819,18 @@ export default function ModelingLanguages() {
       </ObjectPageSection>
     </ObjectPage>
 
-      <Dialog open={addElementSetGroupId !== null} onClose={() => setAddElementSetGroupId(null)} headerText="Add Element Set">
+      <Dialog open={addElementSetGroupId !== null} onClose={() => setAddElementSetGroupId(null)} headerText="Create Subset">
+        {addElementSetGroupId && (
+          <div slot="header" style={{ display: 'flex', flexDirection: 'column', padding: '0.75rem 0', width: '100%' }}>
+            <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontLargeSize)' }}>Create Subset</Text>
+            <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)' }}>
+              {langGroups.find(g => g.id === addElementSetGroupId)?.label}
+            </Text>
+          </div>
+        )}
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '28rem' }}>
-          <Label for="element-set-name-input">Element Set Name:</Label>
-          <Input id="element-set-name-input" placeholder="Enter a name for the new element set." value={newElementSetName} onInput={(e: any) => setNewElementSetName(e.target.value)} style={{ width: '100%' }} />
+          <Label for="element-set-name-input">Subset Name:</Label>
+          <Input id="element-set-name-input" placeholder="Enter a name for the new subset." value={newElementSetName} onInput={(e: any) => setNewElementSetName(e.target.value)} style={{ width: '100%' }} />
         </div>
         <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', width: '100%', padding: '0.5rem 0' }}>
           <Button design="Emphasized" onClick={() => {
@@ -541,16 +840,16 @@ export default function ModelingLanguages() {
               lastModified: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
               groups: clone(BASE_GROUPS),
             }
-            setLangGroups(prev => prev.map(g => g.id === addElementSetGroupId ? { ...g, languages: [...g.languages, newLang] } : g))
-            setIsDirty(true); setAddElementSetGroupId(null); setElementSetToast(true)
-          }}>Add</Button>
+            setLangGroups(prev => prev.map(g => g.id === addElementSetGroupId ? { ...g, expanded: true, languages: [...g.languages, newLang] } : g))
+            setIsDirty(true); setAddElementSetGroupId(null); setElementSetToast(true); selectLang(newLang.id)
+          }}>Create</Button>
           <Button design="Transparent" onClick={() => setAddElementSetGroupId(null)}>Cancel</Button>
         </div>
       </Dialog>
 
-      <Toast open={elementSetToast} placement="BottomCenter" onClose={() => setElementSetToast(false)}>Element set added</Toast>
+      <Toast open={elementSetToast} placement="BottomCenter" onClose={() => setElementSetToast(false)}>Modeling language added</Toast>
       <Toast open={groupDisabledToast !== null} placement="BottomCenter" onClose={() => setGroupDisabledToast(null)}>"{groupDisabledToast}" disabled</Toast>
-      <Toast open={duplicateToast} placement="BottomCenter" onClose={() => setDuplicateToast(false)}>Element set duplicated</Toast>
+      <Toast open={duplicateToast} placement="BottomCenter" onClose={() => setDuplicateToast(false)}>Modeling language duplicated</Toast>
       <Toast open={enabledToast !== null} placement="BottomCenter" onClose={() => setEnabledToast(null)}>"{enabledToast}" enabled</Toast>
       <Toast open={deletedToast !== null} placement="BottomCenter" onClose={() => setDeletedToast(null)}>"{deletedToast}" deleted</Toast>
 
@@ -560,7 +859,7 @@ export default function ModelingLanguages() {
           <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontLargeSize)' }}>Delete</Text>
         </div>
         <div style={{ padding: '1rem', minWidth: '24rem' }}>
-          <Text>This element set will be permanently deleted.</Text>
+          <Text>This modeling language will be permanently deleted.</Text>
         </div>
         <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', width: '100%', padding: '0.5rem 0' }}>
           <Button design="Negative" onClick={() => {
@@ -577,9 +876,9 @@ export default function ModelingLanguages() {
         </div>
       </Dialog>
 
-      <Dialog open={duplicateLang !== null} onClose={() => setDuplicateLang(null)} headerText="Duplicate Element Set">
+      <Dialog open={duplicateLang !== null} onClose={() => setDuplicateLang(null)} headerText="Duplicate Modeling Language">
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '28rem' }}>
-          <Label for="duplicate-name-input">New Element Set Name:</Label>
+          <Label for="duplicate-name-input">New Modeling Language Name:</Label>
           <Input id="duplicate-name-input" value={duplicateName} onInput={(e: any) => setDuplicateName(e.target.value)} style={{ width: '100%' }} />
         </div>
         <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', width: '100%', padding: '0.5rem 0' }}>
@@ -610,11 +909,13 @@ export default function ModelingLanguages() {
           const id = editAppearanceItem?.id ?? ''
           setItemState(id, 'style-updated')
           setItemAppearanceValues(prev => ({ ...prev, [id]: v }))
+          setIsDirty(true)
         }}
         onRestoreDefault={() => {
           const id = editAppearanceItem?.id ?? ''
           setItemState(id, 'default')
           setItemAppearanceValues(prev => { const n = { ...prev }; delete n[id]; return n })
+          setIsDirty(true)
         }}
       />
     </>

@@ -9,6 +9,7 @@ import {
 } from '@ui5/webcomponents-react'
 import { useWorkspace } from '../contexts/WorkspaceContext'
 import { ASSET_TYPES } from '../pages/AssetTypes'
+import { SUB_ELEMENTS } from '../pages/AssetTypeDetail'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -146,7 +147,7 @@ function LanguagePanel(props: LangPanelProps | OtherLangPanelProps) {
 function FieldGroup({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-      <Label required={required}>{label}</Label>
+      <Label required={required} showColon>{label}</Label>
       {children}
     </div>
   )
@@ -166,6 +167,7 @@ interface Props {
   hideAssignSection?: boolean
   defaultAssignedTo?: string[]
   assignableAssetTypes?: { id: string; name: string }[]
+  modelingSubElements?: { id: string; name: string }[]
   dictMode?: boolean
   dictCategories?: { id: string; name: string; parentId?: string }[]
   modelingMode?: boolean
@@ -176,7 +178,7 @@ interface Props {
   onReuseAdd?: () => void
 }
 
-export function CreateAttributeDialog({ open, initialType, initialName, initialDescription, editMode, dialogTitle, hidePickerLabel, showReuseSection, hideAssignSection, defaultAssignedTo, assignableAssetTypes, dictMode, dictCategories, modelingMode, hideAudience, modelingDictMode, onClose, onCreate, onReuseAdd }: Props) {
+export function CreateAttributeDialog({ open, initialType, initialName, initialDescription, editMode, dialogTitle, hidePickerLabel, showReuseSection, hideAssignSection, defaultAssignedTo, assignableAssetTypes, modelingSubElements, dictMode, dictCategories, modelingMode, hideAudience, modelingDictMode, onClose, onCreate, onReuseAdd }: Props) {
   const { contentLanguages } = useWorkspace()
 
   // attribute type
@@ -453,14 +455,14 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
   // ── Type-specific content: language panels ───────────────────────────────
 
   function renderDefaultLangPanel() {
-    const hasUnit = !isAltMode && attrType === 'Number'
-    const hasDateFormat = !isAltMode && attrType === 'Date'
-    const hasDefaultValue = !isAltMode && (attrType === 'Multi-Line Text' || attrType === 'Single-Line Text')
-    const hasOptions = !isAltMode && attrType === 'Selection'
+    const hasUnit = !isAltMode && !modelingDictMode && attrType === 'Number'
+    const hasDateFormat = !isAltMode && !modelingDictMode && attrType === 'Date'
+    const hasDefaultValue = !isAltMode && !modelingDictMode && (attrType === 'Multi-Line Text' || attrType === 'Single-Line Text')
+    const hasOptions = !isAltMode && !modelingDictMode && attrType === 'Selection'
 
     return (
       <>
-        <FieldGroup label="Attribute Name:" required>
+        <FieldGroup label="Attribute Name" required>
           <Input
             value={defaultName}
             placeholder="Enter here"
@@ -471,17 +473,17 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
             onBlur={() => setDefaultNameTouched(true)}
           />
         </FieldGroup>
-        <FieldGroup label="Description:">
+        <FieldGroup label="Description">
           <TextArea value={defaultDescription} placeholder="Enter here" rows={3} style={{ width: '100%' }} onInput={e => setDefaultDescription((e.target as unknown as HTMLTextAreaElement).value)} />
         </FieldGroup>
         {hasUnit && (
-          <FieldGroup label="Unit:">
+          <FieldGroup label="Unit">
             <Input value={defaultUnit} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setDefaultUnit((e.target as unknown as HTMLInputElement).value)} />
           </FieldGroup>
         )}
         {hasDateFormat && (
           <>
-            <FieldGroup label="Date Format:" required>
+            <FieldGroup label="Date Format" required>
               <Select style={{ width: '100%' }} onChange={e => setDateFormat((e.target as unknown as { value: string }).value)}>
                 {DATE_FORMATS.map(f => <Option key={f} selected={dateFormat === f}>{f}</Option>)}
               </Select>
@@ -489,7 +491,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
           </>
         )}
         {hasDefaultValue && (
-          <FieldGroup label="Default Value:">
+          <FieldGroup label="Default Value">
             {attrType === 'Multi-Line Text'
               ? <TextArea value={defaultTextDefaultValue} placeholder="Enter here" rows={3} style={{ width: '100%' }} onInput={e => setDefaultTextDefaultValue((e.target as unknown as HTMLTextAreaElement).value)} />
               : <Input value={defaultTextDefaultValue} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setDefaultTextDefaultValue((e.target as unknown as HTMLInputElement).value)} />
@@ -498,7 +500,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
         )}
         {hasOptions && (
           <>
-          <FieldGroup label="Options:" required>
+          <FieldGroup label="Options" required>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.25rem' }}>
               <Input
                 value={newOptionInput}
@@ -553,33 +555,33 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
   function renderOtherLangPanel() {
     const code = selectedOtherLang?.code ?? ''
     const vals = getLangVal(code)
-    const hasUnit = !isAltMode && attrType === 'Number'
-    const hasDateFormat = !isAltMode && attrType === 'Date'
-    const hasDefaultValue = !isAltMode && (attrType === 'Multi-Line Text' || attrType === 'Single-Line Text')
-    const hasOptions = !isAltMode && attrType === 'Selection'
+    const hasUnit = !isAltMode && !modelingDictMode && attrType === 'Number'
+    const hasDateFormat = !isAltMode && !modelingDictMode && attrType === 'Date'
+    const hasDefaultValue = !isAltMode && !modelingDictMode && (attrType === 'Multi-Line Text' || attrType === 'Single-Line Text')
+    const hasOptions = !isAltMode && !modelingDictMode && attrType === 'Selection'
 
     return (
       <>
-        <FieldGroup label="Attribute Name:">
+        <FieldGroup label="Attribute Name">
           <Input value={vals.name} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setLangVal(code, { name: (e.target as unknown as HTMLInputElement).value })} />
         </FieldGroup>
-        <FieldGroup label="Description:">
+        <FieldGroup label="Description">
           <TextArea value={vals.description} placeholder="Enter here" rows={3} style={{ width: '100%' }} onInput={e => setLangVal(code, { description: (e.target as unknown as HTMLTextAreaElement).value })} />
         </FieldGroup>
         {hasUnit && (
-          <FieldGroup label="Unit:">
+          <FieldGroup label="Unit">
             <Input value={vals.unit ?? ''} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setLangVal(code, { unit: (e.target as unknown as HTMLInputElement).value })} />
           </FieldGroup>
         )}
         {hasDateFormat && (
-          <FieldGroup label="Date Format:">
+          <FieldGroup label="Date Format">
             <Select style={{ width: '100%' }} onChange={e => setLangVal(code, { dateFormat: (e.target as unknown as { value: string }).value })}>
               {DATE_FORMATS.map(f => <Option key={f} selected={(vals.dateFormat ?? DATE_FORMATS[0]) === f}>{f}</Option>)}
             </Select>
           </FieldGroup>
         )}
         {hasDefaultValue && (
-          <FieldGroup label="Default Value:">
+          <FieldGroup label="Default Value">
             {attrType === 'Multi-Line Text'
               ? <TextArea value={vals.defaultValue ?? ''} placeholder="Enter here" rows={3} style={{ width: '100%' }} onInput={e => setLangVal(code, { defaultValue: (e.target as unknown as HTMLTextAreaElement).value })} />
               : <Input value={vals.defaultValue ?? ''} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setLangVal(code, { defaultValue: (e.target as unknown as HTMLInputElement).value })} />
@@ -587,7 +589,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
           </FieldGroup>
         )}
         {hasOptions && (
-          <FieldGroup label="Options:">
+          <FieldGroup label="Options">
             <Input disabled placeholder="Enter here" style={{ width: '100%' }} icon={<Icon slot="icon" name="add" />} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
               {selectionOptions.map((opt, _idx) => (
@@ -667,6 +669,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
     return (
       <Dialog
         open={open}
+        className="dialog-padding-s"
         style={{ width: '50rem' }}
         onClose={onClose}
         header={
@@ -770,6 +773,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
       <Dialog
         open={open}
         preventInitialFocus
+        className="dialog-padding-s"
         style={{ width: '52rem' }}
         onClose={onClose}
         header={
@@ -853,6 +857,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
   return (
     <Dialog
       open={open}
+      className="dialog-padding-s"
       style={{ width: '52rem' }}
       onClose={onClose}
       header={
@@ -895,7 +900,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontLargeSize)' }}>Attribute Details</Text>
 
           {/* Attribute Type selector */}
-          <FieldGroup label="Attribute Type:" required>
+          <FieldGroup label="Attribute Type" required>
             <Select
               style={{ width: '100%' }}
               onChange={e => setAttrType((e.target as unknown as { value: string }).value as AttributeType)}
@@ -972,6 +977,59 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
             </div>
           )}
 
+          {/* Default Value outside language panels — for modelingDictMode only */}
+          {modelingDictMode && !isAltMode && (attrType === 'Single-Line Text' || attrType === 'Multi-Line Text') && (
+            <FieldGroup label="Default Value">
+              {attrType === 'Multi-Line Text'
+                ? <TextArea value={getLangVal(defaultLang?.code ?? 'en').defaultValue ?? ''} placeholder="Enter here" rows={3} style={{ width: '100%' }} onInput={e => setLangVal(defaultLang?.code ?? 'en', { defaultValue: (e.target as unknown as HTMLTextAreaElement).value })} />
+                : <Input value={getLangVal(defaultLang?.code ?? 'en').defaultValue ?? ''} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setLangVal(defaultLang?.code ?? 'en', { defaultValue: (e.target as unknown as HTMLInputElement).value })} />
+              }
+            </FieldGroup>
+          )}
+
+          {/* Date Format outside language panels — for modelingDictMode only */}
+          {modelingDictMode && !isAltMode && attrType === 'Date' && (
+            <FieldGroup label="Date Format" required>
+              <Select style={{ width: '100%' }} onChange={e => setLangVal(defaultLang?.code ?? 'en', { dateFormat: (e.target as unknown as { value: string }).value })}>
+                {DATE_FORMATS.map(f => <Option key={f} selected={(getLangVal(defaultLang?.code ?? 'en').dateFormat ?? DATE_FORMATS[0]) === f}>{f}</Option>)}
+              </Select>
+            </FieldGroup>
+          )}
+
+          {/* Options outside language panels — for modelingDictMode only */}
+          {modelingDictMode && !isAltMode && attrType === 'Selection' && (
+            <>
+              <FieldGroup label="Options" required>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.25rem' }}>
+                  <Input
+                    value={newOptionInput}
+                    placeholder="Enter here"
+                    style={{ flex: 1 }}
+                    icon={<Icon slot="icon" name="add" style={{ cursor: 'pointer' }} onClick={addSelectionOption} />}
+                    onInput={e => setNewOptionInput((e.target as unknown as HTMLInputElement).value)}
+                    onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') addSelectionOption() }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {selectionOptions.map((opt, idx) => (
+                    <div key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', height: '2rem' }}>
+                      <Input value={opt.label} style={{ flex: 1 }} onInput={e => setSelectionOptions(prev => prev.map(o => o.id === opt.id ? { ...o, label: (e.target as unknown as HTMLInputElement).value } : o))} />
+                      <Button icon={opt.isDefault ? 'favorite' : 'unfavorite'} tooltip={opt.isDefault ? 'Remove default' : 'Set as default'} design="Transparent" onClick={() => toggleDefault(opt.id)} style={{ color: opt.isDefault ? 'var(--sapIndicationColor_5)' : undefined }} />
+                      <Button icon="arrow-top" tooltip="Move up" design="Transparent" disabled={idx === 0} onClick={() => idx > 0 && moveSelOpt(opt.id, -1)} />
+                      <Button icon="arrow-bottom" tooltip="Move down" design="Transparent" disabled={idx === selectionOptions.length - 1} onClick={() => idx < selectionOptions.length - 1 && moveSelOpt(opt.id, 1)} />
+                      <Button icon="delete" tooltip="Remove" design="Transparent" onClick={() => removeSelOpt(opt.id)} />
+                    </div>
+                  ))}
+                  {selectionOptions.length === 0 && (
+                    <div style={{ padding: '0.5rem 0.75rem' }}>
+                      <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>No options yet. Type above and press Enter or click +.</Text>
+                    </div>
+                  )}
+                </div>
+              </FieldGroup>
+            </>
+          )}
+
           {/* Checkbox: no language panels, just single name/description */}
           {!showLangPanels && (
             <div style={{
@@ -985,7 +1043,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
               <div style={{ fontWeight: '700', fontSize: 'var(--sapFontSize)' }}>
                 {shortLabel(defaultLang?.label ?? 'English')}
               </div>
-              <FieldGroup label="Attribute Name:" required>
+              <FieldGroup label="Attribute Name" required>
                 <Input
                   value={defaultName}
                   placeholder="Enter here"
@@ -996,7 +1054,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                   onBlur={() => setDefaultNameTouched(true)}
                 />
               </FieldGroup>
-              <FieldGroup label="Description:">
+              <FieldGroup label="Description">
                 <TextArea value={defaultDescription} placeholder="Enter here" rows={3} style={{ width: '100%' }} onInput={e => setDefaultDescription((e.target as unknown as HTMLTextAreaElement).value)} />
               </FieldGroup>
             </div>
@@ -1011,9 +1069,9 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
               <FieldGroup label="Maximum:">
                 <Input value={maximum} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setMaximum((e.target as unknown as HTMLInputElement).value)} />
               </FieldGroup>
-              <FieldGroup label="Default Value:">
+              {!modelingDictMode && <FieldGroup label="Default Value">
                 <Input value={numberDefault} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setNumberDefault((e.target as unknown as HTMLInputElement).value)} />
-              </FieldGroup>
+              </FieldGroup>}
             </>
           )}
 
@@ -1069,7 +1127,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                   {MAX_STARS_OPTIONS.map(o => <Option key={o} selected={maxStars === o}>{o}</Option>)}
                 </Select>
               </FieldGroup>
-              <FieldGroup label="Default Value:">
+              <FieldGroup label="Default Value">
                 <Select style={{ width: '100%' }} onChange={e => setRatingDefault((e.target as unknown as { value: string }).value)}>
                   <Option value="">0 Stars</Option>
                   {RATING_DEFAULT_OPTIONS.map(o => <Option key={o} selected={ratingDefault === o}>{o}</Option>)}
@@ -1107,7 +1165,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
 
           {/* Alt mode (dict or modeling): shared below-panel fields */}
           {isAltMode && (attrType === 'Single-Line Text' || attrType === 'Multi-Line Text') && (
-            <FieldGroup label="Default Value:">
+            <FieldGroup label="Default Value">
               {attrType === 'Multi-Line Text'
                 ? <TextArea value={defaultTextDefaultValue} placeholder="Enter here" rows={3} style={{ width: '100%' }} onInput={e => setDefaultTextDefaultValue((e.target as unknown as HTMLTextAreaElement).value)} />
                 : <Input value={defaultTextDefaultValue} placeholder="Enter here" style={{ width: '100%' }} onInput={e => setDefaultTextDefaultValue((e.target as unknown as HTMLInputElement).value)} />
@@ -1116,7 +1174,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
           )}
 
           {isAltMode && attrType === 'Date' && (
-            <FieldGroup label="Date Format:" required>
+            <FieldGroup label="Date Format" required>
               <Select style={{ width: '100%' }} onChange={e => setDateFormat((e.target as unknown as { value: string }).value)}>
                 {DATE_FORMATS.map(f => <Option key={f} selected={dateFormat === f}>{f}</Option>)}
               </Select>
@@ -1124,7 +1182,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
           )}
 
           {isAltMode && attrType === 'Selection' && (
-            <FieldGroup label="Options:" required>
+            <FieldGroup label="Options" required>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.25rem' }}>
                 <Input
                   value={newOptionInput}
@@ -1191,7 +1249,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                         </Select>
                       </div>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <Label>Column Name:</Label>
+                        <Label showColon>Column Name</Label>
                         <Input value={col.name} placeholder="Enter here" style={{ width: '100%' }} onInput={e => updateTableColumn(col.id, { name: (e.target as unknown as HTMLInputElement).value })} />
                       </div>
                     </div>
@@ -1277,7 +1335,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
         </section>
 
         {/* ── Settings ── */}
-        {(!isAltMode || (attrType !== 'Date' && attrType !== 'Number' && attrType !== 'Checkbox' && attrType !== 'Risk Management')) && (
+        {(!modelingDictMode || (attrType !== 'Date' && attrType !== 'Number' && attrType !== 'Checkbox' && attrType !== 'Risk Management')) && (!isAltMode || (attrType !== 'Date' && attrType !== 'Number' && attrType !== 'Checkbox' && attrType !== 'Risk Management')) && (
         <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontLargeSize)' }}>Settings</Text>
 
@@ -1354,7 +1412,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                     checked={userSelectionMode === 'individuals'}
                     onChange={() => setUserSelectionMode('individuals')}
                   />
-                  <div style={{ paddingLeft: '1.5rem', marginTop: '0.375rem' }}>
+                  <div style={{ marginTop: '0.375rem' }}>
                     <FieldGroup label="Limit to users belonging to these groups:">
                       <MultiComboBox
                         style={{ width: '100%' }}
@@ -1423,7 +1481,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
         {!hideAssignSection && (
         <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontLargeSize)' }}>Usage</Text>
-          <FieldGroup label="Assign Attribute to:">
+          <FieldGroup label="Assign Attribute to:" required={!!(modelingMode || modelingDictMode || dictMode)}>
             <MultiComboBox
               style={{ width: '100%' }}
               onSelectionChange={e => {
@@ -1441,13 +1499,36 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                 })
                 const modelingItems = all.filter(t => !dictCategories?.some(c => c.id === t.id))
                 const dictItems = all.filter(t => dictCategories?.some(c => c.id === t.id))
+
+                // Sub-elements to show under "Modeling Elements" group
+                const subElems: { id: string; name: string }[] = modelingDictMode
+                  ? Object.values(SUB_ELEMENTS).flat().filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i)
+                  : (modelingSubElements ?? [])
+
                 if (modelingItems.length > 0 && dictItems.length > 0) {
                   return (<>
                     <MultiComboBoxItemGroup headerText="Modeling Asset Types">
                       {modelingItems.map(t => <MultiComboBoxItem key={t.id} text={t.name} selected={assignedTo.includes(t.name)} />)}
                     </MultiComboBoxItemGroup>
+                    {subElems.length > 0 && (
+                      <MultiComboBoxItemGroup headerText="Modeling Elements">
+                        {subElems.map(e => <MultiComboBoxItem key={e.id} text={e.name} selected={assignedTo.includes(e.name)} />)}
+                      </MultiComboBoxItemGroup>
+                    )}
                     <MultiComboBoxItemGroup headerText="Dictionary Categories">
                       {dictItems.map(t => <MultiComboBoxItem key={t.id} text={t.name} selected={assignedTo.includes(t.name)} />)}
+                    </MultiComboBoxItemGroup>
+                  </>)
+                }
+                if (subElems.length > 0) {
+                  return (<>
+                    {all.length > 0 && (
+                      <MultiComboBoxItemGroup headerText="Modeling Asset Types">
+                        {all.map(t => <MultiComboBoxItem key={t.id} text={t.name} selected={assignedTo.includes(t.name)} />)}
+                      </MultiComboBoxItemGroup>
+                    )}
+                    <MultiComboBoxItemGroup headerText="Modeling Elements">
+                      {subElems.map(e => <MultiComboBoxItem key={e.id} text={e.name} selected={assignedTo.includes(e.name)} />)}
                     </MultiComboBoxItemGroup>
                   </>)
                 }

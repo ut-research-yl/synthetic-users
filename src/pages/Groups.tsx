@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState, type FunctionComponent } from 'react'
+import React, { useCallback, useEffect, useRef, useState, useMemo, type FunctionComponent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FlexibleColumnLayout,
+  AnalyticalTable,
   Avatar,
   Bar,
   Button,
@@ -21,6 +22,7 @@ import {
   Title,
   Toast,
   ToolbarItem,
+  type AnalyticalTableColumnDefinition,
   type PopoverDomRef,
 } from '@ui5/webcomponents-react'
 import { SigTableWrapper, SigChipV2, SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
@@ -55,7 +57,20 @@ const INITIAL_GROUPS: Group[] = [
 ]
 
 const ACCENT_COLORS = ['Accent1','Accent2','Accent3','Accent4','Accent5','Accent6','Accent7','Accent8','Accent9','Accent10']
-let nextGroupId = 5
+
+const LS_GROUPS_KEY = 'sig_mockup_groups'
+
+function loadGroups(): Group[] {
+  try {
+    const raw = localStorage.getItem(LS_GROUPS_KEY)
+    if (raw) return JSON.parse(raw) as Group[]
+  } catch { /* ignore */ }
+  return INITIAL_GROUPS
+}
+
+function saveGroups(groups: Group[]) {
+  try { localStorage.setItem(LS_GROUPS_KEY, JSON.stringify(groups)) } catch { /* ignore */ }
+}
 
 const SORT_OPTIONS = [
   { key: 'Alphabetically', type: 'text'   as const },
@@ -79,7 +94,7 @@ function AddGroupDialog({ open, onClose, onCreate }: {
   const handleClose  = () => { setName(''); onClose() }
 
   return (
-    <Dialog open={open} headerText="Add Group" onClose={handleClose} style={{ width: '380px' }}>
+    <Dialog open={open} headerText="Create Group" onClose={handleClose} style={{ width: '380px' }}>
       <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <Label for="new-group-name" showColon>Group Name</Label>
         <Input id="new-group-name" value={name} placeholder="Enter group name" style={{ width: '100%' }} onInput={e => setName((e.target as unknown as HTMLInputElement).value)} />
@@ -160,7 +175,7 @@ function CreateGroupDialog({ open, allUsers, onClose, onCreate }: {
             onChange={e => setAutoAdd((e.target as unknown as { checked: boolean }).checked)}
             style={{ marginLeft: '-0.5rem' }}
           />
-          <div style={{ paddingLeft: '1.5rem' }}>
+          <div>
             <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
               New users added to this workspace are automatically added to this group.
             </Text>
@@ -275,10 +290,57 @@ function GroupDetailPanel({ group, allUsers, allGroups, onClose, onUpdate, onDel
     setMemberIds(updated)
     if (migrationState === 'pre') {
       onUpdate({ ...group, memberIds: updated })
+      setSaveToastOpen(true)
     } else {
       setDirty(true)
     }
   }
+
+  const memberColumns: AnalyticalTableColumnDefinition[] = useMemo(() => {
+    const cols: AnalyticalTableColumnDefinition[] = [
+      {
+        id: 'member',
+        accessor: 'name',
+        Header: '',
+        Cell: ({ row }: any) => {
+          const u = row.original as { id: string; name: string; email: string; initials: string; colorScheme: string }
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+              <Avatar initials={u.initials} colorScheme={u.colorScheme as never} size="XS" />
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                <Text style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</Text>
+                <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</Text>
+              </div>
+            </div>
+          )
+        },
+      },
+    ]
+    if (migrationState === 'pre') {
+      cols.push({
+        id: 'action',
+        accessor: 'id',
+        Header: '',
+        width: 44,
+        minWidth: 44,
+        maxWidth: 44,
+        disableResizing: true,
+        Cell: ({ row }: any) => {
+          const u = row.original as { id: string; name: string }
+          return (
+            <Button
+              design="Transparent"
+              icon="decline"
+              accessibleName={`Remove ${u.name}`}
+              onClick={e => { e.stopPropagation(); handleRemoveMember(u.id) }}
+            />
+          )
+        },
+      })
+    }
+    return cols
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [migrationState, filteredMembers])
 
   const filteredNonMembers = nonMembers.filter(u => {
     const q = memberSearch.toLowerCase()
@@ -304,6 +366,7 @@ function GroupDetailPanel({ group, allUsers, allGroups, onClose, onUpdate, onDel
     setMemberIds(next)
     if (migrationState === 'pre') {
       onUpdate({ ...group, memberIds: next })
+      setSaveToastOpen(true)
     } else {
       setDirty(true)
     }
@@ -355,7 +418,7 @@ function GroupDetailPanel({ group, allUsers, allGroups, onClose, onUpdate, onDel
               style={{ flex: 1 }}
               onInput={e => setName((e.target as unknown as HTMLInputElement).value)}
             />
-            <Button design="Emphasized" onClick={() => { onUpdate({ ...group, name: name.trim(), autoAddNewUsers: autoAdd, memberIds }); setEditingName(false) }}>Save</Button>
+            <Button design="Emphasized" onClick={() => { onUpdate({ ...group, name: name.trim(), autoAddNewUsers: autoAdd, memberIds }); setEditingName(false); setSaveToastOpen(true) }}>Save</Button>
             <Button design="Transparent" onClick={() => { setName(group.name); setEditingName(false) }}>Cancel</Button>
           </div>
         )}
@@ -397,12 +460,13 @@ function GroupDetailPanel({ group, allUsers, allGroups, onClose, onUpdate, onDel
                 setAutoAdd(val)
                 if (migrationState === 'pre') {
                   onUpdate({ ...group, name: name.trim(), autoAddNewUsers: val, memberIds })
+                  setSaveToastOpen(true)
                 } else {
                   setDirty(true)
                 }
               }}
             />
-            <div style={{ paddingLeft: '1.5rem', marginTop: '0.125rem' }}>
+            <div style={{ marginTop: '0.125rem' }}>
               <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                 New users will be automatically added to this group, inheriting group permissions.
               </Text>
@@ -467,42 +531,27 @@ function GroupDetailPanel({ group, allUsers, allGroups, onClose, onUpdate, onDel
             </div>
           </div>
           <div style={{ border: '1px solid var(--sapList_BorderColor)', borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden' }}>
-            {members.length === 0 ? (
+            {filteredMembers.length === 0 ? (
               <List separators="Inner">
-                <ListItemStandard type="Inactive" text="No members in this group." />
-              </List>
-            ) : filteredMembers.length === 0 ? (
-              <List separators="Inner">
-                <ListItemStandard type="Inactive" text="No members match your search." />
+                <ListItemStandard type="Inactive" text={members.length === 0 ? 'No members in this group.' : 'No members match your search.'} />
               </List>
             ) : (
-              <List
-                separators="Inner"
-                onItemClick={e => {
-                  const userId = (e.detail.item as HTMLElement).dataset.key
-                  navigate(`/users?userId=${userId}`)
-                }}
-              >
-                {filteredMembers.map(u => (
-                  <ListItemCustom key={u.id} data-key={u.id} accessibleName={u.name} type={migrationState === 'pre' ? 'Inactive' : 'Active'}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0', width: '100%' }}>
-                      <Avatar initials={u.initials} colorScheme={u.colorScheme as never} size="XS" />
-                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                        <Text>{u.name}</Text>
-                        <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>{u.email}</Text>
-                      </div>
-                      {migrationState === 'pre' && (
-                        <Button
-                          design="Transparent"
-                          icon="decline"
-                          accessibleName={`Remove ${u.name}`}
-                          onClick={e => { e.stopPropagation(); handleRemoveMember(u.id) }}
-                        />
-                      )}
-                    </div>
-                  </ListItemCustom>
-                ))}
-              </List>
+              <AnalyticalTable
+                data={filteredMembers}
+                columns={memberColumns}
+                minRows={filteredMembers.length}
+                visibleRows={filteredMembers.length}
+                rowHeight={52}
+                headerRowHeight={0}
+                noDataText="No members"
+                className="members-table"
+                scaleWidthMode="Smart"
+                style={{ width: '100%' }}
+                onRowClick={migrationState === 'post' ? (e: any) => {
+                  const userId = e.detail?.row?.original?.id
+                  if (userId) navigate(`/users?userId=${userId}`)
+                } : undefined}
+              />
             )}
           </div>
         </div>
@@ -615,7 +664,7 @@ function GroupDetailPanel({ group, allUsers, allGroups, onClose, onUpdate, onDel
       {/* ── Delete Group confirmation ── */}
       <Dialog open={deleteOpen} headerText="Delete Group" state="Critical" onClose={() => setDeleteOpen(false)}>
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '400px', maxWidth: '480px' }}>
-          <Text>Are you sure you want to delete the group <strong>"{group.name}"</strong>?</Text>
+          <Text>Do you want to delete the group <strong>"{group.name}"</strong>?</Text>
           <Text>Members of this group will not be deleted — they will remain in the workspace as individual users.</Text>
           <Text style={{ color: 'var(--sapCriticalColor)', fontSize: 'var(--sapFontSmallSize)' }}>This action cannot be undone.</Text>
         </div>
@@ -732,8 +781,8 @@ function GroupsListColumn({ groups, selectedGroup, onSelectGroup, migrationState
         businessActionsSlot={
           <ToolbarItem>
             {migrationState === 'post'
-              ? <Button design="Emphasized" onClick={() => window.open('https://as5u4itfg.accounts400.ondemand.com/saml2/idp/sso?sp=oac.accounts.sap.com&RelayState=https%3A%2F%2Fas5u4itfg.accounts400.ondemand.com%2Fadmin%2F', '_blank')}>Add/Edit Group (SCI)</Button>
-              : <Button design="Emphasized" icon="add" onClick={onCreateGroup}>Add Group</Button>
+              ? <Button design="Emphasized" endIcon="action-external-link" onClick={() => window.open('https://as5u4itfg.accounts400.ondemand.com/saml2/idp/sso?sp=oac.accounts.sap.com&RelayState=https%3A%2F%2Fas5u4itfg.accounts400.ondemand.com%2Fadmin%2F', '_blank')}>Manage Groups (SCI)</Button>
+              : <Button design="Emphasized" onClick={onCreateGroup}>Create Group</Button>
             }
           </ToolbarItem>
         }
@@ -768,11 +817,25 @@ function GroupsListColumn({ groups, selectedGroup, onSelectGroup, migrationState
 // ── Groups (page root with FCL) ───────────────────────────────────────────────
 
 export default function Groups() {
-  const [groups, setGroups]          = useState<Group[]>(INITIAL_GROUPS)
+  const [groups, setGroups]          = useState<Group[]>(loadGroups)
   const [selectedGroup, setSelected] = useState<Group | null>(null)
   const [layout, setLayout]          = useState<'OneColumn' | 'TwoColumnsMidExpanded'>('OneColumn')
   const [createOpen, setCreateOpen]  = useState(false)
-  const [migrationState, setMigrationState] = useState<'pre' | 'post'>('post')
+  const [migrationState, setMigrationState] = useState<'pre' | 'post'>('pre')
+  const nextGroupIdRef               = useRef(0)
+  // seed from actual loaded groups so new IDs never collide
+  if (nextGroupIdRef.current === 0) {
+    const loaded = loadGroups()
+    nextGroupIdRef.current = Math.max(...loaded.map(g => parseInt(g.id.replace(/\D/g, ''), 10) || 0), 0) + 1
+  }
+
+  const updateGroups = useCallback((updater: (prev: Group[]) => Group[]) => {
+    setGroups(prev => {
+      const next = updater(prev)
+      saveGroups(next)
+      return next
+    })
+  }, [])
 
   const handleSelectGroup = (group: Group) => {
     setSelected(group)
@@ -785,20 +848,21 @@ export default function Groups() {
   }
 
   const handleUpdate = (updated: Group) => {
-    setGroups(prev => prev.map(g => g.id === updated.id ? updated : g))
+    updateGroups(prev => prev.map(g => g.id === updated.id ? updated : g))
     setSelected(updated)
   }
 
   const handleDelete = (groupId: string) => {
-    setGroups(prev => prev.filter(g => g.id !== groupId))
+    updateGroups(prev => prev.filter(g => g.id !== groupId))
     setSelected(null)
     setLayout('OneColumn')
   }
 
   const handleCreate = (data: Omit<Group, 'id' | 'colorScheme'>) => {
-    const colorScheme = ACCENT_COLORS[nextGroupId % ACCENT_COLORS.length]
-    const newGroup: Group = { ...data, id: `g${nextGroupId++}`, colorScheme }
-    setGroups(prev => [...prev, newGroup].sort((a, b) => a.name.localeCompare(b.name)))
+    const id = nextGroupIdRef.current++
+    const colorScheme = ACCENT_COLORS[id % ACCENT_COLORS.length]
+    const newGroup: Group = { ...data, id: `g${id}`, colorScheme }
+    updateGroups(prev => [...prev, newGroup].sort((a, b) => a.name.localeCompare(b.name)))
     setCreateOpen(false)
     handleSelectGroup(newGroup)
   }

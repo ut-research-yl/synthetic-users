@@ -229,8 +229,8 @@ export default function Authentication() {
         ) : (
           <SettingsSection
             title="Password Policies"
-            subtitle="Password policies are managed in SAP Cloud Identity Services (SCI)."
-            action={<Button onClick={() => window.open('https://as5u4itfg.accounts400.ondemand.com/saml2/idp/sso?sp=oac.accounts.sap.com&RelayState=https%3A%2F%2Fas5u4itfg.accounts400.ondemand.com%2Fadmin%2F', '_blank')}>Manage in SCI</Button>}
+            subtitle="SAP Cloud Identity Services (SCI) manages password policies."
+            action={<Button endIcon="SAP-icons-v4/link" onClick={() => window.open('https://as5u4itfg.accounts400.ondemand.com/saml2/idp/sso?sp=oac.accounts.sap.com&RelayState=https%3A%2F%2Fas5u4itfg.accounts400.ondemand.com%2Fadmin%2F', '_blank')}>Manage in SCI</Button>}
           >
             <></>
           </SettingsSection>

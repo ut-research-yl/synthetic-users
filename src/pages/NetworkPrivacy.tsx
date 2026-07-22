@@ -166,7 +166,7 @@ export default function NetworkPrivacy() {
           <div className={s.rowWide}>
             <CheckBox
               checked={embeddedModeEnabled}
-              text="Enable SAP Signavio content to be embedded in 3rd party applications"
+              text="Enable SAP Signavio content to be embedded in third-party applications"
               onChange={() => { setEmbeddedModeEnabled(v => !v); setIsDirty(true) }}
               style={{ marginLeft: '-0.5rem' }}
             />
@@ -174,7 +174,7 @@ export default function NetworkPrivacy() {
               <Text className={s.fieldDesc}>
                 Allow SAP Signavio content to be embedded in another system (for example Microsoft SharePoint)
                 and hide the header and navigation panel when embedded.{' '}
-                <Link href="#">Read more</Link>
+                <Link href="#">Read more about embedded mode</Link>
               </Text>
             </div>
           </div>

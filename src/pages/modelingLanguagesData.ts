@@ -217,4 +217,64 @@ export const INITIAL_LANG_GROUPS: LangGroup[] = [
       { id: 'testing-subset', label: 'Testing Subset', variant: 'Custom', active: false, lastModified: '10 Sep 2025', groups: clone(BASE_GROUPS) },
     ],
   },
+  {
+    id: 'bpmn12', label: 'BPMN 1.2', expanded: false,
+    languages: [
+      { id: 'bpmn12-default', label: 'BPMN 1.2', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: clone(BASE_GROUPS.filter(g => g.id !== 'live-insights')) },
+    ],
+  },
+  {
+    id: 'dmn', label: 'Business Decision Diagram (DMN 1.2)', expanded: false,
+    languages: [
+      { id: 'dmn-default', label: 'DMN 1.2', variant: 'Default', active: true, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'choreography', label: 'Choreography Diagram (BPMN 2.0)', expanded: false,
+    languages: [
+      { id: 'choreography-default', label: 'Choreography Diagram', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'conversation', label: 'Conversation Diagram (BPMN 2.0)', expanded: false,
+    languages: [
+      { id: 'conversation-default', label: 'Conversation Diagram', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'archimate', label: 'Enterprise Architecture Diagram (ArchiMate 3.0)', expanded: false,
+    languages: [
+      { id: 'archimate-default', label: 'ArchiMate 3.0', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'epc', label: 'Event-driven process chain (EPC)', expanded: false,
+    languages: [
+      { id: 'epc-default', label: 'EPC', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'org-chart', label: 'Organization Chart', expanded: false,
+    languages: [
+      { id: 'org-chart-default', label: 'Organization Chart', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'uml-class', label: 'UML Class Diagram', expanded: false,
+    languages: [
+      { id: 'uml-class-default', label: 'UML Class Diagram', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'uml-use-case', label: 'UML Use Case Diagram', expanded: false,
+    languages: [
+      { id: 'uml-use-case-default', label: 'UML Use Case Diagram', variant: 'Default', active: false, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
+  {
+    id: 'value-chain', label: 'Value Chain', expanded: false,
+    languages: [
+      { id: 'value-chain-default', label: 'Value Chain', variant: 'Default', active: true, lastModified: '21 Nov 2025', groups: [] },
+    ],
+  },
 ]

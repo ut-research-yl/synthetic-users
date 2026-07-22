@@ -43,7 +43,7 @@ export default function ReleaseSelectorDialog({ open, onClose }: Props) {
                 checked={selected === r.id}
                 onChange={() => setSelected(r.id)}
               />
-              <div style={{ paddingLeft: '2rem' }}>
+              <div>
                 <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)' }}>
                   {r.description}
                 </Text>

@@ -401,11 +401,11 @@ export default function DictionaryCategories() {
                         setMenuOpenId(null)
                       }}
                     >
-                      <MenuItem data-action="up" icon="slim-arrow-up" text="Move up" disabled={sibIdx <= 0} />
-                      <MenuItem data-action="down" icon="slim-arrow-down" text="Move down" disabled={sibIdx >= siblings.length - 1} />
-                      <MenuSeparator />
                       <MenuItem data-action="edit" icon="edit" text="Edit" />
                       <MenuItem data-action="sub-category" icon="add" text="Create Sub Category" />
+                      <MenuSeparator />
+                      <MenuItem data-action="up" icon="slim-arrow-up" text="Move up" disabled={sibIdx <= 0} />
+                      <MenuItem data-action="down" icon="slim-arrow-down" text="Move down" disabled={sibIdx >= siblings.length - 1} />
                       <MenuSeparator />
                       <MenuItem data-action="disable" icon={isEnabled(row.id) ? 'SAP-icons-v4/invisible' : 'show'} text={isEnabled(row.id) ? 'Disable' : 'Enable'} />
                       <MenuItem data-action="delete" icon="delete" text="Delete" />
@@ -449,8 +449,8 @@ export default function DictionaryCategories() {
         open={!!cantDisableTarget}
         type="Warning"
         titleText="Disable Dictionary Category"
-        actions={['OK', 'Cancel']}
-        emphasizedAction="OK"
+        actions={['Disable', 'Cancel']}
+        emphasizedAction="Disable"
         style={{ width: '500px' }}
         onClose={() => setCantDisableTarget(null)}
       >

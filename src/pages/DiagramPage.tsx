@@ -1,18 +1,14 @@
 import React, { useState, useRef } from 'react'
-import { Select, Option, Label, Icon, Text, CheckBox, Button, RadioButton, MultiComboBox } from '@ui5/webcomponents-react'
+import { Select, Option, Icon, Text, CheckBox, Button, RadioButton, MultiComboBox, List, ListItemCustom, Label } from '@ui5/webcomponents-react'
 import InfoPopover from '../components/InfoPopover'
 import { StickyNote } from '../components/StickyNote'
 import AudienceSectionBar from '../components/AudienceSectionBar'
-import { useDragReorder } from '../utils/useDragReorder'
 import PageHeader from '../components/PageHeader'
 import SettingsPageLayout, { SettingsSection } from '../components/SettingsPageLayout'
 import s from '../components/SettingsPage.module.css'
+import { INITIAL_LANG_GROUPS } from './modelingLanguagesData'
 
-const NOTATION_SETS = [
-  'Business Process Diagram (BPMN 2.0)',
-  'Business Decision Diagram (DMN 1.2)',
-  'Value Chain',
-]
+const MODELING_LANGUAGES = INITIAL_LANG_GROUPS.map(g => g.label)
 
 type PageSection = {
   id: string
@@ -41,7 +37,7 @@ type SavedState = {
 }
 
 export default function DiagramPage() {
-  const [notationSet, setNotationSet] = useState(NOTATION_SETS[0])
+  const [notationSet, setNotationSet] = useState(MODELING_LANGUAGES[0])
   const [sections, setSections] = useState(INITIAL_SECTIONS)
   const [headerAttrs, setHeaderAttrs] = useState({
     level: true, revision: true, lastModified: true, lastAuthor: true,
@@ -52,7 +48,7 @@ export default function DiagramPage() {
   const [isDirty, setIsDirty] = useState(false)
   const [featuredAttrsExpanded, setFeaturedAttrsExpanded] = useState(false)
   const savedState = useRef<SavedState>({
-    notationSet: NOTATION_SETS[0],
+    notationSet: MODELING_LANGUAGES[0],
     sections: INITIAL_SECTIONS,
     headerAttrs: { level: true, revision: true, lastModified: true, lastAuthor: true },
     countLevel: '1',
@@ -100,7 +96,23 @@ export default function DiagramPage() {
     setIsDirty(true)
   }
 
-  const { dragging: draggedIndex, onDragStart, onDragOver, onDragEnd } = useDragReorder(sections, setSections, () => setIsDirty(true))
+  const handleMove = (e: CustomEvent) => {
+    const sourceId = (e.detail.source.element as HTMLElement).dataset.id ?? ''
+    const destId = (e.detail.destination.element as HTMLElement).dataset.id ?? ''
+    const placement = e.detail.destination.placement as 'Before' | 'After' | 'On'
+    if (!sourceId || !destId || placement === 'On') return
+    setSections(prev => {
+      const from = prev.findIndex(s => s.id === sourceId)
+      const to = prev.findIndex(s => s.id === destId)
+      if (from === -1 || to === -1) return prev
+      const next = [...prev]
+      const [item] = next.splice(from, 1)
+      const insertAt = placement === 'Before' ? (to > from ? to - 1 : to) : (to < from ? to + 1 : to)
+      next.splice(insertAt, 0, item)
+      return next
+    })
+    setIsDirty(true)
+  }
 
   return (
     <PageHeader title="Model Page" subtitle="Configure the layout and default content shown on the model detail page." isDirty={isDirty} onSave={handleSave} onReset={handleReset}>
@@ -109,23 +121,84 @@ export default function DiagramPage() {
         header="Hint on Featured Attributes"
         text='Page Sections > Featured Attributes formerly had this info description:<br><i>Create attribute groups to enable the usage of Featured Attributes.</i><br><b>Hint:</b> Attribute groups are now part of "Asset Types" so the info text was updated including a link to the new location.'
       />
-      <AudienceSectionBar value={audience} onChange={setAudience} className={s.narrowContent} />
       <SettingsPageLayout gap="1.5rem">
-        <SettingsSection title="Notation Set">
-          <div className={s.rowWide}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <Label for="notation-select">Notation set</Label>
+        <SettingsSection
+          title="Page Sections"
+          subtitle="Configure which sections appear on the model page and in which order. Applies to all audiences; settings are configured per modeling language."
+          headerExtra={
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem' }}>
+              <Label for="notation-select">Modeling language</Label>
               <Select
                 id="notation-select"
-                style={{ minWidth: '18rem' }}
+                style={{ minWidth: '24rem' }}
                 onChange={e => { setNotationSet((e.detail.selectedOption as HTMLElement).textContent ?? notationSet); setIsDirty(true) }}
               >
-                {NOTATION_SETS.map(n => <Option key={n} selected={n === notationSet}>{n}</Option>)}
+                {MODELING_LANGUAGES.map(n => <Option key={n} selected={n === notationSet}>{n}</Option>)}
               </Select>
             </div>
-          </div>
+          }
+        >
+          <List
+            onMoveOver={e => e.preventDefault()}
+            onMove={handleMove}
+          >
+            {sections.map((section) => (
+              <ListItemCustom
+                key={section.id}
+                movable
+                data-id={section.id}
+                type="Inactive"
+                style={{ padding: 0 }}
+              >
+                <div style={{ pointerEvents: 'none', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem' }}>
+                    <Icon name="horizontal-grip" style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }} />
+                    <Text style={{ flex: 1 }}>{section.label}</Text>
+                    <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {section.showable
+                        ? <CheckBox checked={section.shown} text="Show on page" onChange={() => toggleShown(section.id)} />
+                        : <div style={{ visibility: 'hidden' }}><CheckBox text="Show on page" /></div>
+                      }
+                      {section.expandable
+                        ? <Button
+                            icon={section.id === 'featured-attrs' && featuredAttrsExpanded ? 'slim-arrow-up' : 'slim-arrow-down'}
+                            design="Transparent"
+                            tooltip="Configure section"
+                            style={{ flexShrink: 0 }}
+                            onClick={() => section.id === 'featured-attrs' && setFeaturedAttrsExpanded(v => !v)}
+                          />
+                        : <div style={{ visibility: 'hidden' }}><Button icon="slim-arrow-down" design="Transparent" /></div>
+                      }
+                    </div>
+                  </div>
+                  {section.id === 'featured-attrs' && featuredAttrsExpanded && (
+                    <div style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', pointerEvents: 'auto' }}>
+                      <div>
+                        <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.5rem', fontSize: 'var(--sapFontSmallSize)' }}>
+                          Select an attribute group to be shown separately from the rest of the attributes.
+                        </Text>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <MultiComboBox
+                            placeholder="Attribute"
+                            style={{ maxWidth: '28rem', width: '100%' }}
+                          />
+                          <InfoPopover id="featured-attrs-info" header="Featured Attributes">
+                            <Text>Create <a href="#/asset-types">attribute groups</a> in Asset Types &gt; Modeling to enable the usage of Featured Attributes.</Text>
+                          </InfoPopover>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ListItemCustom>
+            ))}
+          </List>
         </SettingsSection>
+      </SettingsPageLayout>
 
+      <AudienceSectionBar value={audience} onChange={setAudience} className={s.narrowContent} />
+
+      <SettingsPageLayout gap="1.5rem">
         <SettingsSection
           title="Header Attributes"
           subtitle="Define attributes that are shown at the top of the diagram page"
@@ -135,64 +208,6 @@ export default function DiagramPage() {
               <div key={row.key} className={s.dragRow}>
                 <CheckBox checked={headerAttrs[row.key]} text={row.label} onChange={() => toggleHeader(row.key)} />
                 {row.extra}
-              </div>
-            ))}
-          </div>
-        </SettingsSection>
-
-        <SettingsSection
-          title="Page Sections"
-          subtitle="Configure which sections appear on the model page and in which order"
-        >
-          <div className={s.rowNoPad} style={{ gap: 0 }}>
-            {sections.map((section, index) => (
-              <div
-                key={section.id}
-                draggable
-                onDragStart={onDragStart(index)}
-                onDragOver={onDragOver(index)}
-                onDragEnd={onDragEnd}
-                style={{
-                  background: draggedIndex === index ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapGroup_ContentBackground)',
-                  borderTop: index === 0 ? 'none' : '1px solid var(--sapList_BorderColor)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem' }}>
-                  <Icon name="horizontal-grip" style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }} />
-                  <Text style={{ flex: 1 }}>{section.label}</Text>
-                  {section.showable
-                    ? <CheckBox checked={section.shown} text="Show on page" onChange={() => toggleShown(section.id)} />
-                    : <div style={{ visibility: 'hidden' }}><CheckBox text="Show on page" /></div>
-                  }
-                  {section.expandable
-                    ? <Button
-                        icon={section.id === 'featured-attrs' && featuredAttrsExpanded ? 'slim-arrow-up' : 'slim-arrow-down'}
-                        design="Transparent"
-                        tooltip="Configure section"
-                        style={{ flexShrink: 0 }}
-                        onClick={() => section.id === 'featured-attrs' && setFeaturedAttrsExpanded(v => !v)}
-                      />
-                    : <div style={{ visibility: 'hidden' }}><Button icon="slim-arrow-down" design="Transparent" /></div>
-                  }
-                </div>
-                {section.id === 'featured-attrs' && featuredAttrsExpanded && (
-                  <div style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div>
-                      <Text style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.5rem', fontSize: 'var(--sapFontSmallSize)' }}>
-                        Select an attribute group to be shown separately from the rest of the attributes.
-                      </Text>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <MultiComboBox
-                          placeholder="Attribute"
-                          style={{ maxWidth: '28rem', width: '100%' }}
-                        />
-                        <InfoPopover id="featured-attrs-info" header="Featured Attributes">
-                          <Text>Create <a href="#/asset-types">attribute groups</a> in Asset Types &gt; Modeling to enable the usage of Featured Attributes.</Text>
-                        </InfoPopover>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>

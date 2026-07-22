@@ -13,17 +13,30 @@ import { useWorkspace } from '../contexts/WorkspaceContext'
 import InfoPopover from '../components/InfoPopover'
 import { DuplicateSettingsDialog } from '../components/DuplicateSettingsDialog'
 
-const USER_GROUPS = [
-  'Administrators', 'Content Administrators', 'ETL Analyst Test',
-  'Finance Team', 'Hub only', 'modeler', 'NoPI', 'Super admin',
-  'TESSSSTT', 'Test A', 'Test2', 'Testgroup', 'Testgroup 2',
-  'VM admin', 'VM basic',
+const LS_GROUPS_KEY = 'sig_mockup_groups'
+
+const FALLBACK_GROUPS = [
+  'Administrators', 'Analysts', 'Human Resources', 'Modelers', 'Process Owners',
+  'Business Architects', 'Compliance Officers', 'External Reviewers',
+  'Finance Controllers', 'IT Operations', 'Legal Team', 'Process Viewers',
 ]
+
+function loadGroupNames(): string[] {
+  try {
+    const raw = localStorage.getItem(LS_GROUPS_KEY)
+    if (raw) {
+      const groups = JSON.parse(raw) as { name: string }[]
+      return groups.map(g => g.name).sort((a, b) => a.localeCompare(b))
+    }
+  } catch { /* ignore */ }
+  return FALLBACK_GROUPS
+}
 
 export default function Audience() {
   const { audiences: rows, setAudiences: setRows } = useWorkspace()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [groupNames, setGroupNames] = useState<string[]>(loadGroupNames)
   const [rowMenuOpenId, setRowMenuOpenId] = useState<string | null>(null)
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
   const [duplicateSourceRow, setDuplicateSourceRow] = useState<string | null>(null)
@@ -81,7 +94,7 @@ export default function Audience() {
                 ref={addBtnRef}
                 design="Emphasized"
                 endIcon="slim-arrow-down"
-                onClick={() => setMenuOpen(true)}
+                onClick={() => { setGroupNames(loadGroupNames()); setMenuOpen(true) }}
               >
                 Add Audience
               </Button>
@@ -91,7 +104,7 @@ export default function Audience() {
                 onClose={() => setMenuOpen(false)}
                 onItemClick={(e: CustomEvent) => handleAddGroup(e.detail.text)}
               >
-                {USER_GROUPS.map(g => (
+                {groupNames.map(g => (
                   <MenuItem key={g} text={g} />
                 ))}
               </Menu>

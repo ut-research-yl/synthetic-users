@@ -130,6 +130,56 @@ export function ChartCard({ title, children, action }: { title: string; children
   )
 }
 
+export function GovItemCard({ label, value, iconName, iconBg, onClick }: {
+  label: string; value: number; iconName?: string; iconBg?: string; onClick?: () => void
+}) {
+  const [hovered, setHovered] = React.useState(false)
+  const hasIcon = !!iconName && !!iconBg
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick?.()}
+      onClick={onClick}
+      style={{
+        border: `1px solid ${hovered ? 'var(--sapLinkColor)' : 'var(--sapList_BorderColor)'}`,
+        borderRadius: '0.75rem',
+        background: hovered ? 'var(--sapList_Hover_Background)' : 'var(--sapGroup_ContentBackground)',
+        padding: '1rem 1.25rem',
+        display: 'flex', flexDirection: 'column', gap: '0.25rem',
+        cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s', outline: 'none',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {hasIcon && (
+          <div style={{
+            width: '1.75rem', height: '1.75rem', borderRadius: '0.375rem',
+            background: iconBg, display: 'flex', alignItems: 'center',
+            justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Icon name={iconName} style={{ fontSize: '1rem', color: '#fff' }} />
+          </div>
+        )}
+        <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>{label}</Text>
+      </div>
+      <Text style={{ fontSize: '2rem', fontWeight: '400', color: 'var(--sapTextColor)', lineHeight: 1.1 }}>
+        {value.toLocaleString()}
+      </Text>
+    </div>
+  )
+}
+
+export function GovItemGrid({ items }: { items: { label: string; value: number; iconName?: string; iconBg?: string }[] }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+      {items.map(item => <GovItemCard key={item.label} {...item} />)}
+    </div>
+  )
+}
+
 export function AccessBadge({ adminOnly }: { adminOnly: boolean }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>

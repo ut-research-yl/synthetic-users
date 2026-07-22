@@ -1,8 +1,9 @@
-import React, { useState, useId, useRef } from 'react'
+import React, { useState, useId, useRef, useCallback } from 'react'
 import {
-  Button, CheckBox, Switch, Input, TextArea,
+  Button, CheckBox, Input, TextArea,
   Text, Title, Label, Icon, Menu, MenuItem, MenuItemGroup, Popover, MessageStrip,
   Dialog, Bar, ObjectPage, ObjectPageTitle, ObjectPageSection, ObjectPageMode,
+  VariantManagement, VariantItem, ListItemGroup,
 } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 
@@ -59,10 +60,10 @@ type Convention = {
 
 // ─── Severity config ──────────────────────────────────────────────────────────
 
-const SEVERITIES: { value: NonNullable<Severity>; label: string; color: string; valueState: string }[] = [
-  { value: 'error',   label: 'Mandatory',     color: 'var(--sapErrorColor)',       valueState: 'Negative'    },
-  { value: 'warning', label: 'Recommendation', color: 'var(--sapWarningColor)',     valueState: 'Critical'    },
-  { value: 'info',    label: 'Information',    color: 'var(--sapInformationColor)', valueState: 'Information' },
+const SEVERITIES: { value: NonNullable<Severity>; label: string; desc: string; color: string; valueState: string; icon: string; iconColor: 'indication2' | 'indication3' | 'indication5' }[] = [
+  { value: 'error',   label: 'Error',   desc: 'Violation is flagged as an error in the model.',  color: 'var(--sapErrorColor)',       valueState: 'Negative',    icon: 'error',               iconColor: 'indication2' },
+  { value: 'warning', label: 'Warning', desc: 'The model deviates from best practices.',          color: 'var(--sapWarningColor)',     valueState: 'Critical',    icon: 'alert',               iconColor: 'indication3' },
+  { value: 'info',    label: 'Hint',    desc: 'A suggestion to improve the model quality.',       color: 'var(--sapInformationColor)', valueState: 'Information', icon: 'message-information', iconColor: 'indication5' },
 ]
 const SEVERITY_MAP = Object.fromEntries(SEVERITIES.map(s => [s.value, s])) as Record<NonNullable<Severity>, typeof SEVERITIES[0]>
 
@@ -388,7 +389,7 @@ function SeverityPicker({ ruleId, severity, readonly: ro, disabled, onChange }: 
   if (ro) {
     if (!severity) return null
     const sv = SEVERITY_MAP[severity]
-    return <SigChipV2 value={sv.label} design={severity === 'error' ? 'indication2' : severity === 'warning' ? 'indication3' : 'indication5'} condensed />
+    return <SigChipV2 value={sv.label} design={severity === 'error' ? 'indication2' : severity === 'warning' ? 'indication3' : 'indication5'} leadingIcon={sv.icon} leadingIconColor={sv.iconColor} condensed tooltip={sv.desc} />
   }
 
   const selected = severity ? SEVERITY_MAP[severity] : null
@@ -399,9 +400,12 @@ function SeverityPicker({ ruleId, severity, readonly: ro, disabled, onChange }: 
         id={chipId}
         value={selected ? selected.label : 'Select'}
         design={selected ? (severity === 'error' ? 'indication2' : severity === 'warning' ? 'indication3' : 'indication5') : 'none'}
+        leadingIcon={selected ? selected.icon : undefined}
+        leadingIconColor={selected ? selected.iconColor : undefined}
         trailingIcon="slim-arrow-down"
         condensed
         disabled={disabled}
+        tooltip={selected ? selected.desc : undefined}
         onClick={(e: any) => { if (!disabled) { e.stopPropagation?.(); setOpen(v => !v) } }}
       />
       <Menu
@@ -417,7 +421,7 @@ function SeverityPicker({ ruleId, severity, readonly: ro, disabled, onChange }: 
         }}
       >
         {SEVERITIES.map(sv => (
-          <MenuItem key={sv.value} text={sv.label} />
+          <MenuItem key={sv.value} text={sv.label} icon={sv.icon} />
         ))}
       </Menu>
     </>
@@ -442,7 +446,7 @@ function ColumnHeaders() {
         <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>Rule</Text>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 1rem' }}>
-        <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>Severity</Text>
+        <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>Violation Shown As</Text>
         <Button
           id={SEVERITY_INFO_ID}
           icon="message-information"
@@ -453,9 +457,9 @@ function ColumnHeaders() {
         <Popover opener={SEVERITY_INFO_ID} open={legendOpen} onClose={() => setLegendOpen(false)} placement="Bottom" className="no-padding-popover">
           <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '300px' }}>
             {[
-              { label: 'Mandatory (Error)',          desc: 'Must be fixed. The model violates a mandatory rule.',         color: 'var(--sapErrorColor)' },
-              { label: 'Recommendation (Warning)',   desc: 'Should be reviewed. The model deviates from best practices.', color: 'var(--sapWarningColor)' },
-              { label: 'Information (Hint)',          desc: 'A suggestion to improve the model quality.',                   color: 'var(--sapInformationColor)' },
+              { label: 'Error',   desc: 'Violation is flagged as an error in the model.', color: 'var(--sapErrorColor)' },
+              { label: 'Warning', desc: 'The model deviates from best practices.', color: 'var(--sapWarningColor)' },
+              { label: 'Hint',    desc: 'A suggestion to improve the model quality.', color: 'var(--sapInformationColor)' },
             ].map(s => (
               <div key={s.label} style={{ display: 'flex', gap: '6px' }}>
                 <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', flexShrink: 0 }}>•</Text>
@@ -690,11 +694,11 @@ export default function ModelingConventions() {
             checked={enabled}
             onChange={() => toggleRule(item.id)}
             accessibleName={item.label}
-            style={{ opacity: dim }}
+            style={{ opacity: dim, flexShrink: 0 }}
           />
         )}
         {num && <Text style={{ color: 'var(--sapTextColor)', fontSize: 'var(--sapFontSize)', flexShrink: 0, opacity: dim, ...CF }}>{num}</Text>}
-        <Text style={{ flex: 1, minWidth: 0, fontSize: 'var(--sapFontSize)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: dim, ...CF }}>{item.label}</Text>
+        <Text style={{ flex: 1, minWidth: 0, fontSize: 'var(--sapFontSize)', opacity: dim, ...CF }}>{item.label}</Text>
         {item.paramType === 'attributemapping' && (
           <Button
             icon="search"
@@ -951,19 +955,51 @@ export default function ModelingConventions() {
   const toggleGroup = (mt: string) => setGroupExpanded(prev => ({ ...prev, [mt]: !prev[mt] }))
   const [openMenu, setOpenMenu] = useState<string | null>(null)
 
-  const body = (
-      <div style={{ display: 'flex', border: BORDER, borderRadius: 'var(--sapElement_BorderCornerRadius)', overflow: 'hidden', flex: 1, minHeight: 0, height: '100%', alignItems: 'stretch' }}>
+  const [isNarrow, setIsNarrow] = useState(false)
+  const roRef = useRef<ResizeObserver | null>(null)
+  const layoutRef = useCallback((el: HTMLDivElement | null) => {
+    if (roRef.current) { roRef.current.disconnect(); roRef.current = null }
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      setIsNarrow(entry.contentRect.width < 900)
+    })
+    ro.observe(el)
+    roRef.current = ro
+  }, [])
 
-        {/* Left panel — convention list */}
-        <div style={{ width: '22rem', flexShrink: 0, borderRight: BORDER, background: 'var(--sapList_Background)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+  const body = (
+      <div ref={layoutRef} style={{ paddingBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start', width: '100%' }}>
+
+        {/* Left panel — hidden on narrow viewports */}
+        {!isNarrow && (
+        <div style={{ width: '22rem', flexShrink: 0, borderRadius: 'var(--sapElement_BorderCornerRadius)', background: 'var(--sapList_Background)', overflowY: 'auto', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, maxHeight: 'calc(100vh - 10rem)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderBottom: BORDER }}>
             <Title level="H5">Modeling Conventions</Title>
+            <div>
+              <Button
+                id="wide-create-conv-btn"
+                design="Emphasized"
+                endIcon="slim-arrow-down"
+                onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'wide-create-conv' ? null : 'wide-create-conv') }}
+              >Create</Button>
+              <Menu
+                opener="wide-create-conv-btn"
+                open={openMenu === 'wide-create-conv'}
+                onClose={() => setOpenMenu(null)}
+                onItemClick={(e: any) => {
+                  const mt = e.detail?.item?.text as ModelType
+                  setOpenMenu(null)
+                  if (mt) { setNewConvModelType(mt); setNewConvName(''); setCopyFromId(''); setAddDialogOpen(true) }
+                }}
+              >
+                {MODEL_TYPES.map(mt => <MenuItem key={mt} text={mt} />)}
+              </Menu>
+            </div>
           </div>
 
           {MODEL_TYPES.map(mt => {
             const group = conventions.filter(c => c.modelType === mt)
             const isExpanded = groupExpanded[mt] ?? true
-            const groupMenuId = `group-menu-${mt.replace(/\s/g, '-')}`
             return (
               <div key={mt}>
                 <div
@@ -979,27 +1015,33 @@ export default function ModelingConventions() {
                     onClick={() => toggleGroup(mt)}
                   >{mt} ({group.length})</Text>
                   <Button
-                    id={groupMenuId}
+                    id={`group-overflow-conv-${mt}`}
                     icon="overflow"
                     design="Transparent"
                     accessibleName={`Options for ${mt}`}
-                    onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === groupMenuId ? null : groupMenuId) }}
+                    onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === `group-overflow-conv-${mt}` ? null : `group-overflow-conv-${mt}`) }}
                   />
                   <Menu
-                    opener={groupMenuId}
-                    open={openMenu === groupMenuId}
+                    opener={`group-overflow-conv-${mt}`}
+                    open={openMenu === `group-overflow-conv-${mt}`}
                     onClose={() => setOpenMenu(null)}
                     onItemClick={(e: any) => {
+                      const text = e.detail?.item?.text
                       setOpenMenu(null)
-                      if (e.detail?.item?.text === 'Add Convention') {
-                        setNewConvModelType(mt as ModelType)
-                        setNewConvName('')
-                        setCopyFromId('')
-                        setAddDialogOpen(true)
+                      if (text === 'Create') {
+                        setNewConvModelType(mt as ModelType); setNewConvName(''); setCopyFromId(''); setAddDialogOpen(true)
+                      } else if (text === 'Disable All') {
+                        mutateConventions(prev => prev.map(c => c.modelType === mt ? { ...c, enabled: false } : c))
+                      } else if (text === 'Enable All') {
+                        mutateConventions(prev => prev.map(c => c.modelType === mt ? { ...c, enabled: true } : c))
                       }
                     }}
                   >
-                    <MenuItem text="Add Convention" />
+                    <MenuItem text="Create" />
+                    {group.every(c => !c.enabled)
+                      ? <MenuItem text="Enable All" />
+                      : <MenuItem text="Disable All" />
+                    }
                   </Menu>
                 </div>
                 {isExpanded && group.map(c => {
@@ -1048,6 +1090,10 @@ export default function ModelingConventions() {
                             setNewConvName(`${c.name} (copy)`)
                             setCopyFromId(c.id)
                             setAddDialogOpen(true)
+                          } else if (text === 'Enable') {
+                            mutateConventions(prev => prev.map(x => x.id === c.id ? { ...x, enabled: true } : x))
+                          } else if (text === 'Disable') {
+                            mutateConventions(prev => prev.map(x => x.id === c.id ? { ...x, enabled: false } : x))
                           } else if (text === 'Delete') {
                             setSelectedConvId(c.id)
                             setDeleteDialogOpen(true)
@@ -1055,6 +1101,7 @@ export default function ModelingConventions() {
                         }}
                       >
                         <MenuItem text="Duplicate" />
+                        {c.enabled ? <MenuItem text="Disable" /> : <MenuItem text="Enable" />}
                         {!c.isBuiltin && <MenuItem text="Delete" />}
                       </Menu>
                     </div>
@@ -1064,17 +1111,101 @@ export default function ModelingConventions() {
             )
           })}
         </div>
+        )}
 
         {/* Right panel — rule table */}
-        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: BG }}>
-          {/* Convention title + toggle */}
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: BG, borderRadius: 'var(--sapElement_BorderCornerRadius)' }}>
+          {/* Convention title + toggle + overflow */}
           <div style={{ padding: '0.75rem 1rem', background: 'var(--sapList_Background)', borderBottom: BORDER }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-              <Title level="H5">{conv.name}</Title>
-              <Switch
-                checked={conv.enabled}
-                onChange={() => mutateConventions(prev => prev.map(c => c.id === selectedConvId ? { ...c, enabled: !c.enabled } : c))}
-              />
+              {isNarrow ? (
+                <VariantManagement
+                  closeOnItemSelect
+                  hideSaveAs
+                  hideManageVariants
+                  level="H5"
+                  size="H5"
+                  titleText="Modeling Conventions"
+                  onSelect={(e: any) => {
+                    const key = (e.detail.selectedVariant as any).children as string
+                    const found = conventions.find(c => c.name === key)
+                    if (found) setSelectedConvId(found.id)
+                  }}
+                >
+                  {MODEL_TYPES.map(mt => (
+                    <ListItemGroup key={mt} headerText={mt}>
+                      {conventions.filter(c => c.modelType === mt).map(c => (
+                        <VariantItem key={c.id} selected={c.id === selectedConvId} labelReadOnly hideDelete readOnly>
+                          {c.name}
+                        </VariantItem>
+                      ))}
+                    </ListItemGroup>
+                  ))}
+                </VariantManagement>
+              ) : (
+                <Title level="H5">{conv.name}</Title>
+              )}
+              {!conv.enabled && <SigChipV2 value="Disabled" design="indication2" condensed />}
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {isNarrow && (
+                  <>
+                  <Button
+                    id="narrow-create-conv-btn"
+                    design="Emphasized"
+                    endIcon="slim-arrow-down"
+                    onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'narrow-create-conv' ? null : 'narrow-create-conv') }}
+                  >Create</Button>
+                  <Menu
+                    opener="narrow-create-conv-btn"
+                    open={openMenu === 'narrow-create-conv'}
+                    onClose={() => setOpenMenu(null)}
+                    onItemClick={(e: any) => {
+                      setOpenMenu(null)
+                      const mt = e.detail?.item?.text as ModelType
+                      if (mt) {
+                        setNewConvModelType(mt)
+                        setNewConvName('')
+                        setCopyFromId('')
+                        setAddDialogOpen(true)
+                      }
+                    }}
+                  >
+                    {MODEL_TYPES.map(mt => <MenuItem key={mt} text={mt} />)}
+                  </Menu>
+                  </>
+                )}
+                <Button
+                  design="Transparent"
+                  onClick={() => mutateConventions(prev => prev.map(c => c.id === selectedConvId ? { ...c, enabled: !c.enabled } : c))}
+                >{conv.enabled ? 'Disable' : 'Enable'}</Button>
+                <Button
+                  id="right-panel-conv-overflow-btn"
+                  icon="overflow"
+                  design="Transparent"
+                  accessibleName={`Options for ${conv.name}`}
+                  onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'right-panel-conv-overflow' ? null : 'right-panel-conv-overflow') }}
+                />
+                <Menu
+                  opener="right-panel-conv-overflow-btn"
+                  open={openMenu === 'right-panel-conv-overflow'}
+                  onClose={() => setOpenMenu(null)}
+                  onItemClick={(e: any) => {
+                    const text = e.detail?.item?.text
+                    setOpenMenu(null)
+                    if (text === 'Duplicate') {
+                      setNewConvModelType(conv.modelType)
+                      setNewConvName(`${conv.name} (copy)`)
+                      setCopyFromId(conv.id)
+                      setAddDialogOpen(true)
+                    } else if (text === 'Delete') {
+                      setDeleteDialogOpen(true)
+                    }
+                  }}
+                >
+                  <MenuItem text="Duplicate" />
+                  {!conv.isBuiltin && <MenuItem text="Delete" />}
+                </Menu>
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: '14px' }}>
@@ -1100,6 +1231,13 @@ export default function ModelingConventions() {
                 />
               </div>
             </div>
+            {conv.isBuiltin && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <MessageStrip design="Information" hideCloseButton>
+                  Default modeling conventions cannot be altered. Duplicate this convention to create a customizable copy.
+                </MessageStrip>
+              </div>
+            )}
           </div>
 
           {/* Rule table */}
@@ -1159,7 +1297,7 @@ export default function ModelingConventions() {
       <Dialog
         open={addDialogOpen}
         onClose={() => setAddDialogOpen(false)}
-        headerText={copyFromId ? 'Duplicate Convention' : 'Add Convention'}
+        headerText={copyFromId ? 'Duplicate Convention' : 'Create Convention'}
         aria-labelledby={addDialogId}
       >
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '28rem' }}>
@@ -1175,7 +1313,7 @@ export default function ModelingConventions() {
           </div>
         </div>
         <Bar slot="footer" design="Footer">
-          <Button slot="endContent" design="Emphasized" onClick={handleAddConvention} disabled={!newConvName.trim()}>{copyFromId ? 'Duplicate' : 'Add'}</Button>
+          <Button slot="endContent" design="Emphasized" onClick={handleAddConvention} disabled={!newConvName.trim()}>{copyFromId ? 'Duplicate' : 'Create'}</Button>
           <Button slot="endContent" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
         </Bar>
       </Dialog>
@@ -1223,7 +1361,7 @@ export default function ModelingConventions() {
       >
         <div style={{ padding: '1rem', minWidth: 360 }}>
           <Text style={{ fontSize: 'var(--sapFontSize)', ...CF }}>
-            Are you sure you want to delete the convention <strong>{conv.name}</strong>?
+            Do you want to delete the convention <strong>{conv.name}</strong>?
           </Text>
         </div>
         <Bar slot="footer" design="Footer">
@@ -1400,7 +1538,7 @@ export default function ModelingConventions() {
       >
         <div style={{ padding: '1rem', minWidth: 360 }}>
           <Text style={{ fontSize: 'var(--sapFontSize)', ...CF }}>
-            Are you sure you want to delete this custom rule?
+            Do you want to delete this custom rule?
           </Text>
         </div>
         <Bar slot="footer" design="Footer">

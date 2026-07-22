@@ -131,7 +131,7 @@ export function AddDictionaryCategoryDialog({ open, categories, editCategory, in
 
         {/* Name */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <Label for="dict-cat-name" required>Name:</Label>
+          <Label for="dict-cat-name" required showColon>Name</Label>
           <Input
             id="dict-cat-name"
             value={name}
@@ -146,7 +146,7 @@ export function AddDictionaryCategoryDialog({ open, categories, editCategory, in
 
         {/* Parent Category */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <Label>Parent Category:</Label>
+          <Label showColon>Parent Category</Label>
           <ComboBox
             placeholder="Select"
             value={parentSearch}
@@ -168,7 +168,7 @@ export function AddDictionaryCategoryDialog({ open, categories, editCategory, in
         {/* Type of Category + Color — side by side */}
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <Label for="dict-cat-type" required>Type of Category:</Label>
+            <Label for="dict-cat-type" required showColon>Type of Category</Label>
             <Select
               id="dict-cat-type"
               style={{ width: '100%' }}
@@ -180,7 +180,7 @@ export function AddDictionaryCategoryDialog({ open, categories, editCategory, in
             </Select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <Label required>Color:</Label>
+            <Label required showColon>Color</Label>
             <div
               id={colorBtnId}
               role="button"
@@ -236,7 +236,7 @@ export function AddDictionaryCategoryDialog({ open, categories, editCategory, in
 
         {/* Publishing Mode */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <Label for="dict-cat-publishing" required>Publishing Mode:</Label>
+          <Label for="dict-cat-publishing" required showColon>Publishing Mode</Label>
           <Select
             id="dict-cat-publishing"
             style={{ width: '100%' }}
@@ -251,7 +251,7 @@ export function AddDictionaryCategoryDialog({ open, categories, editCategory, in
 
         {/* On change, linking diagrams are */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <Label for="dict-cat-linking" required>On change, linking diagrams are:</Label>
+          <Label for="dict-cat-linking" required showColon>On change, linking diagrams are</Label>
           <Select
             id="dict-cat-linking"
             style={{ width: '100%' }}

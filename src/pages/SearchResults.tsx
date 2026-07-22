@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { DynamicPage, DynamicPageTitle, Title, Toolbar, ToolbarButton, Button, Bar, Dialog, Input, Label, TextArea, Toast } from '@ui5/webcomponents-react'
 import SearchResultsPanel from '../components/SearchResultsPanel'
 import { useWorkspace } from '../contexts/WorkspaceContext'
@@ -9,7 +9,6 @@ export default function SearchResults() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
   const { addSmartFolder } = useWorkspace()
-  const navigate = useNavigate()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [toastOpen, setToastOpen] = useState(false)
@@ -41,7 +40,7 @@ export default function SearchResults() {
       </DynamicPageTitle>
     }>
 
-      <SearchResultsPanel query={query} onAssetClick={(asset) => navigate(`/modeler/${asset.id}`)} />
+      <SearchResultsPanel query={query} />
 
       <Dialog
         open={dialogOpen}

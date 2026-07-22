@@ -2,6 +2,7 @@ import './App.css'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { WorkspaceProvider } from './contexts/WorkspaceContext'
 import { ReleaseProvider } from './contexts/ReleaseContext'
+import { DirtyStateProvider } from './contexts/DirtyStateContext'
 import Shell from './components/Shell'
 import Audience from './pages/Audience'
 import Users from './pages/Users'
@@ -46,18 +47,43 @@ import TrashPage from './pages/TrashPage'
 import VariantManagement from './pages/VariantManagement'
 import ModelingConventions from './pages/ModelingConventions'
 import ProcessConsultingAgent from './pages/ProcessConsultingAgent'
+import ProcessLandscape from './pages/ProcessLandscape'
 import ConventionsStandalone from './pages/ConventionsStandalone'
 import ModelerLobby from './pages/ModelerLobby'
 import ModelerLayout from './pages/ModelerLayout'
 import JourneyModelerLayout from './pages/JourneyModelerLayout'
+import TemplatesShell from './templates/TemplatesShell'
+import TemplatesIndex from './templates/TemplatesIndex'
+import TemplateSettingsPage from './templates/pages/TemplateSettingsPage'
+import TemplateSettingsPageWide from './templates/pages/TemplateSettingsPageWide'
+import TemplateTableSettingsPage from './templates/pages/TemplateTableSettingsPage'
+import TemplateTableSettingsPageWide from './templates/pages/TemplateTableSettingsPageWide'
+import TemplateTabbedPage from './templates/pages/TemplateTabbedPage'
+import TemplateTwoColumnPage from './templates/pages/TemplateTwoColumnPage'
+import TemplateTwoColumnPagePanel from './templates/pages/TemplateTwoColumnPagePanel'
+import TemplateSideNavPage from './templates/pages/TemplateSideNavPage'
+import TemplateSideNavPageWide from './templates/pages/TemplateSideNavPageWide'
 
 export default function App() {
   return (
     <ReleaseProvider>
+    <DirtyStateProvider>
     <WorkspaceProvider>
     <HashRouter>
       <Routes>
         <Route path="conventions-standalone" element={<ConventionsStandalone />} />
+        <Route path="templates" element={<TemplatesShell />}>
+          <Route index element={<TemplatesIndex />} />
+          <Route path="settings" element={<TemplateSettingsPage />} />
+          <Route path="settings-wide" element={<TemplateSettingsPageWide />} />
+          <Route path="table-settings" element={<TemplateTableSettingsPage />} />
+          <Route path="table-settings-wide" element={<TemplateTableSettingsPageWide />} />
+          <Route path="tabbed" element={<TemplateTabbedPage />} />
+          <Route path="two-column" element={<TemplateTwoColumnPage />} />
+          <Route path="two-column-panel" element={<TemplateTwoColumnPagePanel />} />
+          <Route path="side-nav" element={<TemplateSideNavPage />} />
+          <Route path="side-nav-wide" element={<TemplateSideNavPageWide />} />
+        </Route>
         <Route path="/" element={<Shell />}>
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="audience" element={<Audience />} />
@@ -103,6 +129,7 @@ export default function App() {
           <Route path="variant-management" element={<VariantManagement />} />
           <Route path="modeling-conventions" element={<ModelingConventions />} />
           <Route path="process-consulting-agent" element={<ProcessConsultingAgent />} />
+          <Route path="process-landscape" element={<ProcessLandscape />} />
           <Route path="modeler" element={<ModelerLobby />} />
           <Route path="modeler/new-journey" element={<JourneyModelerLayout />} />
           <Route path="modeler/:assetId" element={<ModelerLayout />} />
@@ -110,6 +137,7 @@ export default function App() {
       </Routes>
     </HashRouter>
     </WorkspaceProvider>
+    </DirtyStateProvider>
     </ReleaseProvider>
   )
 }

@@ -250,6 +250,7 @@ type Props = {
   isFavorite?: boolean
   onToggleFavorite?: () => void
   isDictView?: boolean
+  isModelingFolder?: boolean
   createDictCategoryId?: string | null
   onDiscardCreate?: () => void
   createProcessAtom?: boolean
@@ -541,6 +542,7 @@ export default function AssetInfoPanel({
   isFavorite,
   onToggleFavorite,
   isDictView,
+  isModelingFolder,
 }: Props) {
   const { contentLanguages } = useWorkspace()
   const [createLangPopoverOpen, setCreateLangPopoverOpen] = useState(false)
@@ -657,25 +659,24 @@ export default function AssetInfoPanel({
     </>
   ) : externalSelectedAsset && externalSelectedAsset.objectType !== 'Process Atoms' && externalSelectedAsset.objectType !== 'Initiative' && externalSelectedAsset.objectType !== 'Business Goal' && externalSelectedAsset.objectType !== 'Dashboard' && externalSelectedAsset.objectType !== 'Dictionary Entry' ? (
     <>
-      {!hideThumbnailAndRevision && (
       <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--sapPageHeader_BorderColor)', marginBottom: '0.75rem' }}>
-        <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />
+        {!hideThumbnailAndRevision && <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />}
       </div>
-      )}
-      {!hideThumbnailAndRevision && (() => {
+      {(() => {
         const isPublished = externalSelectedAsset.chips.some(c => c.value === 'Published')
         const chipFor2 = (status: string) => {
           const design = status === 'Published' ? 'indication5' : status === 'Draft' ? 'indication10' : status === 'On Track' ? 'indication4' : status === 'At Risk' ? 'indication2' : status === 'Modified' ? 'indication7' : 'indication10'
           const icon = status === 'Published' ? 'SAP-icons-v4/published' : status === 'Draft' ? 'write-new-document' : status === 'On Track' ? 'trend-up' : status === 'At Risk' ? 'message-warning' : status === 'Modified' ? 'SAP-icons-v4/published-changed' : undefined
           return { value: status, design, icon }
         }
-        const rows: { label: string; value: string; chips?: { value: string; design: string; icon?: string }[] }[] = [
+        const allRows: { label: string; value: string; chips?: { value: string; design: string; icon?: string }[] }[] = [
           { label: 'Latest Revision:', value: externalSelectedAsset.version ?? '1.0', chips: externalSelectedAsset.chips.slice(0, 1).map(c => chipFor2(c.value)) },
           { label: 'Published Revision:', value: isPublished ? (externalSelectedAsset.version ?? '—') : '—', chips: isPublished ? [chipFor2('Published')] : [] },
           { label: 'Published:', value: externalSelectedAsset.lastPublished ? `${externalSelectedAsset.lastPublished} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
           { label: 'Changed:', value: externalSelectedAsset.lastUpdateDate ? `${externalSelectedAsset.lastUpdateDate} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
           { label: 'Created:', value: (externalSelectedAsset as any).createdDate ? `${(externalSelectedAsset as any).createdDate} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
         ]
+        const rows = hideThumbnailAndRevision ? allRows.filter(r => r.label !== 'Latest Revision:' && r.label !== 'Published Revision:' && r.label !== 'Published:' && r.label !== 'Changed:' && r.label !== 'Created:') : allRows
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', paddingBottom: '0.5rem' }}>
             {rows.map(row => (
@@ -698,7 +699,6 @@ export default function AssetInfoPanel({
       })()}
     </>
   ) : selectedDictEntry ? (
-
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
       {([
         { label: 'Latest Revision:', value: '1.0', chips: [{ value: selectedDictEntry.status, design: selectedDictEntry.status === 'Published' ? 'indication5' : 'indication10', icon: selectedDictEntry.status === 'Published' ? 'SAP-icons-v4/published' : 'write-new-document' }] },
@@ -1011,6 +1011,7 @@ export default function AssetInfoPanel({
       })()}
     </Tab>,
     <Tab text="Relations" key="relations"><RelationsTab /></Tab>,
+    <Tab text="Comments" key="comments"><CommentsTab /></Tab>,
     <Tab text="Activity" key="activity"><ActivityFeed assetType={externalSelectedAsset.objectType} /></Tab>,
   ]
   })() : []
@@ -1349,18 +1350,11 @@ export default function AssetInfoPanel({
         isOpen={true}
         toggleRightSidePanel={onClose}
         style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)' }}
-        tabSlot={[]}
+        tabSlot={[
+          <Tab text="Activity" key="activity"><ActivityFeed assetType="Folder" /></Tab>,
+        ]}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px' }}>
-          <style>{`.folder-panel-illustration::part(subtitle) { display: none; }`}</style>
-          <IllustratedMessage
-            className="folder-panel-illustration"
-            name="NoData"
-            design="Spot"
-            titleText="Select another item to see details"
-            subtitleText=""
-          />
-        </div>
+        {null}
       </SigRightSidePanel>
     )
   }
@@ -1407,18 +1401,22 @@ export default function AssetInfoPanel({
         isOpen={true}
         toggleRightSidePanel={onClose}
         style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)' }}
-        tabSlot={[]}
+        tabSlot={isModelingFolder ? [
+          <Tab text="Activity" key="activity"><ActivityFeed assetType="Folder" /></Tab>,
+        ] : []}
       >
+        {!isModelingFolder && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
           <style>{`.panel-noselection-illustration::part(subtitle) { display: none; }`}</style>
           <IllustratedMessage
             className="panel-noselection-illustration"
             name="NoData"
             design="Spot"
-            titleText="Select an item to see details"
+            titleText="Select an item to see details."
             subtitleText=""
           />
         </div>
+        )}
       </SigRightSidePanel>
     )
   }

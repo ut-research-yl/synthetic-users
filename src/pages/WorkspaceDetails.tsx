@@ -121,7 +121,7 @@ export default function WorkspaceDetails() {
     workspaceName, setWorkspaceName,
     additionalInfo, setAdditionalInfo,
     privateFolder, setPrivateFolder,
-    contentLanguages, addContentLanguage, removeContentLanguage,
+    contentLanguages, setContentLanguages, addContentLanguage, removeContentLanguage,
     moveContentLanguage, reorderContentLanguage, setDefaultLanguage,
     ownerId, setOwnerId,
   } = useWorkspace()
@@ -161,6 +161,7 @@ export default function WorkspaceDetails() {
     setSubscriptionsEnabled(savedSubscriptionsEnabled.current)
     setAdditionalInfo(savedAdditionalInfo.current)
     setPrivateFolder(savedPrivateFolder.current)
+    setContentLanguages([...savedContentLanguages.current])
     setIsDirty(false)
   }
 
@@ -231,6 +232,35 @@ export default function WorkspaceDetails() {
               </div>
             </div>
             <div className={s.rowWide}>
+              <Label className={s.fieldLabel}>Customer Portal SAP for Me</Label>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                <Text className={s.fieldDesc} style={{ flex: 1 }}>
+                  Access usage statistics, audit logs, license consumption, and other workspace insights in SAP for Me.
+                </Text>
+                <Button icon="action" style={{ flexShrink: 0 }} onClick={() => window.open('https://me.sap.com', '_blank')}>Open SAP for Me</Button>
+              </div>
+            </div>
+            <div className={s.rowWide}>
+              <Label className={s.fieldLabel}>Workspace Information</Label>
+              <Text className={s.fieldDesc}>
+                Technical details about this workspace, useful for support and troubleshooting.
+              </Text>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', marginTop: '0.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Text style={{ minWidth: '7rem', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)' }}>Workspace ID</Text>
+                  <Text style={{ fontFamily: 'monospace', flex: 1, wordBreak: 'break-all', fontSize: 'var(--sapFontSmallSize)' }}>
+                    a2f2b6be2c084ff99680a2afa8f7e2a8
+                  </Text>
+                  <Button icon="copy" design="Transparent" tooltip="Copy workspace ID" onClick={() => navigator.clipboard.writeText('a2f2b6be2c084ff99680a2afa8f7e2a8')} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Text style={{ minWidth: '7rem', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)' }}>Version</Text>
+                  <Text style={{ flex: 1 }}>v4.14.17</Text>
+                  <Button icon="copy" design="Transparent" tooltip="Copy version" onClick={() => navigator.clipboard.writeText('v4.14.17')} />
+                </div>
+              </div>
+            </div>
+            <div className={s.rowWide}>
               <Label for="additional-info" showColon className={s.fieldLabel}>Additional Information</Label>
               <Text className={s.fieldDesc}>
                 Any information you enter here is shown to all users in the About section, accessible from the user profile menu.
@@ -244,15 +274,6 @@ export default function WorkspaceDetails() {
                 placeholder="Enter additional workspace information…"
                 onInput={e => { setAdditionalInfo((e.target as unknown as HTMLTextAreaElement).value); setIsDirty(true) }}
               />
-            </div>
-            <div className={s.rowWide}>
-              <Label className={s.fieldLabel}>Customer Portal SAP for Me</Label>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                <Text className={s.fieldDesc} style={{ flex: 1 }}>
-                  Access usage statistics, audit logs, license consumption, and other workspace insights in SAP for Me.
-                </Text>
-                <Button icon="action" style={{ flexShrink: 0 }} onClick={() => window.open('https://me.sap.com', '_blank')}>Open SAP for Me</Button>
-              </div>
             </div>
           </SettingsSection>
 
@@ -307,6 +328,7 @@ export default function WorkspaceDetails() {
                           addContentLanguage({ code: lang.code, label: lang.label, isDefault: false })
                           setAddLangOpen(false)
                           setAddLangSearch('')
+                          setIsDirty(true)
                         }}
                       >
                         {lang.label}
@@ -326,6 +348,7 @@ export default function WorkspaceDetails() {
                   const placement = e.detail.destination.placement as 'Before' | 'After' | 'On'
                   if (sourceCode && destCode && placement !== 'On') {
                     reorderContentLanguage(sourceCode, destCode, placement)
+                    setIsDirty(true)
                   }
                 }}
               >
@@ -382,6 +405,7 @@ export default function WorkspaceDetails() {
                         else if (text === 'Move Down') moveContentLanguage(lang.code, 'down')
                         else if (text === 'Set as Default') setDefaultLanguage(lang.code)
                         else if (text === 'Remove') removeContentLanguage(lang.code)
+                        setIsDirty(true)
                         setOpenMenuCode(null)
                       }}
                     >

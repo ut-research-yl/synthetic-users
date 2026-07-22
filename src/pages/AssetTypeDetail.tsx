@@ -1,15 +1,15 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   DynamicPage, DynamicPageTitle,
   Title, Breadcrumbs, BreadcrumbsItem,
-  Text, Button, Toolbar, ToolbarButton,
+  Text, Button,
   List, ListItemStandard,
   Bar, Toast,
+  VariantManagement, VariantItem,
 } from '@ui5/webcomponents-react'
 import { ASSET_TYPES } from './AssetTypes'
 import { useWorkspace } from '../contexts/WorkspaceContext'
-import { DuplicateSettingsDialog } from '../components/DuplicateSettingsDialog'
 
 const NOTATION_IDS = new Set(['bpmn', 'dmn', 'value-chain', 'nav-map'])
 const NOTATION_ASSET_TYPES = ASSET_TYPES.filter(t => NOTATION_IDS.has(t.id))
@@ -17,9 +17,9 @@ const NON_NOTATION_ASSET_TYPES = ASSET_TYPES.filter(t => !NOTATION_IDS.has(t.id)
 const NO_AUDIENCE_IDS = new Set(['objective', 'initiative', 'insight', 'dashboard', 'process-semantic-view'])
 import AttributeEditorPanel, { makeInitialGroups, makeModelingGroups, type AttrGroup, AUDIENCES } from '../components/AttributeEditorPanel'
 
-type SubElement = { id: string; name: string; icon: string; group: string }
+export type SubElement = { id: string; name: string; icon: string; group: string }
 
-const SUB_ELEMENTS: Record<string, SubElement[]> = {
+export const SUB_ELEMENTS: Record<string, SubElement[]> = {
   bpmn: [
     { id: 'task',         name: 'Task',               icon: 'task',        group: 'Shapes' },
     { id: 'start-event',  name: 'Start Event',        icon: 'circle-task', group: 'Shapes' },
@@ -170,7 +170,18 @@ export default function AssetTypeDetail() {
   const [selectedSubEl, setSelectedSubEl] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [saveToast, setSaveToast] = useState(false)
-  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
+  const [isNarrow, setIsNarrow] = useState(false)
+  const roRef = useRef<ResizeObserver | null>(null)
+  const layoutRef = useCallback((el: HTMLDivElement | null) => {
+    if (roRef.current) { roRef.current.disconnect(); roRef.current = null }
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width
+      setIsNarrow(prev => prev ? w < 740 : w < 700)
+    })
+    ro.observe(el)
+    roRef.current = ro
+  }, [])
 
   const markDirty = () => { if (!dirty) setDirty(true) }
   const handleSave = () => { setDirty(false); setSaveToast(true) }
@@ -199,23 +210,22 @@ export default function AssetTypeDetail() {
   const subElements = SUB_ELEMENTS[id] ?? []
   const subGroups = [...new Set(subElements.map(e => e.group))]
   const selectedSubElName = subElements.find(e => e.id === selectedSubEl)?.name
+  const selectedItemName = selectedSubEl === null ? 'Model' : (selectedSubElName ?? assetType.name)
 
   return (
-    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-      <DynamicPage className="no-padding-dynamic-page" style={{ height: '100%' }} hidePinButton showFooter={dirty} titleArea={
+    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <DynamicPage className="body-scroll-dynamic-page" style={{ height: '100%' }} hidePinButton showFooter={dirty} titleArea={
         <DynamicPageTitle>
           <Breadcrumbs slot="breadcrumbs">
+            <BreadcrumbsItem onClick={() => navigate('/users')} style={{ cursor: 'pointer' }}>
+              Workspace Settings
+            </BreadcrumbsItem>
             <BreadcrumbsItem onClick={() => navigate('/asset-types')} style={{ cursor: 'pointer' }}>
               Asset Types
             </BreadcrumbsItem>
             <BreadcrumbsItem>{assetType.name}</BreadcrumbsItem>
           </Breadcrumbs>
           <Title slot="heading" level="H3">{assetType.name}</Title>
-          {!NO_AUDIENCE_IDS.has(id) && (
-          <Toolbar slot="actionsBar">
-            <ToolbarButton design="Transparent" text="Duplicate Settings" onClick={() => setDuplicateDialogOpen(true)} />
-          </Toolbar>
-          )}
         </DynamicPageTitle>
       }
         footerArea={
@@ -226,17 +236,20 @@ export default function AssetTypeDetail() {
         }
       >
 
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Left panel — sub-elements (notation types only) */}
-          {assetType.notation && (
+        <div ref={layoutRef} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+          {/* Left panel — sub-elements (notation types only, hidden on narrow viewports) */}
+          {assetType.notation && !isNarrow && (
             <div style={{
-              width: '260px',
+              width: '240px',
               flexShrink: 0,
-              borderRight: '1px solid var(--sapList_BorderColor)',
+              borderRadius: 'var(--sapElement_BorderCornerRadius)',
               background: 'var(--sapList_Background)',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
+              position: 'sticky',
+              top: 0,
+              maxHeight: 'calc(100vh - 10rem)',
             }}>
               <div style={{ padding: '0.5rem 1rem 0.25rem', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', userSelect: 'none' as const, fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
                 Asset
@@ -273,13 +286,35 @@ export default function AssetTypeDetail() {
           )}
 
           {/* Right panel */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <AttributeEditorPanel
               attrGroups={currentAttrGroups}
               setAttrGroups={setCurrentAttrGroups}
               markDirty={markDirty}
               hideAudience={NO_AUDIENCE_IDS.has(id)}
-              title={selectedSubElName ?? assetType.name}
+              title={assetType.notation && !isNarrow ? selectedItemName : undefined}
+              titleNode={assetType.notation && isNarrow ? (
+                <VariantManagement
+                  closeOnItemSelect
+                  hideSaveAs
+                  hideManageVariants
+                  titleText="Asset Elements"
+                  onSelect={e => {
+                    const key = (e.detail.selectedVariant as any).children as string
+                    if (key === 'Model') {
+                      setSelectedSubEl(null)
+                    } else {
+                      const el = subElements.find(se => se.name === key)
+                      if (el) setSelectedSubEl(el.id)
+                    }
+                  }}
+                >
+                  <VariantItem selected={selectedSubEl === null} isDefault labelReadOnly hideDelete readOnly>Model</VariantItem>
+                  {subElements.map(el => (
+                    <VariantItem key={el.id} selected={selectedSubEl === el.id} labelReadOnly hideDelete readOnly>{el.name}</VariantItem>
+                  ))}
+                </VariantManagement>
+              ) : undefined}
               hideAssignSection={false}
               defaultAssignedTo={assetType.notation ? [assetType.name] : [assetType.name]}
               assignableAssetTypes={assetType.notation ? [
@@ -288,17 +323,13 @@ export default function AssetTypeDetail() {
               ] : NON_NOTATION_ASSET_TYPES}
               modelingMode={assetType.notation}
               dictCategories={assetType.notation ? dictCategories : undefined}
+              modelingSubElements={assetType.notation ? Object.values(SUB_ELEMENTS).flat().filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i) : undefined}
+              inlinePadding={isNarrow ? '1rem' : undefined}
             />
           </div>
         </div>
       </DynamicPage>
       <Toast open={saveToast} placement="BottomCenter" onClose={() => setSaveToast(false)}>Changes saved.</Toast>
-      <DuplicateSettingsDialog
-        open={duplicateDialogOpen}
-        sourceAudience={AUDIENCES[0]}
-        onClose={() => setDuplicateDialogOpen(false)}
-        onDuplicate={() => setDuplicateDialogOpen(false)}
-      />
     </div>
   )
 }

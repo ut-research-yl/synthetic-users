@@ -18,6 +18,7 @@ type RevisionGroup = {
   revision: number
   description: string
   createdAt: string
+  createdBy?: string
   entries: ActivityEntry[]
 }
 
@@ -28,6 +29,7 @@ const PM_REVISION_GROUPS: RevisionGroup[] = [
     revision: 4,
     description: 'Created automatically',
     createdAt: 'May 20, 2026 · 02:31 PM',
+    createdBy: 'Ludwig Grohe',
     entries: [
       {
         id: 'a1', author: 'Ludwig Grohe', initials: 'LG',
@@ -58,6 +60,7 @@ const PM_REVISION_GROUPS: RevisionGroup[] = [
     revision: 3,
     description: 'Created automatically',
     createdAt: 'May 14, 2026 · 02:31 PM',
+    createdBy: 'Paul Gray',
     entries: [
       {
         id: 'b1', author: 'Paul Gray', initials: 'PG',
@@ -88,6 +91,7 @@ const PM_REVISION_GROUPS: RevisionGroup[] = [
     revision: 2,
     description: 'Created automatically',
     createdAt: 'Feb 14, 2024 · 11:22 AM',
+    createdBy: 'Sarah Kim',
     entries: [
       {
         id: 'c2', author: 'Paul Gray', initials: 'PG',
@@ -112,6 +116,7 @@ const PM_REVISION_GROUPS: RevisionGroup[] = [
     revision: 1,
     description: 'Created when model was created',
     createdAt: 'Feb 14, 2024 · 11:20 AM',
+    createdBy: 'Paul Gray',
     entries: [
       {
         id: 'c5', author: 'Paul Gray', initials: 'PG',
@@ -380,6 +385,36 @@ const DC_EARLIER_CARDS: DictCatRevisionCard[] = [
   ]},
 ]
 
+// ── Folder data (combined feed for all folder contents) ───────────────────────
+
+type FolderRevisionCard = RevisionGroup & { assetName: string; assetType: string; chipStatus?: string }
+
+const FOLDER_TODAY_CARDS: FolderRevisionCard[] = [
+  { revision: 4, assetName: 'Procure-to-Pay Process', assetType: 'Process Model', description: 'Created automatically', createdAt: 'Today · 10:42 AM', createdBy: 'Ludwig Grohe', chipStatus: 'Published', entries: [
+    { id: 'f1', author: 'Ludwig Grohe', initials: 'LG', action: 'published revision 4.', timestamp: 'Today · 10:42 AM', type: 'publish' },
+    { id: 'f2', author: 'Sarah Kim', initials: 'SK', action: 'updated the Process Owner to:', value: 'Lina Davis', timestamp: 'Today · 09:15 AM', type: 'change' },
+  ]},
+  { revision: 2, assetName: 'Supplier Onboarding', assetType: 'Process Model', description: 'Created automatically', createdAt: 'Today · 08:30 AM', createdBy: 'Paul Gray', entries: [
+    { id: 'f3', author: 'Paul Gray', initials: 'PG', action: 'updated the description.', timestamp: 'Today · 08:30 AM', type: 'change' },
+  ]},
+]
+
+const FOLDER_YESTERDAY_CARDS: FolderRevisionCard[] = [
+  { revision: 3, assetName: 'Invoice Validation Flow', assetType: 'Process Model', description: 'Created automatically', createdAt: 'Yesterday · 04:12 PM', createdBy: 'Marie Carlsen', entries: [
+    { id: 'f4', author: 'Marie Carlsen', initials: 'MC', action: 'changed the status to:', value: 'In Review', timestamp: 'Yesterday · 04:12 PM', type: 'change' },
+    { id: 'f5', author: 'Marie Carlsen', initials: 'MC', action: 'updated the title to:', value: 'Invoice Validation Flow', timestamp: 'Yesterday · 03:50 PM', type: 'change' },
+  ]},
+  { revision: 1, assetName: 'Catalog-Based Buying', assetType: 'Process Model', description: 'Created automatically', createdAt: 'Yesterday · 02:00 PM', createdBy: 'Paul Gray', entries: [
+    { id: 'f6', author: 'Paul Gray', initials: 'PG', action: 'created the process model.', timestamp: 'Yesterday · 02:00 PM', type: 'create' },
+  ]},
+]
+
+const FOLDER_EARLIER_CARDS: FolderRevisionCard[] = [
+  { revision: 2, assetName: 'Purchase Requisition Approval', assetType: 'Process Model', description: 'Created automatically', createdAt: 'May 20, 2026 · 11:30 AM', createdBy: 'Ludwig Grohe', chipStatus: 'Published', entries: [
+    { id: 'f7', author: 'Ludwig Grohe', initials: 'LG', action: 'published revision 2.', timestamp: 'May 20, 2026 · 11:30 AM', type: 'publish' },
+  ]},
+]
+
 // ── Data selector ─────────────────────────────────────────────────────────────
 
 type AssetTypeKey = 'Process Model' | 'Customer Journey' | 'Navigation Map' | 'Value Chain' | 'Dashboard' | 'File' | string
@@ -465,7 +500,7 @@ function ActivityItem({ entry }: { entry: ActivityEntry }) {
   )
 }
 
-function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled }: { group: RevisionGroup; isPublished?: boolean; showRestoreButton?: boolean; restoreDisabled?: boolean }) {
+function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled, assetName, assetType: assetTypeProp }: { group: RevisionGroup; isPublished?: boolean; showRestoreButton?: boolean; restoreDisabled?: boolean; assetName?: string; assetType?: string }) {
   const menuRef = useRef<MenuDomRef>(null)
   const btnId = `revision-menu-${group.revision}`
 
@@ -480,6 +515,15 @@ function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled }
       gap: '12px',
     }}>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {assetName && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>
+              {assetName} · Revision {group.revision}
+            </div>
+            {isPublished && <SigChipV2 value="Published" design="indication5" condensed leadingIcon="SAP-icons-v4/published" />}
+          </div>
+        )}
+        {!assetName && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
             fontSize: 'var(--sapFontSize)',
@@ -491,13 +535,15 @@ function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled }
           </div>
           {isPublished && <SigChipV2 value="Published" design="indication5" condensed leadingIcon="SAP-icons-v4/published" />}
         </div>
+        )}
         <div style={{
           fontSize: 'var(--sapFontSize)',
           color: 'var(--sapList_TextColor)',
           fontFamily: "var(--sapFontFamily,'72',sans-serif)",
         }}>
-          {group.description}
+          {group.createdBy ? `Created by ${group.createdBy}` : (assetTypeProp ?? group.description)}
         </div>
+        {!assetTypeProp && !group.createdBy && null}
         <div style={{
           fontSize: 'var(--sapFontSize)',
           color: 'var(--sapContent_LabelColor)',
@@ -522,11 +568,11 @@ function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled }
             }}
           />
           <Menu ref={menuRef}>
-            <MenuItem text="Publish" icon="world" />
-            <MenuItem text="Open" icon="open-folder" />
-            <MenuItem text="Open in Editor" icon="edit" />
-            <MenuItem text="Restore" icon="undo" />
+            <MenuItem text="Open" icon="full-screen" />
+            <MenuItem text="Edit in Editor" icon="write-new" />
             <MenuItem text="Compare" icon="compare" />
+            <MenuItem text="Restore" icon="undo" />
+            <MenuItem text="Publish" icon="world" />
           </Menu>
         </>
       )}
@@ -534,12 +580,12 @@ function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled }
   )
 }
 
-function RevisionFeedSection({ group }: { group: RevisionGroup }) {
+function RevisionFeedSection({ group, isPublished }: { group: RevisionGroup; isPublished?: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {group.entries.map(e => <ActivityItem key={e.id} entry={e} />)}
       <div style={{ paddingBottom: '12px', paddingTop: '4px' }}>
-        <RevisionCard group={group} />
+        <RevisionCard group={group} isPublished={isPublished} />
       </div>
     </div>
   )
@@ -589,17 +635,70 @@ export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Pr
   }
 
   if (assetType === 'Process Model' || assetType === 'Value Chain' || assetType === 'Navigation Map') {
-    const visibleGroups = showMore ? PM_REVISION_GROUPS : PM_REVISION_GROUPS.slice(0, 2)
+    const PM_SECTIONS = [
+      { label: 'Today', groups: [PM_REVISION_GROUPS[0]] },
+      { label: 'Yesterday', groups: [PM_REVISION_GROUPS[1]] },
+      { label: 'Earlier', groups: PM_REVISION_GROUPS.slice(2) },
+    ].filter(s => s.groups.length > 0)
+    const visibleSections = showMore ? PM_SECTIONS : PM_SECTIONS.slice(0, 2)
+    const latestPublishedRevision = Math.max(
+      ...PM_REVISION_GROUPS.filter(g => g.entries.some(e => e.type === 'publish')).map(g => g.revision),
+      -Infinity
+    )
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', padding: '0', fontFamily: "var(--sapFontFamily,'72',sans-serif)", overflowY: 'auto', flex: 1 }}>
-        {visibleGroups.map(group => (
-          <RevisionFeedSection key={group.revision} group={group} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0', fontFamily: "var(--sapFontFamily,'72',sans-serif)", overflowY: 'auto', flex: 1 }}>
+        {visibleSections.map(({ label, groups }) => (
+          <div key={label}>
+            <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapPageHeader_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block', padding: '8px 0' }}>
+              {label}
+            </Text>
+            {groups.map(group => (
+              <RevisionFeedSection key={group.revision} group={group} isPublished={group.revision === latestPublishedRevision} />
+            ))}
+          </div>
         ))}
-        {PM_REVISION_GROUPS.length > 2 && (
+        {PM_SECTIONS.length > 2 && (
           <Button design="Default" onClick={() => setShowMore(v => !v)} style={{ alignSelf: 'flex-start', marginTop: '4px' }}>
             {showMore ? 'Show less' : 'Show more'}
           </Button>
         )}
+      </div>
+    )
+  }
+
+  // Folder: combined feed for all folder contents, date-grouped with asset-labelled revision cards
+  if (assetType === 'Folder') {
+    const FOLDER_SECTIONS = [
+      { label: 'Today', cards: FOLDER_TODAY_CARDS },
+      { label: 'Yesterday', cards: FOLDER_YESTERDAY_CARDS },
+      { label: 'Earlier this week', cards: FOLDER_EARLIER_CARDS },
+    ]
+    const visibleSections = showMore ? FOLDER_SECTIONS : FOLDER_SECTIONS.slice(0, 2)
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0', fontFamily: "var(--sapFontFamily,'72',sans-serif)", overflowY: 'auto', flex: 1 }}>
+        {visibleSections.map(({ label, cards }) => (
+          <div key={label}>
+            <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapPageHeader_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block', padding: '8px 0' }}>
+              {label}
+            </Text>
+            {cards.map(card => (
+              <div key={`${card.assetName}-${card.revision}`}>
+                <div style={{ paddingBottom: '12px', paddingTop: '4px' }}>
+                  <RevisionCard
+                    group={card}
+                    isPublished={!!card.chipStatus && card.chipStatus === 'Published'}
+                    assetName={card.assetName}
+                    assetType={card.assetType}
+                  />
+                </div>
+                {card.entries.map(e => <ActivityItem key={e.id} entry={e} />)}
+              </div>
+            ))}
+          </div>
+        ))}
+        <Button design="Default" onClick={() => setShowMore(v => !v)} style={{ alignSelf: 'flex-start', marginTop: '4px' }}>
+          {showMore ? 'Show less' : 'Show more'}
+        </Button>
       </div>
     )
   }
