@@ -581,7 +581,7 @@ function SystemShape({ el, selected, hovered, ringW, editing }: { el: CanvasElem
         const line2 = words.length > 2 ? words.slice(mid).join(' ') : null
         const pillW = Math.max(line1.length, line2?.length ?? 0) * 6.2 + 16
         const pillH = line2 ? 32 : 20
-        const pillY = el.cy + el.hh + 4
+        const pillY = el.cy + el.hh + 18
         return (
           <g>
             <rect x={el.cx - pillW / 2} y={pillY} width={pillW} height={pillH} rx={8} fill="#f5f6f7" />
@@ -1869,21 +1869,22 @@ function BpmnCanvas({
           const isDropTarget = el.id === dropTargetId
           const hw = el.hw, hh = el.hh
           const ringW = 2 / (zoom / 100)
-          const dotR = Math.min(8, Math.max(3, 6 / (zoom / 100)))
+          const dotR = Math.min(6, Math.max(2.5, 4.5 / (zoom / 100)))
           const dotOff = 1.5 + dotR + 6
           // connection points (4 edges) — sit outside the ring
           const connPts = [
-            { x: el.cx,            y: el.cy - hh - dotOff },
+            { x: el.cx,                y: el.cy - hh - dotOff },
             { x: el.cx + hw + dotOff,  y: el.cy },
-            { x: el.cx,            y: el.cy + hh + dotOff },
+            { x: el.cx,                y: el.cy + hh + dotOff },
             { x: el.cx - hw - dotOff,  y: el.cy },
           ]
-          // resize handles (4 corners) — offset to sit on the ring corners
+          // resize handles (4 corners) — sit exactly on the ring corners
+          const rOff = ringW / 2 + 0.5
           const resizeHandles = [
-            { x: el.cx - hw - 1.5, y: el.cy - hh - 1.5 },
-            { x: el.cx + hw + 1.5, y: el.cy - hh - 1.5 },
-            { x: el.cx + hw + 1.5, y: el.cy + hh + 1.5 },
-            { x: el.cx - hw - 1.5, y: el.cy + hh + 1.5 },
+            { x: el.cx - hw - rOff, y: el.cy - hh - rOff },
+            { x: el.cx + hw + rOff, y: el.cy - hh - rOff },
+            { x: el.cx + hw + rOff, y: el.cy + hh + rOff },
+            { x: el.cx - hw - rOff, y: el.cy + hh + rOff },
           ]
           return (
             <g
@@ -1979,22 +1980,7 @@ function BpmnCanvas({
                 )
               })()}
               {/* Resize handles on selected — corners: white+blue border (task/system/data/artifact only) */}
-              {selected && el.type !== 'gateway' && el.type !== 'event' && (el.type as string) !== 'connector' && resizeHandles.map((pt, i) => (
-                <circle key={i} cx={pt.x} cy={pt.y} r={dotR}
-                  fill="white" stroke="var(--sapHighlightColor)" strokeWidth={ringW}
-                  style={{ pointerEvents: 'none' }}
-                />
-              ))}
-              {selected && (el.type as string) !== 'connector' && connPts.map((pt, i) => (
-                <circle key={`mid-${i}`} cx={pt.x} cy={pt.y} r={dotR}
-                  fill="var(--sapHighlightColor)" stroke="white" strokeWidth={0.5}
-                  style={{ pointerEvents: 'none' }}
-                />
-              ))}
-
-              {/* Inline text editor on double-click — rendered outside SVG as absolute input */}
-
-              {/* Element name label pill for events/gateways */}
+              {/* Element name label pill for events/gateways — rendered BEFORE conn points so points appear on top */}
               {(el.type === 'event' || el.type === 'gateway') && el.name && (
                 <g>
                   {(() => {
@@ -2018,6 +2004,19 @@ function BpmnCanvas({
                   })()}
                 </g>
               )}
+
+              {selected && el.type !== 'gateway' && el.type !== 'event' && (el.type as string) !== 'connector' && resizeHandles.map((pt, i) => (
+                <circle key={i} cx={pt.x} cy={pt.y} r={dotR}
+                  fill="white" stroke="var(--sapHighlightColor)" strokeWidth={ringW}
+                  style={{ pointerEvents: 'none' }}
+                />
+              ))}
+              {selected && (el.type as string) !== 'connector' && connPts.map((pt, i) => (
+                <circle key={`mid-${i}`} cx={pt.x} cy={pt.y} r={dotR}
+                  fill="var(--sapHighlightColor)" stroke="white" strokeWidth={0.5}
+                  style={{ pointerEvents: 'none' }}
+                />
+              ))}
             </g>
           )
         })}
