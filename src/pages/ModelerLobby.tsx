@@ -129,6 +129,7 @@ export default function ModelerLobby() {
           onOverflow={() => setOpenOverflowId(item.id)}
           highlightQuery={searchQuery}
           onClick={() => openAsset(item)}
+          onTitleClick={() => openAsset(item)}
           isLast={i === displayItems.length - 1}
         />
       ))}
@@ -231,7 +232,19 @@ export default function ModelerLobby() {
 
   // ── Overflow menu for row items ───────────────────────────────────────────
   const overflowMenu = openOverflowId && (
-    <Menu opener={`mod-overflow-${openOverflowId}`} open onClose={() => setOpenOverflowId(null)}>
+    <Menu
+      opener={`mod-overflow-${openOverflowId}`}
+      open
+      onClose={() => setOpenOverflowId(null)}
+      onItemClick={(e: any) => {
+        const text = e.detail?.item?.text ?? e.detail?.text
+        if (text === 'Open') {
+          const item = displayItems.find(i => i.id === openOverflowId)
+          if (item) openAsset(item)
+        }
+        setOpenOverflowId(null)
+      }}
+    >
       <MenuItem text="Open" />
       <MenuSeparator />
       <MenuItem text="Add to Favorites" />

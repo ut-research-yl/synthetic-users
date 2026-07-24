@@ -1,8 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Text, Menu, MenuItem, MenuSeparator, SplitButton } from '@ui5/webcomponents-react'
+import { Button, Text, Menu, MenuItem, MenuSeparator, SplitButton, Dialog, Bar, Input, Toast } from '@ui5/webcomponents-react'
 import { createPortal } from 'react-dom'
 import { SigChipV2, SigDomainObject } from '@signavio/sap-signavio-uixtension'
 import { useNavigate } from 'react-router-dom'
+import '@ui5/webcomponents-icons/dist/chain-link.js'
+import { CollaborativeCursors, type Collaborator } from '../components/CollaborativeCursors'
+import { PresenceAvatarGroup, type PresenceUser } from '../components/PresenceAvatarGroup'
+import { BpmnProcurementModel } from './BpmnProcurementModel'
 import DictionaryPanel from '../components/DictionaryPanel'
 import DataPanel from '../components/DataPanel'
 import ElementsPanel from '../components/ElementsPanel'
@@ -1016,6 +1020,8 @@ function LiConnector({ liShape, geomMap }: { liShape: LiShape; geomMap: Record<s
 
 function BpmnCanvas({
   assetName,
+  assetObjectType = 'Process Model',
+  assetId,
   onClose,
   dictOpen,
   onToggleDict,
@@ -1032,6 +1038,8 @@ function BpmnCanvas({
   panelOffset = 0,
 }: {
   assetName: string
+  assetObjectType?: string
+  assetId?: string
   onClose: () => void
   dictOpen: boolean
   onToggleDict: () => void
@@ -1049,13 +1057,33 @@ function BpmnCanvas({
 }) {
   const [lang, setLang] = useState('ENG')
   const [saveState, setSaveState] = useState<SaveState>('saved')
+  const [shareOpen, setShareOpen] = useState(false)
+  const [toastOpen, setToastOpen] = useState(false)
+  const [collaboratorsActive, setCollaboratorsActive] = useState(false)
+
+  const isCollabCanvas = assetId === '5'
+
+  // Collaborator definitions — shown only on asset 5
+  const COLLABORATORS: PresenceUser[] = [
+    { id: 'collab1', name: 'Johan Miller', initials: 'JM', color: '#046c7a', accentColor: '#c2fcee', colorIndex: 7,  isActive: true  },
+    { id: 'collab2', name: 'Sam Driver',   initials: 'SD', color: '#a45d00', accentColor: '#fff3b8', colorIndex: 1,  isActive: false },
+    { id: 'collab3', name: 'Julia Kim',    initials: 'JK', color: '#552cff', accentColor: '#ded3ff', colorIndex: 5,  isActive: true  },
+    { id: 'collab4', name: 'Alex Johnson', initials: 'AJ', color: '#a100c2', accentColor: '#ffdcf3', colorIndex: 4,  isActive: true  },
+  ]
+
+  // After 3s, collaborators "join" the canvas
+  useEffect(() => {
+    if (!isCollabCanvas) return
+    const t = setTimeout(() => setCollaboratorsActive(true), 3000)
+    return () => clearTimeout(t)
+  }, [isCollabCanvas])
   const [mode, setMode] = useState('Edit')
   const [zoom, setZoom] = useState(70)
   const [panX, setPanX] = useState(-80)
   const [panY, setPanY] = useState(80)
 
   // Canvas element state
-  const [elements, setElements] = useState<CanvasElement[]>(buildInitialElements)
+  const [elements, setElements] = useState<CanvasElement[]>(() => assetId === '5' ? [] : buildInitialElements())
   const [liShapes, setLiShapes] = useState<LiShape[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const selectedId = [...selectedIds][0] ?? null  // compat: first selected
@@ -1663,7 +1691,7 @@ function BpmnCanvas({
       <div className={s.floatingTopLeft}>
         <Button design="Transparent" icon="slim-arrow-left" tooltip="Back to list" onClick={onClose} className={s.backBtn} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <SigDomainObject object="Process Model" size="XS" />
+          <SigDomainObject object={assetObjectType as any} size="XS" />
           <span className={s.titleText}>{assetName}</span>
           <Button id="modeler-overflow" icon="slim-arrow-down" design="Transparent" tooltip="More options" className={s.overflowBtn}
             onClick={() => openMenu(overflowMenuRef, 'modeler-overflow')} />
@@ -1684,6 +1712,8 @@ function BpmnCanvas({
 
       {/* ── Top-right toolbar ───────────────────────────────────────────────── */}
       <div className={s.floatingTopRight} style={{ right: `calc(0.75rem + ${panelOffset}px)` }}>
+        <PresenceAvatarGroup users={COLLABORATORS} visible={isCollabCanvas && collaboratorsActive} />
+        <Button design="Emphasized" className={s.shareBtn} onClick={() => setShareOpen(true)}>Share</Button>
         <button className={s.tbBtn} title="Toggle Side Panel" onClick={onTogglePanel}>
           <svg width="36" height="36" viewBox="0 0 36 36" fill="currentColor"><path d="M12.8125 11C12.0208 11 11.3542 11.2708 10.8125 11.8125C10.2708 12.3542 10 13.0208 10 13.8125V22.1875C10 22.9792 10.2708 23.6458 10.8125 24.1875C11.3542 24.7292 12.0208 25 12.8125 25H23.1875C23.9792 25 24.6458 24.7292 25.1875 24.1875C25.7292 23.6458 26 22.9792 26 22.1875V13.8125C26 13.0208 25.7292 12.3542 25.1875 11.8125C24.6458 11.2708 23.9792 11 23.1875 11H12.8125ZM24.4062 22.1875C24.4062 22.5417 24.2917 22.8333 24.0625 23.0625C23.8333 23.2917 23.5417 23.4062 23.1875 23.4062H22V12.5938H23.1875C23.5417 12.5938 23.8333 12.7083 24.0625 12.9375C24.2917 13.1667 24.4062 13.4583 24.4062 13.8125V22.1875ZM11.5938 13.8125C11.5938 13.4583 11.7083 13.1667 11.9375 12.9375C12.1667 12.7083 12.4583 12.5938 12.8125 12.5938H20.4062V23.4062H12.8125C12.4583 23.4062 12.1667 23.2917 11.9375 23.0625C11.7083 22.8333 11.5938 22.5417 11.5938 22.1875V13.8125Z"/></svg>
         </button>
@@ -1745,6 +1775,13 @@ function BpmnCanvas({
 
         {/* Dot grid background */}
         <rect x={panX} y={panY} width={vbW} height={vbH} fill="url(#dot-grid)" />
+
+        {/* BPMN model — Procurement Experience Analysis */}
+        {assetId === '5' && (
+          <g transform="translate(50, 20)">
+            <BpmnProcurementModel />
+          </g>
+        )}
 
         {/* Connections */}
         {CONNECTIONS.map(conn => {
@@ -2137,6 +2174,16 @@ function BpmnCanvas({
         {/* Click on background to deselect */}
       </svg>
 
+      {/* ── Collaborative cursors — HTML overlay, zoom-independent ───────── */}
+      <CollaborativeCursors
+        collaborators={COLLABORATORS}
+        canvasEl={svgRef.current}
+        active={isCollabCanvas && collaboratorsActive}
+        zoom={zoom}
+        panX={panX}
+        panY={panY}
+      />
+
       {/* Inline text editor — absolute positioned over canvas */}
       {editingId && (() => {
         const el = elements.find(e => e.id === editingId)
@@ -2330,6 +2377,41 @@ function BpmnCanvas({
         </Menu>,
         document.body
       )}
+      <Dialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        headerText="Share with others to collaborate"
+        style={{ width: '480px' }}
+        footer={
+          <Bar endContent={
+            <Button design="Transparent" onClick={() => setShareOpen(false)}>Cancel</Button>
+          } />
+        }
+      >
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>Copy &amp; share this model link</Text>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Input
+              value="https://signavio.com/model/xyz..."
+              readonly
+              style={{ flex: 1 }}
+            />
+            <Button
+              design="Emphasized"
+              icon="chain-link"
+              onClick={() => {
+                navigator.clipboard?.writeText('https://signavio.com/model/xyz...')
+                setShareOpen(false)
+                setToastOpen(true)
+              }}
+            >Copy Link</Button>
+          </div>
+          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>
+            Users with Modelling License can Edit. Everyone else can view only
+          </Text>
+        </div>
+      </Dialog>
+      <Toast open={toastOpen} placement="BottomCenter" onClose={() => setToastOpen(false)}>Link copied</Toast>
     </div>
   )
 }
@@ -2351,13 +2433,18 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
     assetId === 'a1' ? 'HR Hiring Process GER'
     : assetId === 'a2' ? 'Incident Management'
     : assetId === 'a3' ? 'Order-to-Cash Value Chain'
+    : assetId === '5' ? 'Procurement Experience Analysis'
     : assetId ? `Asset ${assetId}`
     : 'Untitled'
+
+  const assetObjectType = 'Process Model'
 
   return (
     <div className={s.root}>
       <BpmnCanvas
         assetName={assetName}
+        assetObjectType={assetObjectType}
+        assetId={assetId}
         onClose={() => navigate('/modeler')}
         dictOpen={dictOpen}
         onToggleDict={toggleDict}
