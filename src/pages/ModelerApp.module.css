@@ -228,3 +228,20 @@
 .zoomPercent:hover {
   background: var(--sapButton_Lite_Hover_Background, #e8f3ff);
 }
+
+/* ── Widget detail panel (right side) ────────────────────────────────────── */
+.widgetDetailPanel {
+  position: absolute;
+  right: 65px;
+  top: 68px;
+  bottom: 1.5rem;
+  z-index: 20;
+  width: 320px;
+  background: var(--sapGroup_ContentBackground, #fff);
+  border-radius: 12px;
+  box-shadow: 0 0 2px rgba(34, 53, 72, 0.2), 0 2px 4px rgba(34, 53, 72, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--sapFontFamily);
+}

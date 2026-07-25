@@ -3,6 +3,7 @@ import { Button } from '@ui5/webcomponents-react'
 import { useParams } from 'react-router-dom'
 import ModelerApp, { type LiShape } from './ModelerApp'
 import { SuiteContextPanelContent, SuiteContextRail } from '../components/SuiteContextPanel'
+import type { Widget, ExternalWidget } from '../components/DataPanel'
 import s from './ModelerLayout.module.css'
 
 type ModelerPanelId = string | null
@@ -15,6 +16,7 @@ export default function ModelerLayout() {
   const liShapeUpdateRef = React.useRef<((id: string, changes: Partial<LiShape>) => void) | null>(null)
   const selectElementByIdRef = React.useRef<((id: string) => void) | null>(null)
   const [liShapes, setLiShapes] = React.useState<LiShape[]>([])
+  const [selectedWidget, setSelectedWidget] = React.useState<Widget | ExternalWidget | null>(null)
   const [panelWidth, setPanelWidth] = useState(420)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
@@ -77,6 +79,7 @@ export default function ModelerLayout() {
           onLiShapeUpdate={(id, changes) => liShapeUpdateRef.current?.(id, changes)}
           onSelectElementById={(fn) => { selectElementByIdRef.current = fn }}
           onLiShapesChange={(shapes) => setLiShapes(shapes)}
+          onWidgetSelect={(w) => { setSelectedWidget(w); setActivePanel('widget-detail') }}
         />
         {activePanel && (
           <>
@@ -129,6 +132,7 @@ export default function ModelerLayout() {
                 assetId={assetId}
                 selectedElementId={selectedElementId}
                 selectedLiShape={selectedLiShape}
+                selectedWidget={selectedWidget}
                 onLiShapeUpdate={(id, changes) => {
                   liShapeUpdateRef.current?.(id, changes)
                   setSelectedLiShape(prev => prev && prev.id === id ? { ...prev, ...changes } : prev)

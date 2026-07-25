@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Button, Icon, Input, Label, Switch, TabContainer, Tab, Text } from '@ui5/webcomponents-react'
-import { SigChipV2, SigDomainObject, SigInlineEdit } from '@signavio/sap-signavio-uixtension'
+import { Button, Icon, Input, Label, Switch, Tab, Text } from '@ui5/webcomponents-react'
+import { SigChipV2, SigDomainObject, SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
 import { elementData } from '../data/liveInsightsData'
 
 type Props = {
@@ -211,7 +211,6 @@ function EditableAttrRow({ label, values, assets, type, onRemove, onRemoveAsset 
 }
 
 export default function ElementDetailPanel({ elementId, onClose, linkedShapes, onSelectLinkedShape }: Props) {
-  const [activeTab, setActiveTab] = useState('Attributes')
   const el = elementData[elementId]
 
   // editable custom attrs state
@@ -248,167 +247,158 @@ export default function ElementDetailPanel({ elementId, onClose, linkedShapes, o
     ))
   }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--sapGroup_ContentBackground, white)', overflow: 'hidden' }}>
-
-      {/* ── Header ── */}
-      <div style={{ flexShrink: 0, background: 'var(--sapBaseColor, white)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 16px 8px' }}>
-          <div style={{
-            width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-            background: typeColor,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon name={typeIcon} style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
-          </div>
-          <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap', flex: 1 }}>{typeLabel}</Text>
-          <Button design="Transparent" icon="decline" onClick={onClose} />
-        </div>
-        <div style={{ padding: '4px 16px 16px' }}>
-          <SigInlineEdit text={el.name} size="H3" level="H3" />
-        </div>
-        <div className="element-detail-panel" style={{
-          boxShadow: '0 2px 4px rgba(34,53,72,0.08)',
-          borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)',
-        }}>
-          <TabContainer
-            onTabSelect={(e: any) => setActiveTab(e.detail?.tab?.text ?? 'Attributes')}
+  const tabs = [
+    <Tab text="Attributes" key="attributes">
+      <div style={{ paddingBottom: '12px' }}>
+        <div style={{ marginBottom: 4 }}>
+          <Input
+            placeholder="Search for attributes"
+            type={'Search' as any}
             style={{ width: '100%' } as React.CSSProperties}
           >
-            <Tab text="Attributes" selected={activeTab === 'Attributes'} />
-            <Tab text="Relations"  selected={activeTab === 'Relations'}  />
-          </TabContainer>
+            <Icon slot="icon" name="search" />
+          </Input>
         </div>
-      </div>
 
-      {/* ── Attributes tab ── */}
-      {activeTab === 'Attributes' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 16px' }}>
-          <div style={{ marginBottom: 4 }}>
-            <Input
-              placeholder="Search for attributes"
-              type={'Search' as any}
-              style={{ width: '100%' } as React.CSSProperties}
-            >
-              <Icon slot="icon" name="search" />
-            </Input>
-          </div>
-
-          {/* ── Live Insights Data ── */}
-          {linkedShapes && linkedShapes.length > 0 && (
-            <AttrGroup title="Live Insights Data" count={linkedShapes.length}>
-              <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block', paddingBottom: '0.5rem' } as React.CSSProperties}>
-                Process data connected to this step
-              </Text>
-              {linkedShapes.map(ls => {
-                const LI_ICON: Record<string, string> = {
-                  'Indicator': 'SAP-icons-v4/data-indicator', 'Value': 'record',
-                  'Progress Bar': 'SAP-icons-v4/progress-bar', 'Trend': 'SAP-icons-v4/data-trend',
-                  'Ring Chart': 'SAP-icons-v4/ring-chart', 'Traffic Light': 'SAP-icons-v4/traffic-light',
-                  'Cockpit': 'SAP-icons-v4/gauge-cockpit', 'Sentiment': 'SAP-icons-v4/emotion-positive',
-                }
-                const WIDGET_MOCK: Record<string, { value: string; label: string; trend: string; trendColor: string }> = {
-                  'value-D-001': { value: '4,218', label: 'Total Cases',     trend: '+12%', trendColor: '#256F3A' },
-                  'value-D-002': { value: '1,042', label: 'Open Cases',      trend: '-3%',  trendColor: '#BB0000' },
-                  'value-D-003': { value: '892',   label: 'Resolved Cases',  trend: '+8%',  trendColor: '#256F3A' },
-                  'value-D-004': { value: '94.2%', label: 'SLA Compliance',  trend: '-1%',  trendColor: '#E9730C' },
-                  'value-D-005': { value: '3,156', label: 'Processed Items', trend: '+5%',  trendColor: '#256F3A' },
-                  'value-I-001': { value: '2,847', label: 'Active Cases',    trend: '+12%', trendColor: '#256F3A' },
-                  'value-I-002': { value: '28.5d', label: 'Avg. Duration',   trend: '-4%',  trendColor: '#BB0000' },
-                }
-                const mock = ls.widgetId ? WIDGET_MOCK[ls.widgetId] : undefined
-                const shapeIcon = LI_ICON[ls.shapeType] ?? 'SAP-icons-v4/data-indicator'
-                return (
-                  <div key={ls.id} style={{ border: '1px solid var(--sapList_BorderColor, #d9d9d9)', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
-                    <div onClick={() => onSelectLinkedShape?.(ls.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.75rem', background: 'var(--sapPageSection_Background, #f5f6f7)', cursor: 'pointer' }}
-                    >
-                      <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Icon name={shapeIcon} style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>
-                          {ls.label ?? ls.widgetName}
-                        </Text>
-                        <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>
-                          {ls.shapeType} · {ls.widgetName}
-                        </Text>
-                      </div>
-                      <Icon name="slim-arrow-right" style={{ width: '1rem', height: '1rem', color: '#0064d9', flexShrink: 0 } as React.CSSProperties} />
-                    </div>
-                    {mock && (
-                      <div style={{ display: 'flex', borderTop: '1px solid var(--sapList_BorderColor, #d9d9d9)' }}>
-                        <div style={{ flex: 1, padding: '0.625rem 0.75rem', borderRight: '1px solid var(--sapList_BorderColor, #d9d9d9)' }}>
-                          <Text style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--sapTextColor)', display: 'block' } as React.CSSProperties}>{mock.value}</Text>
-                          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>{mock.label}</Text>
-                        </div>
-                        <div style={{ flex: 1, padding: '0.625rem 0.75rem' }}>
-                          <Text style={{ fontSize: '1.25rem', fontWeight: 700, color: mock.trendColor, display: 'block' } as React.CSSProperties}>{mock.trend}</Text>
-                          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>vs. last month</Text>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </AttrGroup>
-          )}
-
-          {/* ── Main Attributes ── */}
-          <AttrGroup title="Main Attributes" count={totalAttrs}>
-            {el.description && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
-                <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Description</Label>
-                <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)', lineHeight: 1.4 } as React.CSSProperties}>
-                  {el.description}
-                </Text>
-                <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} />
-              </div>
-            )}
-            {attrEntries.map(([label, values]) => {
-              const attrType = attrs.find(a => a.label === label)?.type
+        {linkedShapes && linkedShapes.length > 0 && (
+          <AttrGroup title="Live Insights Data" count={linkedShapes.length}>
+            <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block', paddingBottom: '0.5rem' } as React.CSSProperties}>
+              Process data connected to this step
+            </Text>
+            {linkedShapes.map(ls => {
+              const LI_ICON: Record<string, string> = {
+                'Indicator': 'SAP-icons-v4/data-indicator', 'Value': 'record',
+                'Progress Bar': 'SAP-icons-v4/progress-bar', 'Trend': 'SAP-icons-v4/data-trend',
+                'Ring Chart': 'SAP-icons-v4/ring-chart', 'Traffic Light': 'SAP-icons-v4/traffic-light',
+                'Cockpit': 'SAP-icons-v4/gauge-cockpit', 'Sentiment': 'SAP-icons-v4/emotion-positive',
+              }
+              const WIDGET_MOCK: Record<string, { value: string; label: string; trend: string; trendColor: string }> = {
+                'value-D-001': { value: '4,218', label: 'Total Cases',     trend: '+12%', trendColor: '#256F3A' },
+                'value-D-002': { value: '1,042', label: 'Open Cases',      trend: '-3%',  trendColor: '#BB0000' },
+                'value-D-003': { value: '892',   label: 'Resolved Cases',  trend: '+8%',  trendColor: '#256F3A' },
+                'value-D-004': { value: '94.2%', label: 'SLA Compliance',  trend: '-1%',  trendColor: '#E9730C' },
+                'value-D-005': { value: '3,156', label: 'Processed Items', trend: '+5%',  trendColor: '#256F3A' },
+                'value-I-001': { value: '2,847', label: 'Active Cases',    trend: '+12%', trendColor: '#256F3A' },
+                'value-I-002': { value: '28.5d', label: 'Avg. Duration',   trend: '-4%',  trendColor: '#BB0000' },
+              }
+              const mock = ls.widgetId ? WIDGET_MOCK[ls.widgetId] : undefined
+              const shapeIcon = LI_ICON[ls.shapeType] ?? 'SAP-icons-v4/data-indicator'
               return (
-                <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
-                  <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>{label}</Label>
-                  {attrType === 'boolean'
-                    ? <Switch checked={values[0] === 'true'} />
-                    : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {values.map((v, i) => (
-                          attrType === 'select'
-                            ? <SigChipV2 key={i} value={v} trailingIcon="slim-arrow-down" />
-                            : <SigChipV2 key={i} value={v} endActionIcon="decline" onEndActionClick={() => {}} />
-                        ))}
+                <div key={ls.id} style={{ border: '1px solid var(--sapList_BorderColor, #d9d9d9)', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                  <div onClick={() => onSelectLinkedShape?.(ls.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.75rem', background: 'var(--sapPageSection_Background, #f5f6f7)', cursor: 'pointer' }}
+                  >
+                    <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name={shapeIcon} style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>
+                        {ls.label ?? ls.widgetName}
+                      </Text>
+                      <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>
+                        {ls.shapeType} · {ls.widgetName}
+                      </Text>
+                    </div>
+                    <Icon name="slim-arrow-right" style={{ width: '1rem', height: '1rem', color: '#0064d9', flexShrink: 0 } as React.CSSProperties} />
+                  </div>
+                  {mock && (
+                    <div style={{ display: 'flex', borderTop: '1px solid var(--sapList_BorderColor, #d9d9d9)' }}>
+                      <div style={{ flex: 1, padding: '0.625rem 0.75rem', borderRight: '1px solid var(--sapList_BorderColor, #d9d9d9)' }}>
+                        <Text style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--sapTextColor)', display: 'block' } as React.CSSProperties}>{mock.value}</Text>
+                        <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>{mock.label}</Text>
                       </div>
-                  }
+                      <div style={{ flex: 1, padding: '0.625rem 0.75rem' }}>
+                        <Text style={{ fontSize: '1.25rem', fontWeight: 700, color: mock.trendColor, display: 'block' } as React.CSSProperties}>{mock.trend}</Text>
+                        <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block' } as React.CSSProperties}>vs. last month</Text>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}
           </AttrGroup>
+        )}
 
-          {/* ── Custom Attributes ── */}
-          {customAttrs.length > 0 && (
-            <AttrGroup title="Custom Attributes" count={customAttrs.reduce((s, g) => s + g.values.length + (g.assets?.length ?? 0), 0)}>
-              {customAttrs.map((group, gi) => (
-                <EditableAttrRow
-                  key={group.label}
-                  label={group.label}
-                  type={group.type}
-                  values={group.values}
-                  assets={group.assets}
-                  onRemove={(vi) => removeCustomValue(gi, vi)}
-                  onRemoveAsset={(ai) => removeCustomAsset(gi, ai)}
-                />
-              ))}
-            </AttrGroup>
+        <AttrGroup title="Main Attributes" count={totalAttrs}>
+          {el.description && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
+              <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Description</Label>
+              <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)', lineHeight: 1.4 } as React.CSSProperties}>
+                {el.description}
+              </Text>
+              <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} />
+            </div>
           )}
-        </div>
-      )}
+          {attrEntries.map(([label, values]) => {
+            const attrType = attrs.find(a => a.label === label)?.type
+            return (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
+                <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>{label}</Label>
+                {attrType === 'boolean'
+                  ? <Switch checked={values[0] === 'true'} />
+                  : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {values.map((v, i) => (
+                        attrType === 'select'
+                          ? <SigChipV2 key={i} value={v} trailingIcon="slim-arrow-down" />
+                          : <SigChipV2 key={i} value={v} endActionIcon="decline" onEndActionClick={() => {}} />
+                      ))}
+                    </div>
+                }
+              </div>
+            )
+          })}
+        </AttrGroup>
 
-      {activeTab === 'Relations' && (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
-          <Text>No relations</Text>
+        {customAttrs.length > 0 && (
+          <AttrGroup title="Custom Attributes" count={customAttrs.reduce((s, g) => s + g.values.length + (g.assets?.length ?? 0), 0)}>
+            {customAttrs.map((group, gi) => (
+              <EditableAttrRow
+                key={group.label}
+                label={group.label}
+                type={group.type}
+                values={group.values}
+                assets={group.assets}
+                onRemove={(vi) => removeCustomValue(gi, vi)}
+                onRemoveAsset={(ai) => removeCustomAsset(gi, ai)}
+              />
+            ))}
+          </AttrGroup>
+        )}
+      </div>
+    </Tab>,
+    <Tab text="Relations" key="relations">
+      <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+        <Text>No relations</Text>
+      </div>
+    </Tab>,
+  ]
+
+  return (
+    <SigRightSidePanel
+      headerTitle={el.name}
+      editable
+      editableTitlePlaceholder={el.name}
+      isOpen
+      toggleRightSidePanel={onClose}
+      navigationSlot={[() => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+            background: typeColor,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name={typeIcon} style={{ width: 12, height: 12, color: iconColor } as React.CSSProperties} />
+          </div>
+          <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap' }}>
+            {typeLabel}
+          </Text>
         </div>
-      )}
-    </div>
+      )]}
+      contentActionsSlot={[]}
+      tabSlot={tabs}
+      style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)', position: 'relative' }}
+    >
+      {''}
+    </SigRightSidePanel>
   )
 }

@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Text, Menu, MenuItem, MenuSeparator, SplitButton } from '@ui5/webcomponents-react'
+import { Button, Icon, Text, Menu, MenuItem, MenuSeparator, SplitButton, ToggleButton } from '@ui5/webcomponents-react'
 import { createPortal } from 'react-dom'
 import { SigChipV2, SigDomainObject } from '@signavio/sap-signavio-uixtension'
 import { useNavigate } from 'react-router-dom'
 import DictionaryPanel from '../components/DictionaryPanel'
 import DataPanel from '../components/DataPanel'
+import type { Widget, ExternalWidget } from '../components/DataPanel'
 import ElementsPanel from '../components/ElementsPanel'
 import MoreElementsPanel from '../components/MoreElementsPanel'
 import {
@@ -19,7 +20,7 @@ import s from './ModelerApp.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; panelOffset?: number }
+type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; panelOffset?: number }
 
 type SaveState = 'draft' | 'saved' | 'saving' | 'offline' | 'error'
 
@@ -108,13 +109,17 @@ function getConnectionPoints(
 
   const scx = sg.cx, scy = sg.cy
   const tcx = tg.cx, tcy = tg.cy
+  const dx = tcx - scx, dy = tcy - scy
 
-  if (conn.dir === 'h') {
-    return { x1: scx + sg.hw, y1: scy, x2: tcx - tg.hw, y2: tcy }
-  } else if (conn.dir === 'v') {
-    return { x1: scx, y1: scy + sg.hh, x2: tcx, y2: tcy - tg.hh }
-  } else { // vu
-    return { x1: scx, y1: scy - sg.hh, x2: tcx, y2: tcy + tg.hh }
+  // Dynamic: pick the closest pair of edges based on relative position
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    // horizontal dominant
+    if (dx >= 0) return { x1: scx + sg.hw, y1: scy, x2: tcx - tg.hw, y2: tcy, dir: 'h' as const }
+    else         return { x1: scx - sg.hw, y1: scy, x2: tcx + tg.hw, y2: tcy, dir: 'h' as const }
+  } else {
+    // vertical dominant
+    if (dy >= 0) return { x1: scx, y1: scy + sg.hh, x2: tcx, y2: tcy - tg.hh, dir: 'v' as const }
+    else         return { x1: scx, y1: scy - sg.hh, x2: tcx, y2: tcy + tg.hh, dir: 'vu' as const }
   }
 }
 
@@ -1066,6 +1071,9 @@ function BpmnCanvas({
   const [editingLiLabel, setEditingLiLabel] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [connHover, setConnHover] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [fontSizeMenuOpen, setFontSizeMenuOpen] = useState(false)
+  const [selectedFontSize, setSelectedFontSize] = useState(48)
+  const [dictHoveredId, setDictHoveredId] = useState<string | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const [liDragOverBpmnId, setLiDragOverBpmnId] = useState<string | null>(null)
@@ -1284,10 +1292,11 @@ function BpmnCanvas({
   // ── Mouse handlers for element dragging ──────────────────────────────────────
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    setFontSizeMenuOpen(false)
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
     const hit = hitTestElement(svgPt.x, svgPt.y, elementsRef.current)
-    if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'li-shape' || hit.type === 'data' || hit.type === 'artifact')) {
+    if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'li-shape' || hit.type === 'data' || hit.type === 'artifact' || hit.type === 'gateway' || hit.type === 'event')) {
       if (e.shiftKey) {
         // Shift+click: toggle element in/out of selection
         setSelectedIds(prev => {
@@ -1816,20 +1825,28 @@ function BpmnCanvas({
             'flabel-gateway1-reject1': 'No', 'flabel-gateway2-reject2': 'No', 'flabel-gateway3-end3': 'No',
           }
 
-          if (conn.dir === 'h') {
+          if (pts.dir === 'h') {
             const lbl = conn.flowLabel ? labels[conn.flowLabel] : undefined
-            const x1 = hasStart ? pts.x1 + AW : pts.x1
-            const x2 = hasEnd ? pts.x2 - AW : pts.x2
-            const mx = (pts.x1 + pts.x2) / 2, my = pts.y1
+            const mx = (pts.x1 + pts.x2) / 2, my = (pts.y1 + pts.y2) / 2
+            // compute angle of the line for arrowhead rotation
+            const adx = pts.x2 - pts.x1, ady = pts.y2 - pts.y1
+            const angle = Math.atan2(ady, adx) * 180 / Math.PI
+            const lineLen = Math.sqrt(adx * adx + ady * ady)
+            const x1 = hasStart ? pts.x1 + (adx / lineLen) * AW : pts.x1
+            const y1a = hasStart ? pts.y1 + (ady / lineLen) * AW : pts.y1
+            const x2 = hasEnd ? pts.x2 - (adx / lineLen) * AW : pts.x2
+            const y2a = hasEnd ? pts.y2 - (ady / lineLen) * AW : pts.y2
             return (
               <g key={conn.id}>
                 {t === 'message' && <circle cx={pts.x1} cy={pts.y1} r={5} fill="white" stroke={stroke} strokeWidth={1.5} />}
-                <line x1={x1} y1={pts.y1} x2={x2} y2={pts.y2}
+                <line x1={x1} y1={y1a} x2={x2} y2={y2a}
                   stroke={stroke} strokeWidth={1.5} strokeLinecap={dashed ? 'round' : 'butt'}
                   {...(dashed ? { strokeDasharray: dashed } : {})}
                 />
-                {renderArrowEnd(x2, pts.y1)}
-                {renderArrowStart(pts.x1, pts.y1)}
+                {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-11,-5.5)`} fill={stroke} />}
+                {hasEnd && t !== 'sequence' && t !== 'message' && <polyline points="0,0 7,5.5 0,11" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-7,-5.5)`} />}
+                {hasEnd && t === 'message' && <path d={arrowPath} fill="white" stroke={stroke} strokeWidth="1.5" transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-11,-5.5)`} />}
+                {hasStart && <polyline points="7,0 0,5.5 7,11" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" transform={`translate(${pts.x1},${pts.y1}) rotate(${angle + 180}) translate(-7,-5.5)`} />}
                 {lbl && (
                   <g>
                     <rect x={mx - 14} y={my - 10} width={lbl.length > 2 ? 30 : 27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
@@ -1838,7 +1855,7 @@ function BpmnCanvas({
                 )}
               </g>
             )
-          } else if (conn.dir === 'v') {
+          } else if (pts.dir === 'v') {
             const lbl = conn.flowLabel ? labels[conn.flowLabel] : undefined
             const mx = pts.x1, my = (pts.y1 + pts.y2) / 2
             // vertical with optional label — may be straight or elbow
@@ -1855,7 +1872,8 @@ function BpmnCanvas({
                   <path d={path} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinecap="butt"
                     {...(dashed ? { strokeDasharray: dashed } : {})}
                   />
-                  {renderArrowEnd(pts.x2, pts.y2, 'v')}
+                  {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2 + 5.5}, ${pts.y2 - 10}) rotate(90)`} fill={stroke} />}
+                  {hasEnd && t !== 'sequence' && <polyline points={`${pts.x2-5},${pts.y2-9} ${pts.x2},${pts.y2} ${pts.x2+5},${pts.y2-9}`} fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
                   {lbl && (
                     <g>
                       <rect x={mx - 14} y={my - 10} width={27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
@@ -1865,15 +1883,15 @@ function BpmnCanvas({
                 </g>
               )
             }
-            const y1adj = pts.y1
             const y2adj = hasEnd ? pts.y2 - 10 : pts.y2
             return (
               <g key={conn.id}>
-                <line x1={pts.x1} y1={y1adj} x2={pts.x2} y2={y2adj}
+                <line x1={pts.x1} y1={pts.y1} x2={pts.x2} y2={y2adj}
                   stroke={stroke} strokeWidth={1.5} strokeLinecap={dashed ? 'round' : 'butt'}
                   {...(dashed ? { strokeDasharray: dashed } : {})}
                 />
-                {renderArrowEnd(pts.x2, pts.y2, 'v')}
+                {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2 + 5.5}, ${pts.y2 - 10}) rotate(90)`} fill={stroke} />}
+                {hasEnd && t !== 'sequence' && <polyline points={`${pts.x2-5},${pts.y2-9} ${pts.x2},${pts.y2} ${pts.x2+5},${pts.y2-9}`} fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
                 {lbl && (
                   <g>
                     <rect x={mx - 14} y={my - 10} width={27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
@@ -1883,14 +1901,19 @@ function BpmnCanvas({
               </g>
             )
           } else {
-            // vu: vertical upward
-            const y1adj = hasEnd ? pts.y1 + AW : pts.y1
+            // vu: vertical upward — use same angle-based approach
+            const adx = pts.x2 - pts.x1, ady = pts.y2 - pts.y1
+            const angle = Math.atan2(ady, adx) * 180 / Math.PI
+            const lineLen = Math.sqrt(adx * adx + ady * ady)
+            const x2 = hasEnd ? pts.x2 - (adx / lineLen) * AW : pts.x2
+            const y2a = hasEnd ? pts.y2 - (ady / lineLen) * AW : pts.y2
             return (
               <g key={conn.id}>
-                <line x1={pts.x1} y1={y1adj} x2={pts.x2} y2={pts.y2}
+                <line x1={pts.x1} y1={pts.y1} x2={x2} y2={y2a}
                   stroke={stroke} strokeWidth={1.5} strokeLinecap={dashed ? 'round' : 'butt'}
                   {...(dashed ? { strokeDasharray: dashed ?? '4 3' } : { strokeDasharray: '4 3' })}
                 />
+                {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-11,-5.5)`} fill={stroke} />}
               </g>
             )
           }
@@ -1906,8 +1929,10 @@ function BpmnCanvas({
           const isDropTarget = el.id === dropTargetId || el.id === liDragOverBpmnId
           const hw = el.hw, hh = el.hh
           const ringW = 2 / (zoom / 100)
-          const dotR = Math.min(6, Math.max(2.5, 4.5 / (zoom / 100)))
-          const dotOff = 1.5 + dotR + 6
+          const DOT_R_PX = 4.5
+          const DOT_GAP_PX = 16  // fixed screen px gap between element edge and dot center
+          const dotR = DOT_R_PX / (zoom / 100)
+          const dotOff = DOT_GAP_PX / (zoom / 100)
           // connection points (4 edges) — sit outside the ring
           const connPts = [
             { x: el.cx,                y: el.cy - hh - dotOff },
@@ -1948,6 +1973,39 @@ function BpmnCanvas({
               {el.type === 'system'  && <SystemShape  el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
               {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
+              {/* ── Dictionary icon (selected only) ── */}
+              {(el.type === 'task' || el.type === 'system' || el.type === 'artifact') && selected && (() => {
+                const btnSize = 24 / (zoom / 100)
+                const pad = 2 / (zoom / 100)
+                const bx = el.cx - el.hw + pad
+                const by = el.cy + el.hh - pad - btnSize
+                const linked = !!el.linkedDictId
+                return (
+                  <foreignObject x={bx} y={by} width={btnSize} height={btnSize} style={{ overflow: 'visible' }}>
+                    <ToggleButton
+                      icon={linked ? 'course-book' : 'add-coursebook'}
+                      pressed={linked}
+                      design={linked ? 'Emphasized' : 'Default'}
+                      tooltip={linked ? 'Show Dictionary Item' : 'Link to Dictionary Item'}
+                      onClick={(e: React.MouseEvent) => { e.stopPropagation() }}
+                      onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
+                      style={{
+                        width: `${btnSize * (zoom / 100)}px`,
+                        height: `${btnSize * (zoom / 100)}px`,
+                        '--_ui5_button_base_min_width': `${btnSize * (zoom / 100)}px`,
+                        transform: `scale(${100 / zoom})`,
+                        transformOrigin: '0 0',
+                        ...(linked ? {
+                          '--_ui5_button_emphasized_background': 'var(--sapHighlightColor)',
+                          '--_ui5_toggle_btn_pressed_background': 'var(--sapHighlightColor)',
+                          background: 'var(--sapHighlightColor)',
+                          color: 'white',
+                        } : {}),
+                      } as React.CSSProperties}
+                    />
+                  </foreignObject>
+                )
+              })()}
               {(el.type as string) === 'pool' && (() => {
                 const x = el.cx - el.hw, y = el.cy - el.hh
                 const w = el.hw * 2, h = el.hh * 2
@@ -2334,6 +2392,137 @@ function BpmnCanvas({
 
       {dictOpen && <DictionaryPanel onClose={onToggleDict} />}
 
+      {/* ── Shape context menu ───────────────────────────────────────────────── */}
+      {(() => {
+        if (selectedIds.size !== 1 || isDragging) return null
+        const id = [...selectedIds][0]
+        const el = elements.find(e => e.id === id)
+        if (!el || (el.type !== 'task' && el.type !== 'system' && el.type !== 'gateway' && el.type !== 'event' && el.type !== 'data' && el.type !== 'artifact')) return null
+        const svgRect = svgRef.current?.getBoundingClientRect()
+        if (!svgRect) return null
+        const DOT_GAP_PX = 16
+        const elTopPx = svgRect.top + (el.cy - el.hh - panY) / scale
+        const menuBottomPx = elTopPx - 2 * DOT_GAP_PX
+        const centerPx = svgRect.left + (el.cx - panX) / scale
+        const btnStyle: React.CSSProperties = { width: '2.25rem', height: '2.25rem', color: 'var(--sapTextColor)', '--_ui5_button_base_min_width': '2.25rem' } as React.CSSProperties
+        const sep = <div style={{ width: 1, height: '1.125rem', background: 'var(--sapNeutralBorderColor)', flexShrink: 0, margin: '0 0.125rem' }} />
+        return createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              left: centerPx,
+              top: menuBottomPx,
+              transform: 'translateX(-50%) translateY(-100%)',
+              zIndex: 9999,
+              background: 'var(--sapBaseColor, #fff)',
+              border: '1px solid var(--sapNeutralBorderColor, #d9d9d9)',
+              borderRadius: '0.75rem',
+              boxShadow: '0 2px 8px rgba(34,53,72,0.15)',
+              padding: '0.25rem 0.375rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.125rem',
+              pointerEvents: 'auto',
+            }}
+            onMouseDown={e => e.stopPropagation()}
+          >
+            <Button design="Transparent" icon="SAP-icons-v4/task-activity" tooltip="Shape type" style={btnStyle} />
+            {sep}
+            <div style={{ position: 'relative' }}>
+              <button
+                ref={(btn) => {
+                  if (btn && fontSizeMenuOpen) {
+                    const r = btn.getBoundingClientRect()
+                    ;(btn as any)._rect = r
+                  }
+                }}
+                id="font-size-btn"
+                onClick={(e) => {
+                  setFontSizeMenuOpen(v => !v)
+                  ;(e.currentTarget as any)._rect = e.currentTarget.getBoundingClientRect()
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.25rem',
+                  padding: '0 0.5rem', height: '2.25rem', cursor: 'pointer',
+                  background: fontSizeMenuOpen ? 'var(--sapButton_Selected_Background, #dbeafe)' : 'none',
+                  border: fontSizeMenuOpen ? '1px solid var(--sapHighlightColor)' : '1px solid transparent',
+                  borderRadius: '0.375rem',
+                  fontFamily: 'var(--sapFontFamily)',
+                }}
+                onMouseEnter={e => { if (!fontSizeMenuOpen) e.currentTarget.style.background = 'var(--sapButton_Lite_Hover_Background, #e8f3ff)' }}
+                onMouseLeave={e => { if (!fontSizeMenuOpen) e.currentTarget.style.background = 'none' }}
+              >
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--sapTextColor)', lineHeight: 1, minWidth: '1.5rem', textAlign: 'center' }}>{selectedFontSize}</span>
+                <Icon name="expand" style={{ width: '0.875rem', height: '0.875rem', color: 'var(--sapTextColor)' } as React.CSSProperties} />
+              </button>
+              {fontSizeMenuOpen && (() => {
+                const SIZES = [8, 10, 12, 14, 16, 18, 24, 32, 36, 48, 64, 72]
+                const ITEM_H = 32
+                const btn = document.getElementById('font-size-btn')
+                const r = btn?.getBoundingClientRect()
+                if (!r) return null
+                const selectedIdx = SIZES.indexOf(selectedFontSize)
+                return createPortal(
+                  <div
+                    ref={(el) => { if (el) el.scrollTop = Math.max(0, selectedIdx * ITEM_H - ITEM_H * 3) }}
+                    style={{
+                      position: 'fixed',
+                      left: r.left + r.width / 2,
+                      top: r.bottom,
+                      transform: 'translateX(-50%)',
+                      zIndex: 10000,
+                      background: 'var(--sapBaseColor, #fff)',
+                      border: '1px solid var(--sapNeutralBorderColor)',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 12px rgba(34,53,72,0.18)',
+                      overflow: 'auto',
+                      minWidth: '4rem',
+                      maxHeight: `${ITEM_H * 7}px`,
+                    }}
+                    onMouseDown={e => e.stopPropagation()}
+                  >
+                    {SIZES.map(size => (
+                      <div
+                        key={size}
+                        onClick={() => { setSelectedFontSize(size); setFontSizeMenuOpen(false) }}
+                        style={{
+                          padding: '0 1rem',
+                          height: ITEM_H,
+                          lineHeight: `${ITEM_H}px`,
+                          fontSize: '0.875rem',
+                          fontWeight: size === selectedFontSize ? 700 : 400,
+                          color: size === selectedFontSize ? 'var(--sapHighlightColor)' : 'var(--sapTextColor)',
+                          background: size === selectedFontSize ? 'var(--sapList_SelectionBackgroundColor, #dbeafe)' : 'none',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          fontFamily: 'var(--sapFontFamily)',
+                        }}
+                        onMouseEnter={e => { if (size !== selectedFontSize) (e.currentTarget as HTMLElement).style.background = 'var(--sapList_Hover_Background)' }}
+                        onMouseLeave={e => { if (size !== selectedFontSize) (e.currentTarget as HTMLElement).style.background = 'none' }}
+                      >
+                        {size}
+                      </div>
+                    ))}
+                  </div>,
+                  document.body
+                )
+              })()}
+            </div>
+            <Button design="Transparent" icon="text-formatting" tooltip="Text formatting" style={btnStyle} />
+            <Button design="Transparent" icon="text-align-center" tooltip="Text alignment" style={btnStyle} />
+            {sep}
+            <Button design="Transparent" icon="text-color" tooltip="Text color" style={btnStyle} />
+            <Button design="Transparent" icon="border" tooltip="Shape border" style={btnStyle} />
+            <Button design="Transparent" icon="color-fill" tooltip="Color fill" style={btnStyle} />
+            {sep}
+            <Button design="Transparent" icon="SAP-icons-v4/align-left" tooltip="Align" style={btnStyle} />
+            {sep}
+            <Button design="Transparent" icon="overflow" tooltip="More" style={btnStyle} />
+          </div>,
+          document.body
+        )
+      })()}
+
       {createPortal(
         <Menu ref={overflowMenuRef}>
           <MenuItem text="Open Latest Draft" />
@@ -2373,7 +2562,7 @@ function BpmnCanvas({
 
 // ── ModelerApp ─────────────────────────────────────────────────────────────────
 
-export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onSelectElementById, onLiShapesChange, panelOffset = 0 }: Props) {
+export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onSelectElementById, onLiShapesChange, onWidgetSelect, panelOffset = 0 }: Props) {
   const navigate = useNavigate()
   const [dictOpen, setDictOpen] = useState(false)
   const [dataOpen, setDataOpen] = useState(false)
@@ -2410,7 +2599,7 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onLiShapesChange={onLiShapesChange}
         panelOffset={panelOffset}
       />
-      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} />}
+      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} />}
       {shapesOpen && !moreElementsOpen && (
         <ElementsPanel
           onClose={() => setShapesOpen(false)}

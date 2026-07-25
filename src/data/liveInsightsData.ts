@@ -106,13 +106,13 @@ export const dictionaryItems: DictionaryItem[] = [
 
 export const elementData: Record<string, ElementData> = {
   'el-start':     { name: 'Application received',    type: 'event',   subtype: 'Start',  description: 'Start of the hiring process when an application is received.' },
-  'el-evaluate':  { name: 'Evaluate CV',             type: 'task',    subtype: 'User Task',    description: "Review and evaluate the candidate's CV and cover letter." },
+  'el-evaluate':  { name: 'Evaluate CV',             type: 'task',    subtype: 'User Task',    description: "Review and evaluate the candidate's CV and cover letter.", linkedDictId: 'd27' },
   'el-gateway1':  { name: 'Proceed with interview?', type: 'gateway', subtype: 'Exclusive',    description: 'Decision whether to proceed with interviewing the candidate.' },
   'el-reject1':   { name: 'Send rejection',          type: 'task',    subtype: 'User Task',    description: 'Send rejection notification to the candidate after CV evaluation.' },
   'el-end1':      { name: 'Application rejected',    type: 'event',   subtype: 'End',    description: '' },
   'el-plan':      { name: 'Plan interview',          type: 'task',    subtype: 'User Task',    description: 'Schedule and plan the candidate interview with relevant stakeholders.' },
-  'el-interview': { name: 'Interview candidate',     type: 'task',    subtype: 'User Task',    description: 'Conduct the candidate interview and complete the scorecard.' },
-  'el-system':    { name: 'ATS System',              type: 'artifact', subtype: 'ITSystem',   description: 'Applicant Tracking System used to manage candidates during the interview process.' },
+  'el-interview': { name: 'Interview candidate',     type: 'task',    subtype: 'User Task',    description: 'Conduct the candidate interview and complete the scorecard.', linkedDictId: 'd28' },
+  'el-system':    { name: 'ATS System',              type: 'artifact', subtype: 'ITSystem',   description: 'Applicant Tracking System used to manage candidates during the interview process.', linkedDictId: 'd41' },
   'el-gateway2':  { name: 'Hire candidate?',         type: 'gateway', subtype: 'Exclusive',    description: 'Decision whether to hire the candidate based on interview results.' },
   'el-reject2':   { name: 'Send rejection',          type: 'task',    subtype: 'User Task',    description: 'Send rejection notification to candidate after interview.' },
   'el-end2':      { name: 'Application rejected',    type: 'event',   subtype: 'End',    description: '' },

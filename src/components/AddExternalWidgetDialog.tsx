@@ -98,7 +98,7 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Label showColon>Chart Type</Label>
+            <Label showColon>Element Type</Label>
             <Select
               style={{ width: '100%' } as React.CSSProperties}
               onChange={(e: any) => setShapeType(e.detail?.selectedOption?.dataset?.value ?? 'Indicator')}

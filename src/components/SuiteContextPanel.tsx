@@ -10,7 +10,9 @@ import AssetInfoPanel from '../pages/Repository/AssetInfoPanel'
 import AtomsPanel from './SuiteContextPanel/AtomsPanel'
 import ElementDetailPanel from './ElementDetailPanel'
 import LiShapeDetailPanel from './LiShapeDetailPanel'
+import WidgetDetailPanel from './WidgetDetailPanel'
 import type { LiShape } from '../pages/ModelerApp'
+import type { Widget, ExternalWidget } from './DataPanel'
 import type { SelectedAssetInfo } from '../pages/AllResources'
 import s from './SuiteContextPanel.module.css'
 
@@ -74,8 +76,17 @@ function makeMockAsset(assetId?: string): SelectedAssetInfo {
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null }) {
   if (!activePanel) return null
+
+  // widget detail
+  if (activePanel === 'widget-detail' && selectedWidget) {
+    return (
+      <div className={s.panelContent}>
+        <WidgetDetailPanel widget={selectedWidget} onClose={() => onTogglePanel(null)} />
+      </div>
+    )
+  }
 
   // li shape detail
   if (activePanel === 'element-detail' && selectedLiShape) {
