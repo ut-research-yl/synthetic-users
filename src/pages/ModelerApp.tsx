@@ -1079,6 +1079,7 @@ function BpmnCanvas({
   const [dictHoveredId, setDictHoveredId] = useState<string | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [dropInvalidId, setDropInvalidId] = useState<string | null>(null)
   const [liDragOverBpmnId, setLiDragOverBpmnId] = useState<string | null>(null)
 
   // Undo/Redo history
@@ -1422,6 +1423,7 @@ function BpmnCanvas({
               ? { ...s, linkedBpmnId: overBpmn.id, linkedBpmnName: overBpmn.name, cx: pos.cx, cy: pos.cy }
               : s
           ))
+          setToastMsg(`Connected to "${overBpmn.name}"`)
         }
       }
     }
@@ -1467,14 +1469,29 @@ function BpmnCanvas({
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
     const hit = hitTestElement(svgPt.x, svgPt.y, elements)
-    setDropTargetId(hit?.id ?? null)
+    if (!hit) { setDropTargetId(null); setDropInvalidId(null); return }
+
+    const et = (window as any).__dictDragElementType as string | null
+    if (et && e.dataTransfer.types.includes('application/dict-item')) {
+      const compatible = (et === 'task' && hit.type === 'task')
+        || (et === 'artifact' && (hit.type === 'artifact' || hit.type === 'system'))
+        || (et === 'data' && hit.type === 'data')
+        || (et === 'event' && hit.type === 'event')
+        || (et === 'gateway' && hit.type === 'gateway')
+      if (compatible) { setDropTargetId(hit.id); setDropInvalidId(null) }
+      else             { setDropTargetId(null); setDropInvalidId(hit.id) }
+    } else {
+      setDropTargetId(hit.id)
+      setDropInvalidId(null)
+    }
   }
 
-  const handleDragLeave = () => setDropTargetId(null)
+  const handleDragLeave = () => { setDropTargetId(null); setDropInvalidId(null) }
 
   const handleDrop = (e: React.DragEvent<SVGSVGElement>) => {
     e.preventDefault()
     setDropTargetId(null)
+    setDropInvalidId(null)
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
 
@@ -1621,11 +1638,56 @@ function BpmnCanvas({
       try {
         const dictItem = JSON.parse(dictRaw)
         const hit = hitTestElement(svgPt.x, svgPt.y, elements)
-        if (hit && (hit.type === 'task' || hit.type === 'system')) {
-          setElements(els => els.map(el => el.id === hit.id
-            ? { ...el, linkedDictId: dictItem.id, linkedDictName: dictItem.name }
-            : el
-          ))
+        if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'gateway' || hit.type === 'event' || hit.type === 'data' || hit.type === 'artifact')) {
+          // only allow linking when elementType matches shape type
+          const et = dictItem.elementType
+          const typeMatch = !et
+            || (et === 'task' && (hit.type === 'task'))
+            || (et === 'artifact' && (hit.type === 'artifact' || hit.type === 'system'))
+            || (et === 'data' && hit.type === 'data')
+            || (et === 'event' && hit.type === 'event')
+            || (et === 'gateway' && hit.type === 'gateway')
+          if (typeMatch) {
+            setElements(els => els.map(el => el.id === hit.id
+              ? { ...el, linkedDictId: dictItem.id, linkedDictName: dictItem.name }
+              : el
+            ))
+            setToastMsg(`"${dictItem.name}" linked to "${hit.name}"`)
+          } else {
+            setToastMsg(`Cannot link ${dictItem.type ?? 'this item'} to this element`)
+          }
+        } else {
+          // elementType 우선 사용, 없으면 category로 fallback
+          const sub = (dictItem.subCategory ?? '').toLowerCase()
+          const cat = dictItem.type ?? ''
+          const et = dictItem.elementType ?? ''
+          let shapeType = et || 'task'
+          let subtype = 'User Task'
+          let hw = 50, hh = 40
+
+          if (et === 'artifact' || (!et && (cat === 'IT System' || cat === 'IT Systems'))) {
+            shapeType = 'artifact'; subtype = 'ITSystem'; hw = 28.5; hh = 28.5
+          } else if (et === 'data' || (!et && cat === 'Documents')) {
+            shapeType = 'data'; subtype = 'DataObject'; hw = 40; hh = 40
+          } else if (et === 'event' || (!et && cat === 'Events')) {
+            shapeType = 'event'; hw = 16; hh = 16
+            subtype = sub.includes('start') ? 'Start' : 'End'
+          } else if (et === 'gateway' || (!et && cat === 'Gateway')) {
+            shapeType = 'gateway'; subtype = 'Exclusive'; hw = 20; hh = 20
+          }
+          const newId = `el-drop-${Date.now()}`
+          setElements(els => [...els, {
+            id: newId,
+            type: shapeType,
+            subtype,
+            name: dictItem.name,
+            description: '',
+            cx: svgPt.x, cy: svgPt.y,
+            hw, hh,
+            linkedDictId: dictItem.id,
+            linkedDictName: dictItem.name,
+          }])
+          setSelectedId(newId)
         }
       } catch {}
       return
@@ -1755,6 +1817,7 @@ function BpmnCanvas({
         onMouseLeave={handleSvgMouseUp}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onDragEnd={() => { setDropTargetId(null); setDropInvalidId(null) }}
         onDrop={handleDrop}
         style={{ cursor: panState.current ? 'grabbing' : isDragging ? 'grabbing' : 'default' }}
       >
@@ -1933,6 +1996,7 @@ function BpmnCanvas({
           const selected = selectedIds.has(el.id) && selectedIds.size === 1
           const hovered = el.id === hoveredId && !selected
           const isDropTarget = el.id === dropTargetId || el.id === liDragOverBpmnId
+          const isDropInvalid = el.id === dropInvalidId
           const hw = el.hw, hh = el.hh
           const ringW = 2 / (zoom / 100)
           const DOT_R_PX = 4.5
@@ -1966,13 +2030,21 @@ function BpmnCanvas({
                 setSelectedId(el.id)
               }}
             >
-              {isDropTarget && (el.type === 'task' || el.type === 'system' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') && (
-                <rect
-                  x={el.cx - el.hw - 6} y={el.cy - el.hh - 6}
-                  width={(el.hw + 6) * 2} height={(el.hh + 6) * 2}
-                  rx={14} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={2} strokeDasharray="5 4" opacity={0.8}
-                />
-              )}
+              {(isDropTarget || isDropInvalid) && (() => {
+                const stroke = isDropInvalid ? 'var(--sapNegativeColor, #bb0000)' : 'var(--sapHighlightColor)'
+                const pad = 6
+                if (el.type === 'gateway') {
+                  const r = el.hw + pad
+                  return <polygon points={`${el.cx},${el.cy - r} ${el.cx + r},${el.cy} ${el.cx},${el.cy + r} ${el.cx - r},${el.cy}`} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+                }
+                if (el.type === 'event') {
+                  return <circle cx={el.cx} cy={el.cy} r={el.hw + pad} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+                }
+                if (el.type === 'system' || el.type === 'artifact') {
+                  return <circle cx={el.cx} cy={el.cy} r={el.hw + pad} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+                }
+                return <rect x={el.cx - el.hw - pad} y={el.cy - el.hh - pad} width={(el.hw + pad) * 2} height={(el.hh + pad) * 2} rx={14} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+              })()}
               {el.type === 'task'    && <TaskShape    el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {el.type === 'gateway' && <GatewayShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
               {el.type === 'event'   && <EventShape   el={el} selected={selected} hovered={hovered} ringW={ringW} />}
@@ -1980,7 +2052,7 @@ function BpmnCanvas({
               {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
               {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {/* ── Dictionary icon (selected only) ── */}
-              {(el.type === 'task' || el.type === 'system' || el.type === 'artifact' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') && selected && (() => {
+              {(el.type === 'task' || el.type === 'system' || el.type === 'artifact' || el.type === 'event' || el.type === 'data') && selected && (() => {
                 const btnSize = 24 / (zoom / 100)
                 const pad = 2 / (zoom / 100)
                 const bx = el.cx - el.hw + pad

@@ -28,6 +28,7 @@ type DictItem = {
   name: string
   category: DictCategory
   subCategory?: string
+  elementType?: 'task' | 'artifact' | 'data' | 'event' | 'gateway'
   description: string
   lastUpdated: string
   usedInDiagram?: boolean
@@ -35,19 +36,21 @@ type DictItem = {
 }
 
 const DICT_ITEMS: DictItem[] = [
-  { id: 'd27', name: 'Evaluate CV', category: 'Activities', description: 'Review and evaluate submitted curriculum vitae against job requirements', lastUpdated: '10.03.2026', usedInDiagram: true },
-  { id: 'd40', name: 'Plan interview', category: 'Activities', description: 'Schedule and organize interview logistics and panel members', lastUpdated: '14.03.2026', usedInDiagram: true },
-  { id: 'd28', name: 'Interview candidate', category: 'Activities', description: 'Conduct structured interview with candidate', lastUpdated: '15.03.2026', usedInDiagram: true },
-  { id: 'd30', name: 'Make offer', category: 'Activities', description: 'Prepare and send job offer letter to selected candidate', lastUpdated: '12.03.2026', usedInDiagram: true },
-  { id: 'd31', name: 'Onboard candidate', category: 'Activities', description: 'Complete onboarding process for newly hired employee', lastUpdated: '14.03.2026', usedInDiagram: true },
-  { id: 'd29', name: 'Send rejection', category: 'Activities', description: 'Send rejection notification to unsuccessful candidates', lastUpdated: '08.03.2026', usedInDiagram: true },
-  { id: 'd41', name: 'ATS System', category: 'IT System', subCategory: 'HR Technology', description: 'Applicant Tracking System for managing recruitment workflow', lastUpdated: '15.03.2026', usedInDiagram: true },
-  { id: 'd56', name: 'Workday', category: 'IT System', subCategory: 'HCM', description: 'Human capital management cloud platform', lastUpdated: '14.03.2026', isFavorite: true },
-  { id: 'd61', name: 'Application Form', category: 'Documents', subCategory: 'HR Information', description: 'Candidate application form with personal and professional details', lastUpdated: '11.03.2026' },
-  { id: 'd63', name: 'Interview Scorecard', category: 'Documents', subCategory: 'HR Information', description: 'Structured evaluation form for candidate interviews', lastUpdated: '10.03.2026' },
-  { id: 'd42', name: 'Recruitment Specialist', category: 'Organizational Units', subCategory: 'Human Resources', description: 'Handles end-to-end recruitment activities', lastUpdated: '15.03.2026' },
-  { id: 'd33', name: 'Application received', category: 'Events', subCategory: 'Start Event', description: 'Start event triggered when a new application is submitted', lastUpdated: '11.03.2026', usedInDiagram: true },
-  { id: 'd35', name: 'Candidate hired', category: 'Events', subCategory: 'End Event', description: 'End event when candidate successfully completes hiring process', lastUpdated: '13.03.2026', usedInDiagram: true },
+  { id: 'd27', name: 'Evaluate CV',          category: 'Activities',          elementType: 'task',     description: 'Review and evaluate submitted curriculum vitae against job requirements', lastUpdated: '10.03.2026', usedInDiagram: true },
+  { id: 'd41', name: 'ATS System',           category: 'IT System',           elementType: 'artifact', subCategory: 'HR Technology', description: 'Applicant Tracking System for managing recruitment workflow', lastUpdated: '15.03.2026', usedInDiagram: true },
+  { id: 'd33', name: 'Application received', category: 'Events',              elementType: 'event',    subCategory: 'Start Event', description: 'Start event triggered when a new application is submitted', lastUpdated: '11.03.2026', usedInDiagram: true },
+  { id: 'd40', name: 'Plan interview',       category: 'Activities',          elementType: 'task',     description: 'Schedule and organize interview logistics and panel members', lastUpdated: '14.03.2026', usedInDiagram: true },
+  { id: 'd61', name: 'Application Form',     category: 'Documents',           elementType: 'data',     subCategory: 'HR Information', description: 'Candidate application form with personal and professional details', lastUpdated: '11.03.2026' },
+  { id: 'd28', name: 'Interview candidate',  category: 'Activities',          elementType: 'task',     description: 'Conduct structured interview with candidate', lastUpdated: '15.03.2026', usedInDiagram: true },
+  { id: 'd70', name: 'Proceed with interview?', category: 'Gateway',          elementType: 'gateway',  description: 'Decision gateway for interview process', lastUpdated: '10.03.2026' },
+  { id: 'd56', name: 'Workday',              category: 'IT System',           elementType: 'artifact', subCategory: 'HCM', description: 'Human capital management cloud platform', lastUpdated: '14.03.2026', isFavorite: true },
+  { id: 'd30', name: 'Make offer',           category: 'Activities',          elementType: 'task',     description: 'Prepare and send job offer letter to selected candidate', lastUpdated: '12.03.2026', usedInDiagram: true },
+  { id: 'd63', name: 'Interview Scorecard',  category: 'Documents',           elementType: 'data',     subCategory: 'HR Information', description: 'Structured evaluation form for candidate interviews', lastUpdated: '10.03.2026' },
+  { id: 'd35', name: 'Candidate hired',      category: 'Events',              elementType: 'event',    subCategory: 'End Event', description: 'End event when candidate successfully completes hiring process', lastUpdated: '13.03.2026', usedInDiagram: true },
+  { id: 'd42', name: 'Recruitment Specialist', category: 'Organizational Units', elementType: 'task',  subCategory: 'Human Resources', description: 'Handles end-to-end recruitment activities', lastUpdated: '15.03.2026' },
+  { id: 'd31', name: 'Onboard candidate',    category: 'Activities',          elementType: 'task',     description: 'Complete onboarding process for newly hired employee', lastUpdated: '14.03.2026', usedInDiagram: true },
+  { id: 'd71', name: 'Hire candidate?',      category: 'Gateway',             elementType: 'gateway',  description: 'Decision gateway for hiring decision', lastUpdated: '10.03.2026' },
+  { id: 'd29', name: 'Send rejection',       category: 'Activities',          elementType: 'task',     description: 'Send rejection notification to unsuccessful candidates', lastUpdated: '08.03.2026', usedInDiagram: true },
 ]
 
 // ── Category icon ─────────────────────────────────────────────────────────────
@@ -63,9 +66,6 @@ const CAT_ICON_NAME: Record<DictCategory, string> = {
 
 const TASK_ICONS = [
   'SAP-icons-v4/task-activity',
-  'SAP-icons-v4/exclusive-xor-gateway',
-  'SAP-icons-v4/inclusive-gateway',
-  'SAP-icons-v4/parallel-gateway',
 ]
 
 const CAT_ICON_COLOR: Record<DictCategory, string> = {
@@ -87,7 +87,8 @@ function DictCard({ item }: { item: DictItem }) {
   return (
     <div className={s.card} draggable onDragStart={(e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', item.id)
-        e.dataTransfer.setData('application/dict-item', JSON.stringify({ id: item.id, name: item.name, type: item.type }))
+        e.dataTransfer.setData('application/dict-item', JSON.stringify({ id: item.id, name: item.name, type: item.category, subCategory: item.subCategory, elementType: item.elementType }))
+        ;(window as any).__dictDragElementType = item.elementType ?? null
       }}>
       <div className={s.cardIcon} style={{ color: CAT_ICON_COLOR[item.category] }}>
         <Icon name={iconName} style={{ width: '1.25rem', height: '1.25rem' } as React.CSSProperties} />
