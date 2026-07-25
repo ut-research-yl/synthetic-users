@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Icon, Text, Menu, MenuItem, MenuSeparator, SplitButton, ToggleButton } from '@ui5/webcomponents-react'
+import { Button, Icon, Text, Menu, MenuItem, MenuSeparator, SplitButton, ToggleButton, Toast } from '@ui5/webcomponents-react'
 import { createPortal } from 'react-dom'
 import { SigChipV2, SigDomainObject } from '@signavio/sap-signavio-uixtension'
 import { useNavigate } from 'react-router-dom'
 import DictionaryPanel from '../components/DictionaryPanel'
 import DataPanel from '../components/DataPanel'
 import type { Widget, ExternalWidget } from '../components/DataPanel'
+import { LinkedDictPopup, UnlinkedDictPopup, getDictName } from '../components/DictionaryLinkPopup'
 import ElementsPanel from '../components/ElementsPanel'
 import MoreElementsPanel from '../components/MoreElementsPanel'
 import {
@@ -1073,6 +1074,8 @@ function BpmnCanvas({
   const [connHover, setConnHover] = useState<{ id: string; x: number; y: number } | null>(null)
   const [fontSizeMenuOpen, setFontSizeMenuOpen] = useState(false)
   const [selectedFontSize, setSelectedFontSize] = useState(48)
+  const [dictPopup, setDictPopup] = useState<{ elId: string; rect: DOMRect } | null>(null)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
   const [dictHoveredId, setDictHoveredId] = useState<string | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
@@ -1138,6 +1141,7 @@ function BpmnCanvas({
   const panYRef = useRef(panY)
   useEffect(() => { panXRef.current = panX }, [panX])
   useEffect(() => { panYRef.current = panY }, [panY])
+  useEffect(() => { if (dictPopup) setDictPopup(null) }, [panX, panY])
 
   const overflowMenuRef = useRef<any>(null)
   const modeMenuRef = useRef<any>(null)
@@ -1293,6 +1297,7 @@ function BpmnCanvas({
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     setFontSizeMenuOpen(false)
+    setDictPopup(null)
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
     const hit = hitTestElement(svgPt.x, svgPt.y, elementsRef.current)
@@ -1339,6 +1344,7 @@ function BpmnCanvas({
     if (!svgRef.current) return
     if (panState.current) {
       const moved = Math.abs(e.clientX - panState.current.startX) + Math.abs(e.clientY - panState.current.startY)
+      if (moved > 3) setDictPopup(null)
       if (moved < 3) return
       const pt = clientToSvg(e.clientX, e.clientY, svgRef.current)
       const ptStart = clientToSvg(panState.current.startX, panState.current.startY, svgRef.current)
@@ -1974,7 +1980,7 @@ function BpmnCanvas({
               {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
               {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {/* ── Dictionary icon (selected only) ── */}
-              {(el.type === 'task' || el.type === 'system' || el.type === 'artifact') && selected && (() => {
+              {(el.type === 'task' || el.type === 'system' || el.type === 'artifact' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') && selected && (() => {
                 const btnSize = 24 / (zoom / 100)
                 const pad = 2 / (zoom / 100)
                 const bx = el.cx - el.hw + pad
@@ -1987,7 +1993,11 @@ function BpmnCanvas({
                       pressed={linked}
                       design={linked ? 'Emphasized' : 'Default'}
                       tooltip={linked ? 'Show Dictionary Item' : 'Link to Dictionary Item'}
-                      onClick={(e: React.MouseEvent) => { e.stopPropagation() }}
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                        setDictPopup({ elId: el.id, rect })
+                      }}
                       onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
                       style={{
                         width: `${btnSize * (zoom / 100)}px`,
@@ -2391,6 +2401,51 @@ function BpmnCanvas({
       </div>
 
       {dictOpen && <DictionaryPanel onClose={onToggleDict} />}
+      {toastMsg && (
+        <Toast open placement="BottomCenter" onClose={() => setToastMsg(null)}>
+          {toastMsg}
+        </Toast>
+      )}
+
+      {/* ── Dictionary link popups ── */}
+      {dictPopup && (() => {
+        const el = elements.find(e => e.id === dictPopup.elId)
+        if (!el) return null
+        if (el.linkedDictId) {
+          return (
+            <LinkedDictPopup
+              dictId={el.linkedDictId}
+              elementName={el.name}
+              anchorRect={dictPopup.rect}
+              onClose={() => setDictPopup(null)}
+              onLink={(dictId) => {
+                pushHistory(elements, liShapes)
+                setElements(els => els.map(e => e.id === el.id ? { ...e, linkedDictId: dictId } : e))
+                setToastMsg(`Replaced with "${getDictName(dictId)}"`)
+              }}
+              onUnlink={() => {
+                pushHistory(elements, liShapes)
+                setElements(els => els.map(e => e.id === el.id ? { ...e, linkedDictId: undefined, linkedDictName: undefined } : e))
+                setDictPopup(null)
+                setToastMsg(`Unlinked "${el.name}" from Dictionary`)
+              }}
+            />
+          )
+        } else {
+          return (
+            <UnlinkedDictPopup
+              elementName={el.name}
+              anchorRect={dictPopup.rect}
+              onClose={() => setDictPopup(null)}
+              onLink={(dictId) => {
+                pushHistory(elements, liShapes)
+                setElements(els => els.map(e => e.id === el.id ? { ...e, linkedDictId: dictId } : e))
+                setToastMsg(`Linked to "${getDictName(dictId)}"`)
+              }}
+            />
+          )
+        }
+      })()}
 
       {/* ── Shape context menu ───────────────────────────────────────────────── */}
       {(() => {
@@ -2413,7 +2468,7 @@ function BpmnCanvas({
               left: centerPx,
               top: menuBottomPx,
               transform: 'translateX(-50%) translateY(-100%)',
-              zIndex: 9999,
+              zIndex: 8,
               background: 'var(--sapBaseColor, #fff)',
               border: '1px solid var(--sapNeutralBorderColor, #d9d9d9)',
               borderRadius: '0.75rem',
