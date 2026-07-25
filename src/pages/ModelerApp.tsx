@@ -1068,6 +1068,7 @@ function BpmnCanvas({
   const [connHover, setConnHover] = useState<{ id: string; x: number; y: number } | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [liDragOverBpmnId, setLiDragOverBpmnId] = useState<string | null>(null)
 
   // Undo/Redo history
   const [history, setHistory] = useState<{ elements: CanvasElement[]; liShapes: LiShape[] }[]>([])
@@ -1366,13 +1367,49 @@ function BpmnCanvas({
       ? { ...s, cx: (s.id === id ? origCx : s.cx) + dx, cy: (s.id === id ? origCy : s.cy) + dy }
       : s
     ))
+    // highlight BPMN shape when a single LI shape is dragged over it
+    const draggedLi = liShapesRef.current.find(s => s.id === id)
+    if (draggedLi && selectedIds.size === 1) {
+      const liCx = origCx + dx, liCy = origCy + dy
+      const overBpmn = elementsRef.current.find(el =>
+        (el.type === 'task' || el.type === 'system' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') &&
+        liCx >= el.cx - el.hw && liCx <= el.cx + el.hw &&
+        liCy >= el.cy - el.hh && liCy <= el.cy + el.hh
+      )
+      setLiDragOverBpmnId(overBpmn?.id ?? null)
+    } else {
+      setLiDragOverBpmnId(null)
+    }
   }
 
-  const handleSvgMouseUp = () => {
+  const handleSvgMouseUp = (e: React.MouseEvent<SVGSVGElement>) => {
+    const ds = dragState.current
     dragState.current = null
     panState.current = null
     setIsDragging(false)
     setRubberBand(null)
+    setLiDragOverBpmnId(null)
+
+    // auto-link LI shape when dropped onto a BPMN shape
+    if (ds && svgRef.current) {
+      const draggedLi = liShapesRef.current.find(s => s.id === ds.id)
+      if (draggedLi && selectedIds.size === 1) {
+        const overBpmn = elementsRef.current.find(el =>
+          (el.type === 'task' || el.type === 'system' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') &&
+          draggedLi.cx >= el.cx - el.hw && draggedLi.cx <= el.cx + el.hw &&
+          draggedLi.cy >= el.cy - el.hh && draggedLi.cy <= el.cy + el.hh
+        )
+        if (overBpmn && overBpmn.id !== draggedLi.linkedBpmnId) {
+          pushHistory(elementsRef.current, liShapesRef.current)
+          const pos = findLiShapePosition(overBpmn, elementsRef.current, liShapesRef.current.filter(s => s.id !== draggedLi.id), draggedLi.shapeType)
+          setLiShapes(ls => ls.map(s =>
+            s.id === draggedLi.id
+              ? { ...s, linkedBpmnId: overBpmn.id, linkedBpmnName: overBpmn.name, cx: pos.cx, cy: pos.cy }
+              : s
+          ))
+        }
+      }
+    }
   }
 
   // Non-passive wheel handler to prevent browser zoom
@@ -1433,7 +1470,7 @@ function BpmnCanvas({
       const diWidgetShape = e.dataTransfer.getData('application/di-widget-shape')
       pushHistory(elements, liShapes)
       const hit = hitTestElement(svgPt.x, svgPt.y, elements)
-      if (hit && (hit.type === 'task' || hit.type === 'system')) {
+      if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'gateway' || hit.type === 'event' || hit.type === 'data')) {
         // Create LI shape next to the element, linked via dashed connector
         const ID_TO_TYPE2: Record<string, string> = {
           'value': 'Value', 'bar': 'Bar Chart', 'line': 'Line Chart', 'area': 'Area Chart',
@@ -1866,7 +1903,7 @@ function BpmnCanvas({
         {elements.map(el => {
           const selected = selectedIds.has(el.id) && selectedIds.size === 1
           const hovered = el.id === hoveredId && !selected
-          const isDropTarget = el.id === dropTargetId
+          const isDropTarget = el.id === dropTargetId || el.id === liDragOverBpmnId
           const hw = el.hw, hh = el.hh
           const ringW = 2 / (zoom / 100)
           const dotR = Math.min(6, Math.max(2.5, 4.5 / (zoom / 100)))
@@ -1898,7 +1935,7 @@ function BpmnCanvas({
                 setSelectedId(el.id)
               }}
             >
-              {isDropTarget && (el.type === 'task' || el.type === 'system') && (
+              {isDropTarget && (el.type === 'task' || el.type === 'system' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') && (
                 <rect
                   x={el.cx - el.hw - 6} y={el.cy - el.hh - 6}
                   width={(el.hw + 6) * 2} height={(el.hh + 6) * 2}

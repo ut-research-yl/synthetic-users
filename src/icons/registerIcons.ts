@@ -52,6 +52,7 @@ import '@signavio/icons/dist/complex-gateway.js'
 import '@signavio/icons/dist/pool-lane.js'
 import '@signavio/icons/dist/collapsed-pool.js'
 
+import '@signavio/icons/dist/diamond.js'
 import '@signavio/icons/dist/text-annotation.js'
 import '@signavio/icons/dist/end-event.js'
 import '@signavio/icons/dist/end-message-event.js'
