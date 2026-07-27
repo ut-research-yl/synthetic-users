@@ -52,6 +52,7 @@
 
 .floatingTopLeft {
   left: 0.75rem;
+  padding-right: 0.625rem;
 }
 
 .floatingTopRight {

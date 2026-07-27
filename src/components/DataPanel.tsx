@@ -227,9 +227,9 @@ type LocationState = {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-type Props = { onClose: () => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void }
+type Props = { onClose: () => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onAddFromBrowse?: (widgetId: string, widgetName: string, widgetType: string) => void }
 
-export default function DataPanel({ onClose, onWidgetSelect }: Props) {
+export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: Props) {
   const [query, setQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [selectedSource, setSelectedSource] = useState<string | null>(null)
@@ -297,39 +297,25 @@ export default function DataPanel({ onClose, onWidgetSelect }: Props) {
 
   return (
     <div className={s.panel}>
-      <div className={s.header}>
+      <div className={s.header} style={{ gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader5Size)', color: 'var(--sapTextColor)', whiteSpace: 'nowrap' }}>
             Data Integration
           </Text>
-          <Button
-            id="data-add-btn"
-            design="Default"
-            endIcon="slim-arrow-down"
-            onClick={() => {
-              if (addMenuRef.current) {
-                addMenuRef.current.opener = 'data-add-btn'
-                addMenuRef.current.open = true
-              }
-            }}
-          >Add</Button>
-          {createPortal(
-            <Menu ref={addMenuRef} onItemClick={(e: any) => {
-              if (e.detail?.text === 'Add Manually') setConnectOpen(true)
-              if (e.detail?.text === 'Add External Widget') setAddExternalOpen(true)
-            }}>
-              <MenuItem text="Add External Widget" icon="add" />
-              <MenuItem text="Add Manually" icon="edit" />
-            </Menu>,
-            document.body
-          )}
-          <ConnectWidgetDialog open={connectOpen} onClose={() => setConnectOpen(false)} />
-          <AddExternalWidgetDialog
-            open={addExternalOpen}
-            onClose={() => setAddExternalOpen(false)}
-            onSave={w => setExternalWidgets(prev => [...prev, w])}
-          />
         </div>
+        {/* Add External Widget button next to X */}
+        <Button
+          design="Default"
+          icon="add"
+          onClick={() => setAddExternalOpen(true)}
+          style={{ flexShrink: 0 } as React.CSSProperties}
+        >Add External Widget</Button>
+        <ConnectWidgetDialog open={connectOpen} onClose={() => setConnectOpen(false)} onAdd={onAddFromBrowse} />
+        <AddExternalWidgetDialog
+          open={addExternalOpen}
+          onClose={() => setAddExternalOpen(false)}
+          onSave={w => setExternalWidgets(prev => [...prev, w])}
+        />
         <Button icon="decline" design="Transparent" className={s.closeBtn} tooltip="Close"
           style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', flexShrink: 0 } as React.CSSProperties}
           onClick={onClose} />
@@ -400,14 +386,20 @@ export default function DataPanel({ onClose, onWidgetSelect }: Props) {
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapTextColor)' }}>
             {hasFilters || query ? 'Result' : 'All'} ({totalCount})
           </Text>
-          <Button id="data-sort-btn" icon="sort" design="Transparent"
-            style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties}
-            onClick={() => {
-              if (sortMenuRef.current) {
-                sortMenuRef.current.opener = 'data-sort-btn'
-                sortMenuRef.current.open = !sortMenuRef.current.open
-              }
-            }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Button id="data-browse-btn" icon="browse-folder" design="Transparent" tooltip="Browse"
+              style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties}
+              onClick={() => setConnectOpen(true)}
+            />
+            <Button id="data-sort-btn" icon="sort" design="Transparent"
+              style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties}
+              onClick={() => {
+                if (sortMenuRef.current) {
+                  sortMenuRef.current.opener = 'data-sort-btn'
+                  sortMenuRef.current.open = !sortMenuRef.current.open
+                }
+              }} />
+          </div>
         </div>
 
         {/* Widget list */}

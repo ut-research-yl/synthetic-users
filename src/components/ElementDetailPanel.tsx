@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import { Button, Icon, Input, Label, Switch, Tab, Text } from '@ui5/webcomponents-react'
-import { SigChipV2, SigDomainObject, SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
+import { Avatar, Button, Icon, Input, Label, SegmentedButton, SegmentedButtonItem, Switch, Tab, TabContainer, Text } from '@ui5/webcomponents-react'
+import { SigChipV2, SigDomainObject, SigInlineEdit, SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
 import { elementData } from '../data/liveInsightsData'
 
 type Props = {
   elementId: string
   onClose: () => void
+  dictId?: string
+  onViewDictEntry?: () => void
   linkedShapes?: { id: string; widgetName: string; widgetId?: string; label?: string; shapeType: string }[]
   onSelectLinkedShape?: (shapeId: string) => void
 }
@@ -210,8 +212,9 @@ function EditableAttrRow({ label, values, assets, type, onRemove, onRemoveAsset 
   )
 }
 
-export default function ElementDetailPanel({ elementId, onClose, linkedShapes, onSelectLinkedShape }: Props) {
+export default function ElementDetailPanel({ elementId, onClose, dictId, onViewDictEntry, linkedShapes, onSelectLinkedShape }: Props) {
   const el = elementData[elementId]
+  const [activeTab, setActiveTab] = useState('Attributes')
 
   // editable custom attrs state
   const initCustom = (CUSTOM_ATTRS[elementId] ?? []).map(g => ({ ...g, values: [...g.values], assets: g.assets ? [...g.assets] : undefined }))
@@ -373,6 +376,177 @@ export default function ElementDetailPanel({ elementId, onClose, linkedShapes, o
     </Tab>,
   ]
 
+  const [dictView, setDictView] = useState<'element' | 'dict'>('element')
+  const [dictActiveTab, setDictActiveTab] = useState('Attributes')
+
+  // dict-linked: custom layout matching design
+  if (dictId) {
+    const dictData: Record<string, { name: string; category: string; subCategory: string; description: string; version?: string; status?: string; lastUpdated?: string; updatedBy?: string; usedIn?: string[] }> = {
+      'd27': { name: 'Evaluate CV', category: 'Activities', subCategory: 'HR Processes', description: 'Review and evaluate submitted curriculum vitae against job requirements', version: '2.3', status: 'published', lastUpdated: '10.03.2026', updatedBy: 'Sarah Chen' },
+      'd28': { name: 'Plan interview', category: 'Activities', subCategory: 'HR Processes', description: 'Schedule and plan the candidate interview', version: '1.5', status: 'published', lastUpdated: '14.03.2026', updatedBy: 'HR Manager' },
+      'd41': { name: 'ATS System', category: 'IT System', subCategory: 'HR Technology', description: 'Applicant Tracking System for managing recruitment workflow', version: '3.0', status: 'published', lastUpdated: '15.03.2026', updatedBy: 'IT Admin' },
+      'd30': { name: 'Make offer', category: 'Activities', subCategory: 'HR Processes', description: 'Prepare and deliver formal job offer to selected candidate', version: '1.2', status: 'published', lastUpdated: '12.03.2026', updatedBy: 'HR Manager' },
+      'd31': { name: 'Onboard candidate', category: 'Activities', subCategory: 'HR Processes', description: 'Complete onboarding process for new hire', version: '1.0', status: 'draft', lastUpdated: '14.03.2026', updatedBy: 'HR Manager' },
+    }
+    const dict = dictData[dictId]
+
+    const CAT_ICON: Record<string, string> = {
+      'Activities': 'SAP-icons-v4/task-activity',
+      'IT System': 'SAP-icons-v4/computer',
+      'Documents': 'document',
+    }
+    const CAT_COLOR: Record<string, string> = {}  // unused, using Avatar
+    const catIconColor = '#6a2ee0'
+    const catIcon = dict ? (CAT_ICON[dict.category] ?? 'document') : 'document'
+    const catColor = dict ? (CAT_COLOR[dict.category] ?? 'var(--sapAvatar_6_Background)') : 'var(--sapAvatar_6_Background)'
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--sapGroup_ContentBackground, white)', overflow: 'hidden' }}>
+        {/* Row 1: SegmentedButton + Open + X */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem 0.375rem', flexShrink: 0 }}>
+          <SegmentedButton className="element-dict-toggle">
+            <SegmentedButtonItem pressed={dictView === 'element'} icon="SAP-icons-v4/graph-unspecified" onClick={() => setDictView('element')}>Element</SegmentedButtonItem>
+            <SegmentedButtonItem pressed={dictView === 'dict'} icon="course-book" onClick={() => setDictView('dict')}>Dictionary Entry</SegmentedButtonItem>
+          </SegmentedButton>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {dictView === 'dict' && (
+              <Button design="Emphasized" icon="SAP-icons-v4/link">Open</Button>
+            )}
+            <Button design="Transparent" icon="decline" onClick={onClose}
+              style={{ '--_ui5_button_base_min_width': '2rem', width: '2rem', height: '2rem' } as React.CSSProperties} />
+          </div>
+        </div>
+
+        {dictView === 'element' ? (
+          <>
+            {/* Row 2: type badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.75rem 1rem 0.5rem', flexShrink: 0 }}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: typeColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={typeIcon} style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
+              </div>
+              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap' }}>{typeLabel}</Text>
+            </div>
+            {/* Row 3: element name */}
+            <div style={{ padding: '0 1rem 1rem', flexShrink: 0 }}>
+              <SigInlineEdit text={el.name} size="H3" level="H3" />
+            </div>
+            {/* Tabs */}
+            <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.08)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', flexShrink: 0 }}>
+              <TabContainer onTabSelect={(e: any) => setActiveTab(e.detail?.tab?.text ?? 'Attributes')} style={{ width: '100%' } as React.CSSProperties}>
+                <Tab text="Attributes" selected={activeTab === 'Attributes'} />
+                <Tab text="Relations" selected={activeTab === 'Relations'} />
+              </TabContainer>
+            </div>
+            {activeTab === 'Attributes' && (
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 16px' }}>
+                <div style={{ marginBottom: 4 }}>
+                  <Input placeholder="Search for attributes" type={'Search' as any} style={{ width: '100%' } as React.CSSProperties}>
+                    <Icon slot="icon" name="search" />
+                  </Input>
+                </div>
+                <AttrGroup title="Main Attributes" count={attrs.length + (el.description ? 1 : 0)}>
+                  {el.description && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
+                      <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Description</Label>
+                      <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)', lineHeight: 1.4 }}>{el.description}</Text>
+                      <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} />
+                    </div>
+                  )}
+                  {attrEntries.map(([label, values]) => {
+                    const attrType = attrs.find(a => a.label === label)?.type
+                    return (
+                      <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
+                        <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>{label}</Label>
+                        {attrType === 'boolean' ? <Switch checked={values[0] === 'true'} />
+                          : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              {values.map((v, i) => attrType === 'select'
+                                ? <SigChipV2 key={i} value={v} trailingIcon="slim-arrow-down" />
+                                : <SigChipV2 key={i} value={v} endActionIcon="decline" onEndActionClick={() => {}} />
+                              )}
+                            </div>
+                        }
+                      </div>
+                    )
+                  })}
+                </AttrGroup>
+              </div>
+            )}
+            {activeTab === 'Relations' && (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                <Text>No relations</Text>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Dict Entry view */}
+            {/* Row 2: dict category badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.75rem 1rem 0.5rem', flexShrink: 0 }}>
+              <Avatar icon="course-book" colorScheme="Accent5" shape="Square" size="XS" style={{ flexShrink: 0 } as React.CSSProperties} />
+              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap' }}>
+                {dict?.category}{dict?.subCategory ? ` / ${dict.subCategory}` : ''}
+              </Text>
+            </div>
+            {/* Row 3: dict entry name */}
+            <div style={{ padding: '0.25rem 1rem 0.75rem', flexShrink: 0 }}>
+              <Text style={{ fontSize: 'var(--sapFontHeader3Size)', fontWeight: 900, color: 'var(--sapPageHeader_TextColor)', display: 'block' }}>
+                {dict?.name}
+              </Text>
+            </div>
+            {/* Meta info */}
+            {dict && (
+              <div style={{ padding: '0 1rem 1rem', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
+                {[
+                  { label: 'Latest Revision', value: dict.version, chip: dict.status },
+                  { label: 'Last Updated', value: dict.lastUpdated },
+                  { label: 'Updated by', value: dict.updatedBy },
+                ].map(row => row.value && (
+                  <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '8rem 1fr', alignItems: 'center', minHeight: '1.75rem' }}>
+                    <Label style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)' }}>{row.label}:</Label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>{row.value}</Text>
+                      {row.chip && (
+                        <SigChipV2
+                          value={row.chip.charAt(0).toUpperCase() + row.chip.slice(1)}
+                          design={row.chip === 'published' ? ('indication5' as any) : ('indication10' as any)}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Tabs */}
+            <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.08)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', flexShrink: 0 }}>
+              <TabContainer onTabSelect={(e: any) => setDictActiveTab(e.detail?.tab?.text ?? 'Attributes')} style={{ width: '100%' } as React.CSSProperties}>
+                <Tab text="Attributes" selected={dictActiveTab === 'Attributes'} />
+                <Tab text="Relations" selected={dictActiveTab === 'Relations'} />
+              </TabContainer>
+            </div>
+            {dictActiveTab === 'Attributes' && (
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 16px' }}>
+                <Input placeholder="Search for attributes" type={'Search' as any} style={{ width: '100%', marginBottom: 8 } as React.CSSProperties}>
+                  <Icon slot="icon" name="search" />
+                </Input>
+                {dict?.description && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
+                    <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Description</Label>
+                    <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)', lineHeight: 1.5 }}>{dict.description}</Text>
+                  </div>
+                )}
+              </div>
+            )}
+            {dictActiveTab === 'Relations' && (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                <Text>No relations defined.</Text>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
     <SigRightSidePanel
       headerTitle={el.name}
@@ -382,19 +556,14 @@ export default function ElementDetailPanel({ elementId, onClose, linkedShapes, o
       toggleRightSidePanel={onClose}
       navigationSlot={[() => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-            background: typeColor,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon name={typeIcon} style={{ width: 12, height: 12, color: iconColor } as React.CSSProperties} />
+          <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: typeColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name={typeIcon} style={{ width: 14, height: 14, color: iconColor } as React.CSSProperties} />
           </div>
-          <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap' }}>
-            {typeLabel}
-          </Text>
+          <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap' }}>{typeLabel}</Text>
         </div>
       )]}
       contentActionsSlot={[]}
+      subHeaderSlot={[]}
       tabSlot={tabs}
       style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)', position: 'relative' }}
     >

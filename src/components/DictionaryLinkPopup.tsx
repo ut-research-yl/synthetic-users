@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import { Avatar, Button, Icon, Input, Label, List, ListItemCustom, ListItemStandard, Title, Text } from '@ui5/webcomponents-react'
+import React, { useRef, useState } from 'react'
+import { Avatar, Button, Icon, Input, Label, List, ListItemCustom, ListItemStandard, Menu, MenuItem, Title, Text } from '@ui5/webcomponents-react'
 import { createPortal } from 'react-dom'
 
-const DICT_DATA: Record<string, { name: string; category: string; subCategory: string; description: string }> = {
+export const DICT_DATA: Record<string, { name: string; category: string; subCategory: string; description: string }> = {
   'd27': { name: 'Evaluate CV',         category: 'Activities',  subCategory: 'HR Processes',    description: 'Review and evaluate submitted curriculum vitae against job requirements' },
   'd28': { name: 'Interview candidate', category: 'Activities',  subCategory: 'HR Processes',    description: 'Conduct structured interview with candidate' },
   'd41': { name: 'ATS System',          category: 'IT System',   subCategory: 'HR Technology',   description: 'Applicant Tracking System for managing recruitment workflow' },
@@ -23,6 +23,7 @@ type LinkedProps = {
   onClose: () => void
   onUnlink: () => void
   onLink: (dictId: string) => void
+  onViewDetails?: () => void
 }
 
 type UnlinkedProps = {
@@ -30,6 +31,8 @@ type UnlinkedProps = {
   anchorRect: DOMRect
   onClose: () => void
   onLink: (dictId: string) => void
+  onCreateDictItem?: () => void
+  onViewDetails?: (dictId: string) => void
   headerTitle?: string
   subText?: string
 }
@@ -59,7 +62,7 @@ function PopupContainer({ anchorRect, width, children }: { anchorRect: DOMRect; 
   )
 }
 
-export function LinkedDictPopup({ dictId, elementName, anchorRect, onClose, onUnlink, onLink }: LinkedProps) {
+export function LinkedDictPopup({ dictId, elementName, anchorRect, onClose, onUnlink, onLink, onViewDetails }: LinkedProps) {
   const [replacing, setReplacing] = useState(false)
   const dict = DICT_DATA[dictId]
   const name = dict?.name ?? elementName
@@ -105,7 +108,7 @@ export function LinkedDictPopup({ dictId, elementName, anchorRect, onClose, onUn
         <ListItemStandard>
           Go to Dictionary <Icon name="SAP-icons-v4/link" style={{ width: '0.875rem', height: '0.875rem', color: 'var(--sapHighlightColor)', verticalAlign: 'middle', marginLeft: '0.25rem' } as React.CSSProperties} />
         </ListItemStandard>
-        <ListItemStandard>View Details</ListItemStandard>
+        <ListItemStandard onClick={() => { onClose(); onViewDetails?.() }}>View Details</ListItemStandard>
         <ListItemStandard onClick={() => setReplacing(true)}>Replace Dictionary Link</ListItemStandard>
       </List>
 
@@ -121,10 +124,12 @@ export function LinkedDictPopup({ dictId, elementName, anchorRect, onClose, onUn
   )
 }
 
-export function UnlinkedDictPopup({ elementName, anchorRect, onClose, onLink, headerTitle = 'Link to Dictionary', subText }: UnlinkedProps) {
+export function UnlinkedDictPopup({ elementName, anchorRect, onClose, onLink, onCreateDictItem, onViewDetails, headerTitle = 'Link to Dictionary', subText }: UnlinkedProps) {
   const [query, setQuery] = useState('')
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const overflowMenuRef = useRef<any>(null)
+  const [overflowMenuOpener, setOverflowMenuOpener] = useState<string | null>(null)
   const filtered = SEARCH_ENTRIES.filter(e =>
     !query || e.name.toLowerCase().includes(query.toLowerCase()) || e.description.toLowerCase().includes(query.toLowerCase())
   )
@@ -180,15 +185,23 @@ export function UnlinkedDictPopup({ elementName, anchorRect, onClose, onLink, he
               transition: 'background 0.1s, box-shadow 0.1s',
             }}
           >
-            <Avatar icon="document" colorScheme="Accent5" shape="Square" size="S" style={{ flexShrink: 0, marginTop: '0.125rem' } as React.CSSProperties} />
+            <Avatar icon="document" colorScheme="Accent5" shape="Square" size="XS" style={{ flexShrink: 0, marginTop: '0.125rem' } as React.CSSProperties} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--sapList_TextColor)' }}>
                   {entry.name}
                 </Text>
                 <Button design="Transparent" icon="overflow"
+                  id={`dict-overflow-${entry.id}`}
                   style={{ '--_ui5_button_base_min_width': '1.75rem', width: '1.75rem', height: '1.75rem', flexShrink: 0 } as React.CSSProperties}
-                  onClick={e => e.stopPropagation()} />
+                  onClick={e => {
+                    e.stopPropagation()
+                    setOverflowMenuOpener(entry.id)
+                    if (overflowMenuRef.current) {
+                      overflowMenuRef.current.opener = `dict-overflow-${entry.id}`
+                      overflowMenuRef.current.open = true
+                    }
+                  }} />
               </div>
               <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', display: 'block' }}>
                 {entry.category} / {entry.subCategory}
@@ -203,10 +216,21 @@ export function UnlinkedDictPopup({ elementName, anchorRect, onClose, onLink, he
 
       <div style={{ padding: '0.5rem 1rem 1rem' }}>
         {/* Create button */}
-        <Button design="Emphasized" icon="add" style={{ width: '100%' } as React.CSSProperties}>
+        <Button design="Emphasized" icon="add" style={{ width: '100%' } as React.CSSProperties}
+          onClick={() => { onClose(); onCreateDictItem?.() }}>
           Create Dictionary Item
         </Button>
       </div>
+      <Menu ref={overflowMenuRef} onItemClick={(e: any) => {
+        const text = e.detail?.item?.text
+        if (text === 'View Details' && overflowMenuOpener) {
+          onViewDetails?.(overflowMenuOpener)
+        }
+        if (text === 'Open Dictionary') { /* stub */ }
+      }}>
+        <MenuItem text="View Details" />
+        <MenuItem text="Open Dictionary" />
+      </Menu>
     </PopupContainer>
   )
 }

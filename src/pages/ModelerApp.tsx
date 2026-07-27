@@ -4,15 +4,18 @@ import { createPortal } from 'react-dom'
 import { SigChipV2, SigDomainObject } from '@signavio/sap-signavio-uixtension'
 import { useNavigate } from 'react-router-dom'
 import DictionaryPanel from '../components/DictionaryPanel'
+import DictionarySuggestionPopup from '../components/DictionarySuggestionPopup'
 import DataPanel from '../components/DataPanel'
 import type { Widget, ExternalWidget } from '../components/DataPanel'
-import { LinkedDictPopup, UnlinkedDictPopup, getDictName } from '../components/DictionaryLinkPopup'
+import { LinkedDictPopup, UnlinkedDictPopup, getDictName, DICT_DATA } from '../components/DictionaryLinkPopup'
+import NewDiagramOverlay from '../components/NewDiagramOverlay'
 import ElementsPanel from '../components/ElementsPanel'
 import MoreElementsPanel from '../components/MoreElementsPanel'
 import {
   ELEMENT_GEOMETRY,
   CONNECTIONS,
   elementData as INITIAL_ELEMENT_DATA,
+  dictionaryItems,
   type ElementData,
   type ElementGeometry,
   type Connection,
@@ -21,7 +24,7 @@ import s from './ModelerApp.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; panelOffset?: number }
+type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null, hasLinkedDict?: boolean, dictId?: string) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onOpenDictPanel?: () => void; onDictItemSelect?: (item: any) => void; onAddBrowseWidget?: (widgetId: string, widgetName: string, widgetType: string) => void; panelOffset?: number }
 
 type SaveState = 'draft' | 'saved' | 'saving' | 'offline' | 'error'
 
@@ -289,17 +292,17 @@ function GatewayShape({ el, selected, hovered, ringW }: { el: CanvasElement; sel
   )
 }
 
-function EventShape({ el, selected, hovered, ringW }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number }) {
+function EventShape({ el, selected, hovered, ringW, aiPreview }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; aiPreview?: boolean }) {
   const isStart = el.subtype?.includes('Start')
   const isSuccess = el.id === 'el-end4'
-  const r = el.hw  // outer radius
+  const r = el.hw
   const { cx, cy } = el
 
   if (isStart) {
     const subtype = el.subtype ?? 'Start'
     const s = r / 16
-    const bg = 'var(--sapAvatar_8_Background)'
-    const ic = 'var(--sapAccentColor8)'
+    const bg = aiPreview ? '#e8f3ff' : 'var(--sapAvatar_8_Background)'
+    const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAccentColor8)'
     const selectionEl = <rect x={cx - r - 1.5} y={cy - r - 1.5} width={(r + 1.5) * 2} height={(r + 1.5) * 2} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
     const outerCircle = (dashed = false) => dashed
@@ -530,8 +533,8 @@ function EventShape({ el, selected, hovered, ringW }: { el: CanvasElement; selec
   // End events — sapAccentColor3b bg, sapAccentColor2 icon, thick outer circle
   const sub = el.subtype ?? 'End'
   const s = r / 16
-  const bg = 'var(--sapAccentBackgroundColor3)'
-  const ic = 'var(--sapAccentColor2)'
+  const bg = aiPreview ? '#e8f3ff' : 'var(--sapAccentBackgroundColor3)'
+  const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAccentColor2)'
   const selectionEl = <rect x={cx - r - 1.5} y={cy - r - 1.5} width={(r + 1.5) * 2} height={(r + 1.5) * 2} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
   const endIcon = () => {
@@ -604,11 +607,11 @@ function SystemShape({ el, selected, hovered, ringW, editing }: { el: CanvasElem
 }
 
 // Data Object / Data Store / IT System shapes — circular bg with icon inside
-function DataObjectShape({ el, selected, hovered, ringW }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number }) {
+function DataObjectShape({ el, selected, hovered, ringW, aiPreview }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; aiPreview?: boolean }) {
   const { cx, cy } = el
   const r = el.hw
-  const bg = 'var(--sapAvatar_6_Background)'
-  const ic = 'var(--sapAvatar_6_TextColor)'
+  const bg = aiPreview ? '#e8f3ff' : 'var(--sapAvatar_6_Background)'
+  const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAvatar_6_TextColor)'
   const selectionEl = <rect x={cx - r - 1.5} y={cy - r - 1.5} width={(r + 1.5) * 2} height={(r + 1.5) * 2} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
   if (el.subtype === 'DataStore') {
@@ -932,11 +935,11 @@ function LiShapeComp({ shape, editing = false }: { shape: LiShape; editing?: boo
 
 // ── LI connector line ─────────────────────────────────────────────────────────
 
-function ArtifactShape({ el, selected, hovered, ringW, editing }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; editing?: boolean }) {
+function ArtifactShape({ el, selected, hovered, ringW, editing, aiPreview }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; editing?: boolean; aiPreview?: boolean }) {
   const { cx, cy } = el
   const w = el.hw * 2, h = el.hh * 2
   const x = cx - el.hw, y = cy - el.hh
-  const tc = 'var(--sapTextColor)'
+  const tc = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapTextColor)'
   const selectionEl = <rect x={x - ringW / 2 - 0.5} y={y - ringW / 2 - 0.5} width={w + ringW + 1} height={h + ringW + 1} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
   if (el.subtype === 'Group') {
@@ -963,8 +966,8 @@ function ArtifactShape({ el, selected, hovered, ringW, editing }: { el: CanvasEl
   }
 
   if (el.subtype === 'ITSystem') {
-    const bg = 'var(--sapAvatar_6_Background)'
-    const ic = 'var(--sapAvatar_6_TextColor)'
+    const bg = aiPreview ? '#e8f3ff' : 'var(--sapAvatar_6_Background)'
+    const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAvatar_6_TextColor)'
     const r = el.hw  // 28.5
     const scale = 0.98
     const pillW = Math.max(el.name.length * 6.2 + 16, 60)
@@ -1022,9 +1025,11 @@ function LiConnector({ liShape, geomMap }: { liShape: LiShape; geomMap: Record<s
 
 function BpmnCanvas({
   assetName,
+  assetId,
   onClose,
   dictOpen,
   onToggleDict,
+  dictInitialQuery,
   onTogglePanel,
   onToggleData,
   shapesOpen,
@@ -1033,24 +1038,38 @@ function BpmnCanvas({
   onLiShapeSelect,
   onLiShapeUpdate,
   onRegisterLiShapeUpdater,
+  onRegisterAddLiShape,
   onSelectElementById,
   onLiShapesChange,
+  onWidgetSelect,
+  onOpenDictPanel,
+  onDictItemSelect,
+  onExploreDict,
+  onAddBrowseWidget,
   panelOffset = 0,
 }: {
   assetName: string
+  assetId?: string
   onClose: () => void
   dictOpen: boolean
   onToggleDict: () => void
+  dictInitialQuery?: string
   onTogglePanel?: () => void
   onToggleData?: () => void
   shapesOpen?: boolean
   onToggleShapes?: () => void
-  onElementSelect?: (id: string | null) => void
+  onElementSelect?: (id: string | null, hasLinkedDict?: boolean, dictId?: string) => void
   onLiShapeSelect?: (shape: LiShape | null) => void
   onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void
   onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void
+  onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void
   onSelectElementById?: (fn: (id: string) => void) => void
   onLiShapesChange?: (shapes: LiShape[]) => void
+  onWidgetSelect?: (widget: Widget | ExternalWidget) => void
+  onOpenDictPanel?: () => void
+  onDictItemSelect?: (item: any) => void
+  onExploreDict?: (query: string) => void
+  onAddBrowseWidget?: (widgetId: string, widgetName: string, widgetType: string) => void
   panelOffset?: number
 }) {
   const [lang, setLang] = useState('ENG')
@@ -1061,7 +1080,9 @@ function BpmnCanvas({
   const [panY, setPanY] = useState(80)
 
   // Canvas element state
-  const [elements, setElements] = useState<CanvasElement[]>(buildInitialElements)
+  const [elements, setElements] = useState<CanvasElement[]>(() =>
+    assetId === 'new' ? [] : buildInitialElements()
+  )
   const [liShapes, setLiShapes] = useState<LiShape[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const selectedId = [...selectedIds][0] ?? null  // compat: first selected
@@ -1070,12 +1091,18 @@ function BpmnCanvas({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingLiId, setEditingLiId] = useState<string | null>(null)
   const [editingLiLabel, setEditingLiLabel] = useState('')
+  const [suggestionQuery, setSuggestionQuery] = useState('')
+  const [suggestionPos, setSuggestionPos] = useState<{ x: number; y: number } | null>(null)
+  const suppressSuggestionClose = useRef(false)
+  const suggestionMenuOpen = useRef(false)
   const [isDragging, setIsDragging] = useState(false)
   const [connHover, setConnHover] = useState<{ id: string; x: number; y: number } | null>(null)
   const [fontSizeMenuOpen, setFontSizeMenuOpen] = useState(false)
   const [selectedFontSize, setSelectedFontSize] = useState(48)
   const [dictPopup, setDictPopup] = useState<{ elId: string; rect: DOMRect } | null>(null)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [overlayDismissed, setOverlayDismissed] = useState(false)
+  const [isAiPreview, setIsAiPreview] = useState(false)
   const [dictHoveredId, setDictHoveredId] = useState<string | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
@@ -1097,6 +1124,13 @@ function BpmnCanvas({
   useEffect(() => {
     onRegisterLiShapeUpdater?.(handleLiShapeUpdate)
   }, [handleLiShapeUpdate, onRegisterLiShapeUpdater])
+
+  useEffect(() => {
+    onRegisterAddLiShape?.((shape: LiShape) => {
+      setLiShapes(ls => [...ls, shape])
+      setToastMsg(`"${shape.widgetName}" added to canvas`)
+    })
+  }, [onRegisterAddLiShape])
 
   useEffect(() => {
     onLiShapesChange?.(liShapes)
@@ -1297,6 +1331,7 @@ function BpmnCanvas({
   // ── Mouse handlers for element dragging ──────────────────────────────────────
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (isAiPreview) return  // read-only in preview mode
     setFontSizeMenuOpen(false)
     setDictPopup(null)
     if (!svgRef.current) return
@@ -1315,8 +1350,7 @@ function BpmnCanvas({
         if (!selectedIds.has(hit.id)) {
           setSelectedIds(new Set([hit.id]))
         }
-        onElementSelect?.(hit.id)
-        dragState.current = { id: hit.id, startX: e.clientX, startY: e.clientY, origCx: hit.cx, origCy: hit.cy }
+        onElementSelect?.(hit.id, !!hit.linkedDictId, hit.linkedDictId)
       }
     } else if (!hit) {
       setSelectedIds(new Set())
@@ -1336,7 +1370,7 @@ function BpmnCanvas({
         })
       } else {
         setSelectedIds(new Set([hit.id]))
-        onElementSelect?.(hit.id)
+        onElementSelect?.(hit.id, !!hit.linkedDictId, hit.linkedDictId)
       }
     }
   }
@@ -1808,7 +1842,7 @@ function BpmnCanvas({
       {/* ── Interactive SVG Canvas ──────────────────────────────────────────── */}
       <svg
         ref={svgRef}
-        className={s.bpmnSvg}
+        className={`${s.bpmnSvg}${isAiPreview ? ' ai-preview' : ''}`}
         viewBox={viewBox}
         preserveAspectRatio="xMidYMid meet"
         onMouseDown={handleSvgMouseDown}
@@ -1916,12 +1950,6 @@ function BpmnCanvas({
                 {hasEnd && t !== 'sequence' && t !== 'message' && <polyline points="0,0 7,5.5 0,11" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-7,-5.5)`} />}
                 {hasEnd && t === 'message' && <path d={arrowPath} fill="white" stroke={stroke} strokeWidth="1.5" transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-11,-5.5)`} />}
                 {hasStart && <polyline points="7,0 0,5.5 7,11" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" transform={`translate(${pts.x1},${pts.y1}) rotate(${angle + 180}) translate(-7,-5.5)`} />}
-                {lbl && (
-                  <g>
-                    <rect x={mx - 14} y={my - 10} width={lbl.length > 2 ? 30 : 27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
-                    <text x={mx} y={my + 4} fontSize={11} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
-                  </g>
-                )}
               </g>
             )
           } else if (pts.dir === 'v') {
@@ -1943,12 +1971,6 @@ function BpmnCanvas({
                   />
                   {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2 + 5.5}, ${pts.y2 - 10}) rotate(90)`} fill={stroke} />}
                   {hasEnd && t !== 'sequence' && <polyline points={`${pts.x2-5},${pts.y2-9} ${pts.x2},${pts.y2} ${pts.x2+5},${pts.y2-9}`} fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
-                  {lbl && (
-                    <g>
-                      <rect x={mx - 14} y={my - 10} width={27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
-                      <text x={mx} y={my + 4} fontSize={11} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
-                    </g>
-                  )}
                 </g>
               )
             }
@@ -1961,12 +1983,6 @@ function BpmnCanvas({
                 />
                 {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2 + 5.5}, ${pts.y2 - 10}) rotate(90)`} fill={stroke} />}
                 {hasEnd && t !== 'sequence' && <polyline points={`${pts.x2-5},${pts.y2-9} ${pts.x2},${pts.y2} ${pts.x2+5},${pts.y2-9}`} fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
-                {lbl && (
-                  <g>
-                    <rect x={mx - 14} y={my - 10} width={27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
-                    <text x={mx} y={my + 4} fontSize={11} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
-                  </g>
-                )}
               </g>
             )
           } else {
@@ -2047,10 +2063,10 @@ function BpmnCanvas({
               })()}
               {el.type === 'task'    && <TaskShape    el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {el.type === 'gateway' && <GatewayShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
-              {el.type === 'event'   && <EventShape   el={el} selected={selected} hovered={hovered} ringW={ringW} />}
+              {el.type === 'event'   && <EventShape   el={el} selected={selected} hovered={hovered} ringW={ringW} aiPreview={isAiPreview} />}
               {el.type === 'system'  && <SystemShape  el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
-              {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
-              {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
+              {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} aiPreview={isAiPreview} />}
+              {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} aiPreview={isAiPreview} />}
               {/* ── Dictionary icon (selected only) ── */}
               {(el.type === 'task' || el.type === 'system' || el.type === 'artifact' || el.type === 'event' || el.type === 'data') && selected && (() => {
                 const btnSize = 24 / (zoom / 100)
@@ -2157,30 +2173,7 @@ function BpmnCanvas({
                 )
               })()}
               {/* Resize handles on selected — corners: white+blue border (task/system/data/artifact only) */}
-              {/* Element name label pill for events/gateways — rendered BEFORE conn points so points appear on top */}
-              {(el.type === 'event' || el.type === 'gateway') && el.name && (
-                <g>
-                  {(() => {
-                    const words = el.name.split(' ')
-                    const multiLine = words.length > 2
-                    const mid = Math.ceil(words.length / 2)
-                    const line1 = multiLine ? words.slice(0, mid).join(' ') : el.name
-                    const line2 = multiLine ? words.slice(mid).join(' ') : null
-                    const charW = 6.2
-                    const pad = 16
-                    const w = Math.max(line1.length, line2?.length ?? 0) * charW + pad
-                    const h = multiLine ? 32 : 20
-                    const pillY = el.cy + el.hh + 4
-                    return <>
-                      <rect x={el.cx - w / 2} y={pillY} width={w} height={h} rx={8} fill="#f5f6f7" />
-                      {editingId !== el.id && (multiLine ? <>
-                        <text x={el.cx} y={pillY + 13} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line1}</text>
-                        <text x={el.cx} y={pillY + 26} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line2}</text>
-                      </> : <text x={el.cx} y={pillY + 14} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>)}
-                    </>
-                  })()}
-                </g>
-              )}
+              {/* Element name label pill — now rendered separately at the end */}
 
               {selected && el.type !== 'gateway' && el.type !== 'event' && (el.type as string) !== 'connector' && resizeHandles.map((pt, i) => (
                 <circle key={i} cx={pt.x} cy={pt.y} r={dotR}
@@ -2199,6 +2192,7 @@ function BpmnCanvas({
         })}
 
         {/* LI shapes */}
+
         {liShapes.map(ls => (
           <g key={ls.id}
             style={{ cursor: 'grab' }}
@@ -2250,6 +2244,47 @@ function BpmnCanvas({
             <LiShapeComp shape={ls} editing={editingLiId === ls.id} />
           </g>
         ))}
+
+        {/* Gateway/Event labels — rendered after LI shapes */}
+        {/* Flow labels (Yes/No) — also rendered last */}
+        {CONNECTIONS.map(conn => {
+          const pts = getConnectionPoints(conn, geomMap)
+          if (!pts || !conn.flowLabel) return null
+          const labels: Record<string, string> = {
+            'flabel-gateway1-plan': 'Yes', 'flabel-gateway2-offer': 'Yes', 'flabel-gateway3-onboard': 'Yes',
+            'flabel-gateway1-reject1': 'No', 'flabel-gateway2-reject2': 'No', 'flabel-gateway3-end3': 'No',
+          }
+          const lbl = labels[conn.flowLabel]
+          if (!lbl) return null
+          const mx = (pts.x1 + pts.x2) / 2, my = (pts.y1 + pts.y2) / 2
+          return (
+            <g key={`flabel-${conn.id}`} style={{ pointerEvents: 'none' }}>
+              <rect x={mx - 14} y={my - 10} width={lbl.length > 2 ? 30 : 27} height={20} rx={7} fill={isAiPreview ? '#e8f3ff' : '#f5f6f7'} stroke={isAiPreview ? 'var(--sapHighlightColor)' : '#758ca4'} strokeWidth={1} />
+              <text x={mx} y={my + 4} fontSize={11} fill={isAiPreview ? 'var(--sapHighlightColor)' : '#556b82'} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
+            </g>
+          )
+        })}
+        {elements.filter(el => (el.type === 'event' || el.type === 'gateway') && el.name).map(el => {
+          const words = el.name.split(' ')
+          const multiLine = words.length > 2
+          const mid = Math.ceil(words.length / 2)
+          const line1 = multiLine ? words.slice(0, mid).join(' ') : el.name
+          const line2 = multiLine ? words.slice(mid).join(' ') : null
+          const charW = 6.2
+          const pad = 16
+          const w = Math.max(line1.length, line2?.length ?? 0) * charW + pad
+          const h = multiLine ? 32 : 20
+          const pillY = el.cy + el.hh + 8
+          return (
+            <g key={`label-${el.id}`} style={{ pointerEvents: 'none' }}>
+              <rect x={el.cx - w / 2} y={pillY} width={w} height={h} rx={8} fill={isAiPreview ? '#e8f3ff' : '#f5f6f7'} />
+              {multiLine ? <>
+                <text x={el.cx} y={pillY + 13} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line1}</text>
+                <text x={el.cx} y={pillY + 26} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line2}</text>
+              </> : <text x={el.cx} y={pillY + 14} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>}
+            </g>
+          )
+        })}
 
         {/* Guidance lines while dragging */}
         {isDragging && dragState.current && (() => {
@@ -2340,14 +2375,27 @@ function BpmnCanvas({
             <input
               autoFocus
               defaultValue={el.name}
+              onChange={e => {
+                setSuggestionQuery(e.target.value)
+                setSuggestionPos({ x: px, y: py + ph })
+              }}
               onBlur={e => {
+                if (suppressSuggestionClose.current || suggestionMenuOpen.current) {
+                  suppressSuggestionClose.current = false
+                  ;(e.target as HTMLInputElement).focus()
+                  return
+                }
                 setElements(els => els.map(el2 => el2.id === el.id ? { ...el2, name: e.target.value } : el2))
                 setEditingId(null)
+                setSuggestionQuery('')
+                setSuggestionPos(null)
               }}
               onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === 'Escape') {
                   if (e.key === 'Enter') setElements(els => els.map(el2 => el2.id === el.id ? { ...el2, name: (e.target as HTMLInputElement).value } : el2))
                   setEditingId(null)
+                  setSuggestionQuery('')
+                  setSuggestionPos(null)
                   e.stopPropagation()
                 }
               }}
@@ -2363,6 +2411,62 @@ function BpmnCanvas({
               }}
             />
           </div>
+        )
+      })()}
+
+      {suggestionPos && suggestionQuery.length > 0 && (() => {
+        const POPUP_W = 340
+        const containerW = (svgRef.current?.closest('[style*="position"]') as HTMLElement)?.offsetWidth ?? window.innerWidth
+        const rightEdge = containerW - (panelOffset ?? 0) - 8
+        const clampedX = Math.min(suggestionPos.x, rightEdge - POPUP_W)
+        return (
+          <DictionarySuggestionPopup
+            query={suggestionQuery}
+            x={clampedX}
+            y={suggestionPos.y}
+            elementType={editingId ? elements.find(e => e.id === editingId)?.type : undefined}
+            onViewDetails={(dictId) => {
+              const dictItem = dictionaryItems.find(d => d.id === dictId)
+              if (dictItem) {
+                onDictItemSelect?.({
+                  id: dictItem.id,
+                  name: dictItem.name,
+                  category: dictItem.type,
+                  subCategory: dictItem.subCategory,
+                  description: dictItem.description,
+                  lastUpdated: dictItem.lastUpdated,
+                })
+              }
+            }}
+            onMenuOpenChange={(open) => { suggestionMenuOpen.current = open }}
+          onSelect={(dictId) => {
+            const dictItem = dictionaryItems.find(d => d.id === dictId)
+            if (dictItem && editingId) {
+              setElements(els => els.map(el2 => el2.id === editingId
+                ? { ...el2, name: dictItem.name, linkedDictId: dictId, linkedDictName: dictItem.name }
+                : el2
+              ))
+              setToastMsg(`"${dictItem.name}" linked`)
+            }
+            setEditingId(null)
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+          }}
+          onCreateNew={() => {
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+          }}
+          onExploreMore={(q) => {
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+            setEditingId(null)
+            onExploreDict?.(q)
+          }}
+          onClose={() => {
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+          }}
+        />
         )
       })()}
 
@@ -2472,7 +2576,50 @@ function BpmnCanvas({
         <Button icon="add" design="Transparent" tooltip="Zoom in" className={s.zoomBtn} onClick={zoomIn} />
       </div>
 
-      {dictOpen && <DictionaryPanel onClose={onToggleDict} />}
+      {dictOpen && <DictionaryPanel onClose={onToggleDict} onItemSelect={(item) => onDictItemSelect?.(item)} initialQuery={dictInitialQuery} />}
+
+      {/* ── AI preview floating bar ── */}
+      {isAiPreview && (
+        <div style={{
+          position: 'absolute', bottom: '5.5rem', left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20,
+          background: 'var(--sapPageFooter_Background, #fff)',
+          borderRadius: '0.5rem',
+          boxShadow: '0 0 0 1px rgba(34,53,72,0.48), 0 2px 8px rgba(34,53,72,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0.25rem 0.75rem 0.25rem 1rem',
+          gap: '1.5rem',
+          whiteSpace: 'nowrap',
+          maxWidth: 'calc(100vw - 4rem)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Icon name="ai" style={{ width: '1.25rem', height: '1.25rem', color: 'var(--sapHighlightColor)', flexShrink: 0 } as React.CSSProperties} />
+            <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
+              This process was created by AI from your text input.
+            </Text>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <Button design="Emphasized" onClick={() => setIsAiPreview(false)}>Accept</Button>
+            <Button design="Default" onClick={() => { setElements([]); setIsAiPreview(false); setOverlayDismissed(false) }}>Decline</Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── New diagram empty state overlay ── */}
+      {assetId === 'new' && elements.length === 0 && !overlayDismissed && (
+        <NewDiagramOverlay
+          onGenerate={() => {
+            pushHistory(elements, liShapes)
+            const newEls = buildInitialElements()
+            elementsRef.current = newEls
+            setElements(newEls)
+            setIsAiPreview(true)
+            setTimeout(() => zoomFit(), 50)
+          }}
+          onDismiss={() => setOverlayDismissed(true)}
+        />
+      )}
       {toastMsg && (
         <Toast open placement="BottomCenter" onClose={() => setToastMsg(null)}>
           {toastMsg}
@@ -2501,6 +2648,10 @@ function BpmnCanvas({
                 setDictPopup(null)
                 setToastMsg(`Unlinked "${el.name}" from Dictionary`)
               }}
+              onViewDetails={() => {
+                setDictPopup(null)
+                onOpenDictPanel?.()
+              }}
             />
           )
         } else {
@@ -2513,6 +2664,21 @@ function BpmnCanvas({
                 pushHistory(elements, liShapes)
                 setElements(els => els.map(e => e.id === el.id ? { ...e, linkedDictId: dictId } : e))
                 setToastMsg(`Linked to "${getDictName(dictId)}"`)
+              }}
+              onCreateDictItem={() => {
+                setDictPopup(null)
+                onDictItemSelect?.({ __createNew: true, elementName: el.name, elementId: el.id } as any)
+              }}
+              onViewDetails={(dictId) => {
+                const d = DICT_DATA[dictId]
+                onDictItemSelect?.({
+                  id: dictId,
+                  name: d?.name ?? getDictName(dictId),
+                  category: d?.category ?? 'Activities',
+                  subCategory: d?.subCategory,
+                  description: d?.description ?? '',
+                  lastUpdated: '',
+                })
               }}
             />
           )
@@ -2689,9 +2855,10 @@ function BpmnCanvas({
 
 // ── ModelerApp ─────────────────────────────────────────────────────────────────
 
-export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onSelectElementById, onLiShapesChange, onWidgetSelect, panelOffset = 0 }: Props) {
+export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onRegisterAddLiShape, onSelectElementById, onLiShapesChange, onWidgetSelect, onOpenDictPanel, onDictItemSelect, onAddBrowseWidget, panelOffset = 0 }: Props) {
   const navigate = useNavigate()
   const [dictOpen, setDictOpen] = useState(false)
+  const [dictInitialQuery, setDictInitialQuery] = useState('')
   const [dataOpen, setDataOpen] = useState(false)
   const [shapesOpen, setShapesOpen] = useState(false)
   const [moreElementsOpen, setMoreElementsOpen] = useState(false)
@@ -2711,9 +2878,11 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
     <div className={s.root}>
       <BpmnCanvas
         assetName={assetName}
+        assetId={assetId}
         onClose={() => navigate('/modeler')}
         dictOpen={dictOpen}
         onToggleDict={toggleDict}
+        dictInitialQuery={dictInitialQuery}
         onTogglePanel={onTogglePanel}
         onToggleData={toggleData}
         shapesOpen={shapesOpen}
@@ -2722,11 +2891,16 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onLiShapeSelect={onLiShapeSelect}
         onLiShapeUpdate={onLiShapeUpdate}
         onRegisterLiShapeUpdater={onRegisterLiShapeUpdater}
+        onRegisterAddLiShape={onRegisterAddLiShape}
         onSelectElementById={onSelectElementById}
         onLiShapesChange={onLiShapesChange}
+        onOpenDictPanel={onOpenDictPanel}
+        onExploreDict={(q) => { setDictInitialQuery(q); setDictOpen(true) }}
+        onDictItemSelect={onDictItemSelect}
+        onAddBrowseWidget={onAddBrowseWidget}
         panelOffset={panelOffset}
       />
-      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} />}
+      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} />}
       {shapesOpen && !moreElementsOpen && (
         <ElementsPanel
           onClose={() => setShapesOpen(false)}

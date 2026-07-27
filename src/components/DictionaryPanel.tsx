@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Button,
@@ -51,6 +51,38 @@ const DICT_ITEMS: DictItem[] = [
   { id: 'd31', name: 'Onboard candidate',    category: 'Activities',          elementType: 'task',     description: 'Complete onboarding process for newly hired employee', lastUpdated: '14.03.2026', usedInDiagram: true },
   { id: 'd71', name: 'Hire candidate?',      category: 'Gateway',             elementType: 'gateway',  description: 'Decision gateway for hiring decision', lastUpdated: '10.03.2026' },
   { id: 'd29', name: 'Send rejection',       category: 'Activities',          elementType: 'task',     description: 'Send rejection notification to unsuccessful candidates', lastUpdated: '08.03.2026', usedInDiagram: true },
+  // Additional diverse items
+  { id: 'd80', name: 'Approve Purchase Order', category: 'Activities',        elementType: 'task',     description: 'Review and approve purchase orders exceeding threshold', lastUpdated: '09.03.2026' },
+  { id: 'd81', name: 'Process Invoice',       category: 'Activities',         elementType: 'task',     description: 'Validate, match and process incoming supplier invoices', lastUpdated: '10.03.2026' },
+  { id: 'd82', name: 'Escalate Incident',     category: 'Activities',         elementType: 'task',     description: 'Escalate unresolved incidents to higher-tier support team', lastUpdated: '12.03.2026' },
+  { id: 'd83', name: 'Customer complaint received', category: 'Events',       elementType: 'event',    subCategory: 'Start Event', description: 'Triggered when a customer formally submits a complaint', lastUpdated: '11.03.2026' },
+  { id: 'd84', name: 'Budget exceeded?',      category: 'Gateway',            elementType: 'gateway',  description: 'Decision point based on whether spending exceeds approved budget', lastUpdated: '10.03.2026' },
+  { id: 'd85', name: 'Contract Agreement',    category: 'Documents',          elementType: 'data',     subCategory: 'Legal', description: 'Signed legal agreement between parties defining terms of engagement', lastUpdated: '12.03.2026' },
+  { id: 'd86', name: 'Purchase Order',        category: 'Documents',          elementType: 'data',     subCategory: 'Finance', description: 'Formal document authorising a purchase from a supplier', lastUpdated: '13.03.2026' },
+  { id: 'd87', name: 'Risk Assessment Report', category: 'Documents',         elementType: 'data',     subCategory: 'Compliance', description: 'Documented evaluation of potential risks and mitigation measures', lastUpdated: '12.03.2026' },
+  { id: 'd88', name: 'Finance Controller',    category: 'Organizational Units', elementType: 'task',   subCategory: 'Finance', description: 'Oversees financial reporting, budgeting and compliance', lastUpdated: '07.03.2026' },
+  { id: 'd89', name: 'IT Operations',         category: 'Organizational Units', elementType: 'task',   subCategory: 'IT Management', description: 'Responsible for infrastructure availability and incident resolution', lastUpdated: '08.03.2026' },
+  { id: 'd90', name: 'SAP Ariba',             category: 'IT System',          elementType: 'artifact', subCategory: 'Procurement', description: 'Cloud procurement and supply chain management platform', lastUpdated: '14.03.2026' },
+  { id: 'd91', name: 'Microsoft Teams',       category: 'IT System',          elementType: 'artifact', subCategory: 'Collaboration', description: 'Unified communication and collaboration platform', lastUpdated: '13.03.2026', isFavorite: true },
+  { id: 'd92', name: 'Validate Customer Data', category: 'Activities',        elementType: 'task',     description: 'Verify completeness and accuracy of customer master data records', lastUpdated: '06.03.2026' },
+  { id: 'd93', name: 'Order fulfilled',       category: 'Events',             elementType: 'event',    subCategory: 'End Event', description: 'End event confirming successful order fulfilment and delivery', lastUpdated: '09.03.2026' },
+  { id: 'd94', name: 'Compliance check passed?', category: 'Gateway',        elementType: 'gateway',  description: 'Decision gateway verifying regulatory compliance before proceeding', lastUpdated: '11.03.2026' },
+  // scr-matching items
+  { id: 'd95', name: 'Screen Application',   category: 'Activities',         elementType: 'task',     description: 'Screen and review incoming job applications against criteria', lastUpdated: '09.03.2026' },
+  { id: 'd96', name: 'Screen References',    category: 'Activities',         elementType: 'task',     description: 'Screen and verify candidate professional references', lastUpdated: '10.03.2026' },
+  { id: 'd97', name: 'Technical Screening',  category: 'Activities',         elementType: 'task',     description: 'Conduct technical screening to assess candidate skills and competency', lastUpdated: '12.03.2026' },
+  { id: 'd98', name: 'Screening Scorecard',  category: 'Documents',          elementType: 'data',     subCategory: 'HR Information', description: 'Structured scorecard for recording screening interview outcomes', lastUpdated: '08.03.2026' },
+  { id: 'd99', name: 'Pre-screening Call',   category: 'Activities',         elementType: 'task',     description: 'Initial phone screening to assess candidate fit and availability', lastUpdated: '07.03.2026' },
+  { id: 'd100', name: 'Screen for Cultural Fit',     category: 'Activities', elementType: 'task',    description: 'Screen candidate alignment with company values and cultural expectations', lastUpdated: '06.03.2026' },
+  { id: 'd101', name: 'Initial CV Screen',           category: 'Activities', elementType: 'task',    description: 'Perform initial screening of submitted CVs against minimum job requirements', lastUpdated: '05.03.2026' },
+  { id: 'd102', name: 'Phone Screen',                category: 'Activities', elementType: 'task',    description: 'Conduct a brief phone screen to verify candidate interest and basic qualifications', lastUpdated: '04.03.2026' },
+  { id: 'd103', name: 'Screen Diversity Criteria',   category: 'Activities', elementType: 'task',    description: 'Review applications against diversity and inclusion screening criteria', lastUpdated: '03.03.2026' },
+  { id: 'd104', name: 'Screening Decision',          category: 'Gateway',    elementType: 'gateway', description: 'Gateway deciding whether candidate passes the screening stage', lastUpdated: '10.03.2026' },
+  { id: 'd105', name: 'Video Screen Interview',      category: 'Activities', elementType: 'task',    description: 'Conduct asynchronous or live video screening interview with shortlisted candidates', lastUpdated: '11.03.2026' },
+  { id: 'd106', name: 'Screening Passed',            category: 'Events',     elementType: 'event',   subCategory: 'Intermediate Event', description: 'Intermediate event triggered when candidate successfully passes all screening steps', lastUpdated: '09.03.2026' },
+  { id: 'd107', name: 'Automated Resume Screening',  category: 'Activities', elementType: 'task',    description: 'Use ATS to automatically screen resumes based on keyword and criteria matching', lastUpdated: '08.03.2026' },
+  { id: 'd108', name: 'Screening Report',            category: 'Documents',  elementType: 'data',    subCategory: 'HR Information', description: 'Document summarising screening outcomes and recommendations for each candidate', lastUpdated: '07.03.2026' },
+  { id: 'd109', name: 'Screening Criteria Document', category: 'Documents',  elementType: 'data',    subCategory: 'HR Information', description: 'Document defining the mandatory and desirable criteria used for candidate screening', lastUpdated: '06.03.2026' },
 ]
 
 // ── Category icon ─────────────────────────────────────────────────────────────
@@ -79,13 +111,13 @@ const CAT_ICON_COLOR: Record<DictCategory, string> = {
 
 // ── Single dictionary card ────────────────────────────────────────────────────
 
-function DictCard({ item }: { item: DictItem }) {
+function DictCard({ item, onSelect }: { item: DictItem; onSelect?: () => void }) {
   const sub = item.subCategory ? ` / ${item.subCategory}` : ''
   const iconName = item.category === 'Activities'
     ? TASK_ICONS[parseInt(item.id.replace(/\D/g, ''), 10) % TASK_ICONS.length]
     : CAT_ICON_NAME[item.category]
   return (
-    <div className={s.card} draggable onDragStart={(e: React.DragEvent) => {
+    <div className={s.card} draggable onClick={onSelect} style={{ cursor: 'pointer' }} onDragStart={(e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', item.id)
         e.dataTransfer.setData('application/dict-item', JSON.stringify({ id: item.id, name: item.name, type: item.category, subCategory: item.subCategory, elementType: item.elementType }))
         ;(window as any).__dictDragElementType = item.elementType ?? null
@@ -127,10 +159,16 @@ function DictCard({ item }: { item: DictItem }) {
 
 type Props = {
   onClose: () => void
+  onItemSelect?: (item: DictItem) => void
+  initialQuery?: string
 }
 
-export default function DictionaryPanel({ onClose }: Props) {
-  const [query, setQuery] = useState('')
+export default function DictionaryPanel({ onClose, onItemSelect, initialQuery = '' }: Props) {
+  const [query, setQuery] = useState(initialQuery)
+
+  useEffect(() => {
+    setQuery(initialQuery)
+  }, [initialQuery])
   const [usedInOnly, setUsedInOnly] = useState(false)
   const [infoVisible, setInfoVisible] = useState(true)
   const categoryMenuRef = useRef<any>(null)
@@ -236,7 +274,7 @@ export default function DictionaryPanel({ onClose }: Props) {
               </Text>
             </div>
           ) : (
-            filtered.map(item => <DictCard key={item.id} item={item} />)
+            filtered.map(item => <DictCard key={item.id} item={item} onSelect={() => onItemSelect?.(item)} />)
           )}
         </div>
       </div>

@@ -11,8 +11,12 @@ import AtomsPanel from './SuiteContextPanel/AtomsPanel'
 import ElementDetailPanel from './ElementDetailPanel'
 import LiShapeDetailPanel from './LiShapeDetailPanel'
 import WidgetDetailPanel from './WidgetDetailPanel'
+import DictionaryDetailPanel from './DictionaryDetailPanel'
+import CreateDictionaryItemPanel from './CreateDictionaryItemPanel'
+import type { DictPanelItem } from './DictionaryDetailPanel'
 import type { LiShape } from '../pages/ModelerApp'
 import type { Widget, ExternalWidget } from './DataPanel'
+import { elementData } from '../data/liveInsightsData'
 import type { SelectedAssetInfo } from '../pages/AllResources'
 import s from './SuiteContextPanel.module.css'
 
@@ -76,8 +80,49 @@ function makeMockAsset(assetId?: string): SelectedAssetInfo {
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null }) {
   if (!activePanel) return null
+
+  if (activePanel === 'create-dict-item' && selectedDictItem) {
+    return (
+      <div className={s.panelContent}>
+        <CreateDictionaryItemPanel
+          elementName={selectedDictItem.name}
+          onClose={() => onTogglePanel(null)}
+          onCreateAndLink={(name, category, subCategory, description) => {
+            onTogglePanel(null)
+          }}
+        />
+      </div>
+    )
+  }
+
+  // dict detail panel
+  if (activePanel === 'dict-detail' && selectedDictItem) {
+    return (
+      <div className={`${s.panelContent} dict-detail-panel`}>
+        <DictionaryDetailPanel item={selectedDictItem} onClose={() => onTogglePanel(null)} />
+      </div>
+    )
+  }
+
+  // dictionary linked panel
+  if (activePanel === 'dictionary-linked' && selectedElementId) {
+    // use selectedDictId prop, or fall back to elementData lookup
+    const dictId = selectedDictId || elementData[selectedElementId]?.linkedDictId
+    if (dictId) {
+      return (
+        <div className={s.panelContent}>
+          <DictionaryLinkedPanel
+            elementId={selectedElementId}
+            dictId={dictId}
+            onClose={() => onTogglePanel(null)}
+            onSwitchToElement={() => onTogglePanel('element-detail')}
+          />
+        </div>
+      )
+    }
+  }
 
   // widget detail
   if (activePanel === 'widget-detail' && selectedWidget) {
@@ -112,6 +157,8 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
           key={selectedElementId}
           elementId={selectedElementId}
           onClose={() => onTogglePanel(null)}
+          dictId={selectedDictId ?? undefined}
+          onViewDictEntry={() => onTogglePanel('dictionary-linked')}
           linkedShapes={connectedShapes.map(ls => ({ id: ls.id, widgetName: ls.widgetName, widgetId: ls.widgetId, label: ls.label, shapeType: ls.shapeType }))}
           onSelectLinkedShape={(id) => {
             const ls = (liShapes ?? []).find(s => s.id === id)
