@@ -1,0 +1,39 @@
+<svg width="32" height="33" viewBox="0 0 32 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="32" height="33" fill="#656565"/>
+<g id="Events">
+<path d="M-1259 -253C-1259 -270.673 -1244.67 -285 -1227 -285H2353C2370.67 -285 2385 -270.673 2385 -253V900C2385 917.673 2370.67 932 2353 932H-1227C-1244.67 932 -1259 917.673 -1259 900V-253Z" fill="white"/>
+<g id="Canvas">
+<g clip-path="url(#clip0_9024_951)">
+<rect x="-75" y="-24" width="164" height="773" rx="10" fill="#F5F6F7"/>
+<g id="Events 5">
+<g id="Grid">
+<g id="Group 633980">
+<g id="Row">
+<ellipse id="Ellipse 409" cx="15.998" cy="8.99803" rx="0.99803" ry="0.99803" fill="black" fill-opacity="0.2"/>
+</g>
+<g id="Row_2">
+<ellipse id="Ellipse 409_2" cx="15.998" cy="26.998" rx="0.99803" ry="0.99803" fill="black" fill-opacity="0.2"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+<g id="none" clip-path="url(#clip1_9024_951)">
+<g id="Icon Start Event">
+<g id="Avatar">
+<rect width="32" height="32" rx="16" fill="white"/>
+<path id="bg_frame" d="M16 27C22.0751 27 27 22.0751 27 16C27 9.92487 22.0751 5 16 5C9.92487 5 5 9.92487 5 16C5 22.0751 9.92487 27 16 27Z" stroke="#1D2D3E"/>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_9024_951">
+<rect x="-75" y="-24" width="164" height="773" rx="10" fill="white"/>
+</clipPath>
+<clipPath id="clip1_9024_951">
+<rect width="32" height="33" fill="white"/>
+</clipPath>
+</defs>
+</svg>
