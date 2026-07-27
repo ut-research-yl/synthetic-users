@@ -1077,6 +1077,7 @@ function BpmnCanvas({
   panelOffset?: number
 }) {
   const [lang, setLang] = useState('ENG')
+  const [editableTitle, setEditableTitle] = useState(assetName)
   const [saveState, setSaveState] = useState<SaveState>('saved')
   const [mode, setMode] = useState('Edit')
   const [zoom, setZoom] = useState(70)
@@ -1834,10 +1835,10 @@ function BpmnCanvas({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SigDomainObject object="Process Model" size="XS" />
           <SigInlineEdit
-            text={assetName === 'Untitled Stakeholder' ? '' : assetName}
+            text={editableTitle}
             placeholder="Untitled"
             size="H4"
-            style={{ minWidth: '8rem' } as React.CSSProperties}
+            onChange={(e: any) => setEditableTitle(e.detail?.value ?? e.target?.value ?? editableTitle)}
           />
           <Button id="modeler-overflow" icon="slim-arrow-down" design="Transparent" tooltip="More options" className={s.overflowBtn}
             onClick={() => openMenu(overflowMenuRef, 'modeler-overflow')} />
@@ -2897,8 +2898,9 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
     assetId === 'a1' ? 'HR Hiring Process GER'
     : assetId === 'a2' ? 'Incident Management'
     : assetId === 'a3' ? 'Order-to-Cash Value Chain'
+    : assetId === 'new' ? ''
     : assetId ? `Asset ${assetId}`
-    : 'Untitled Stakeholder'
+    : ''
 
   return (
     <div className={s.root}>

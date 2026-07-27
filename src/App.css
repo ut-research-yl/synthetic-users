@@ -659,3 +659,9 @@ svg.ai-preview g rect[rx="8"][fill="#f5f6f7"] {
   font-size: var(--sapFontHeader5Size, 1rem) !important;
   font-weight: 700 !important;
 }
+
+/* Modeler title: SigInlineEdit placeholder font weight */
+.modeler-title-inline sig-inline-edit [data-testid="title"],
+.modeler-title-inline sig-inline-edit span {
+  font-weight: 700 !important;
+}
