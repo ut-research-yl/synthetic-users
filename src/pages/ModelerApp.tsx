@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Icon, Text, Menu, MenuItem, MenuSeparator, SplitButton, ToggleButton, Toast } from '@ui5/webcomponents-react'
 import { createPortal } from 'react-dom'
-import { SigChipV2, SigDomainObject } from '@signavio/sap-signavio-uixtension'
+import { SigChipV2, SigDomainObject, SigInlineEdit } from '@signavio/sap-signavio-uixtension'
 import { useNavigate } from 'react-router-dom'
 import DictionaryPanel from '../components/DictionaryPanel'
 import DictionarySuggestionPopup from '../components/DictionarySuggestionPopup'
@@ -24,7 +24,7 @@ import s from './ModelerApp.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null, hasLinkedDict?: boolean, dictId?: string) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onOpenDictPanel?: () => void; onDictItemSelect?: (item: any) => void; onAddBrowseWidget?: (widgetId: string, widgetName: string, widgetType: string) => void; panelOffset?: number }
+type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null, hasLinkedDict?: boolean, dictId?: string) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onRegisterSelectLiShapeById?: (fn: (id: string) => void) => void; onRegisterLinkDictToElement?: (fn: (elementId: string, dictId: string, dictName: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onOpenDictPanel?: () => void; onDictItemSelect?: (item: any) => void; onAddBrowseWidget?: (widgetId: string, widgetName: string, widgetType: string) => void; panelOffset?: number }
 
 type SaveState = 'draft' | 'saved' | 'saving' | 'offline' | 'error'
 
@@ -1039,6 +1039,8 @@ function BpmnCanvas({
   onLiShapeUpdate,
   onRegisterLiShapeUpdater,
   onRegisterAddLiShape,
+  onRegisterSelectLiShapeById,
+  onRegisterLinkDictToElement,
   onSelectElementById,
   onLiShapesChange,
   onWidgetSelect,
@@ -1063,6 +1065,8 @@ function BpmnCanvas({
   onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void
   onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void
   onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void
+  onRegisterSelectLiShapeById?: (fn: (id: string) => void) => void
+  onRegisterLinkDictToElement?: (fn: (elementId: string, dictId: string, dictName: string) => void) => void
   onSelectElementById?: (fn: (id: string) => void) => void
   onLiShapesChange?: (shapes: LiShape[]) => void
   onWidgetSelect?: (widget: Widget | ExternalWidget) => void
@@ -1131,6 +1135,23 @@ function BpmnCanvas({
       setToastMsg(`"${shape.widgetName}" added to canvas`)
     })
   }, [onRegisterAddLiShape])
+
+  useEffect(() => {
+    onRegisterSelectLiShapeById?.((id: string) => {
+      const shape = liShapesRef.current.find(s => s.id === id)
+      if (shape) {
+        setSelectedIds(new Set([id]))
+        onLiShapeSelect?.(shape)
+      }
+    })
+  }, [onRegisterSelectLiShapeById])
+
+  useEffect(() => {
+    onRegisterLinkDictToElement?.((elementId: string, dictId: string, dictName: string) => {
+      setElements(els => els.map(el => el.id === elementId ? { ...el, linkedDictId: dictId, linkedDictName: dictName } : el))
+      setToastMsg(`"${dictName}" linked`)
+    })
+  }, [onRegisterLinkDictToElement])
 
   useEffect(() => {
     onLiShapesChange?.(liShapes)
@@ -1812,7 +1833,12 @@ function BpmnCanvas({
         <Button design="Transparent" icon="slim-arrow-left" tooltip="Back to list" onClick={onClose} className={s.backBtn} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SigDomainObject object="Process Model" size="XS" />
-          <span className={s.titleText}>{assetName}</span>
+          <SigInlineEdit
+            text={assetName === 'Untitled Stakeholder' ? '' : assetName}
+            placeholder="Untitled"
+            size="H4"
+            style={{ minWidth: '8rem' } as React.CSSProperties}
+          />
           <Button id="modeler-overflow" icon="slim-arrow-down" design="Transparent" tooltip="More options" className={s.overflowBtn}
             onClick={() => openMenu(overflowMenuRef, 'modeler-overflow')} />
         </div>
@@ -2855,7 +2881,7 @@ function BpmnCanvas({
 
 // ── ModelerApp ─────────────────────────────────────────────────────────────────
 
-export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onRegisterAddLiShape, onSelectElementById, onLiShapesChange, onWidgetSelect, onOpenDictPanel, onDictItemSelect, onAddBrowseWidget, panelOffset = 0 }: Props) {
+export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onRegisterAddLiShape, onSelectElementById, onRegisterSelectLiShapeById, onRegisterLinkDictToElement, onLiShapesChange, onWidgetSelect, onOpenDictPanel, onDictItemSelect, onAddBrowseWidget, panelOffset = 0 }: Props) {
   const navigate = useNavigate()
   const [dictOpen, setDictOpen] = useState(false)
   const [dictInitialQuery, setDictInitialQuery] = useState('')
@@ -2872,7 +2898,7 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
     : assetId === 'a2' ? 'Incident Management'
     : assetId === 'a3' ? 'Order-to-Cash Value Chain'
     : assetId ? `Asset ${assetId}`
-    : 'Untitled'
+    : 'Untitled Stakeholder'
 
   return (
     <div className={s.root}>
@@ -2892,6 +2918,8 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onLiShapeUpdate={onLiShapeUpdate}
         onRegisterLiShapeUpdater={onRegisterLiShapeUpdater}
         onRegisterAddLiShape={onRegisterAddLiShape}
+        onRegisterSelectLiShapeById={onRegisterSelectLiShapeById}
+        onRegisterLinkDictToElement={onRegisterLinkDictToElement}
         onSelectElementById={onSelectElementById}
         onLiShapesChange={onLiShapesChange}
         onOpenDictPanel={onOpenDictPanel}

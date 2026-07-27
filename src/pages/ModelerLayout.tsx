@@ -17,6 +17,8 @@ export default function ModelerLayout() {
   const selectElementByIdRef = React.useRef<((id: string) => void) | null>(null)
   const liShapeUpdateRef = React.useRef<((id: string, changes: Partial<LiShape>) => void) | null>(null)
   const addLiShapeRef = React.useRef<((shape: LiShape) => void) | null>(null)
+  const selectLiShapeByIdRef = React.useRef<((id: string) => void) | null>(null)
+  const linkDictToElementRef = React.useRef<((elementId: string, dictId: string, dictName: string) => void) | null>(null)
   const [liShapes, setLiShapes] = React.useState<LiShape[]>([])
   const [selectedWidget, setSelectedWidget] = React.useState<Widget | ExternalWidget | null>(null)
   const [selectedDictId, setSelectedDictId] = React.useState<string | null>(null)
@@ -82,6 +84,8 @@ export default function ModelerLayout() {
           }}
           onRegisterLiShapeUpdater={(fn) => { liShapeUpdateRef.current = fn }}
           onRegisterAddLiShape={(fn) => { addLiShapeRef.current = fn }}
+          onRegisterSelectLiShapeById={(fn) => { selectLiShapeByIdRef.current = fn }}
+          onRegisterLinkDictToElement={(fn) => { linkDictToElementRef.current = fn }}
           onLiShapeUpdate={(id, changes) => liShapeUpdateRef.current?.(id, changes)}
           onSelectElementById={(fn) => { selectElementByIdRef.current = fn }}
           onLiShapesChange={(shapes) => setLiShapes(shapes)}
@@ -167,6 +171,9 @@ export default function ModelerLayout() {
                 selectedWidget={selectedWidget}
                 selectedDictId={selectedDictId}
                 selectedDictItem={selectedDictItem}
+                onLinkDictItem={(elementId, dictId, dictName) => {
+                  linkDictToElementRef.current?.(elementId, dictId, dictName)
+                }}
                 onLiShapeUpdate={(id, changes) => {
                   liShapeUpdateRef.current?.(id, changes)
                   setSelectedLiShape(prev => prev && prev.id === id ? { ...prev, ...changes } : prev)
@@ -182,6 +189,7 @@ export default function ModelerLayout() {
                   setSelectedLiShape(shape)
                   setSelectedElementId(null)
                   setActivePanel('element-detail')
+                  selectLiShapeByIdRef.current?.(shape.id)
                 }}
               />
             </div>

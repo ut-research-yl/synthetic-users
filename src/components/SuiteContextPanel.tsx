@@ -80,7 +80,7 @@ function makeMockAsset(assetId?: string): SelectedAssetInfo {
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem, onLinkDictItem }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null; onLinkDictItem?: (elementId: string, dictId: string, dictName: string) => void }) {
   if (!activePanel) return null
 
   if (activePanel === 'create-dict-item' && selectedDictItem) {
@@ -90,6 +90,11 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
           elementName={selectedDictItem.name}
           onClose={() => onTogglePanel(null)}
           onCreateAndLink={(name, category, subCategory, description) => {
+            const elementId = (selectedDictItem as any)?.elementId
+            if (elementId) {
+              const newDictId = `dict-new-${Date.now()}`
+              onLinkDictItem?.(elementId, newDictId, name)
+            }
             onTogglePanel(null)
           }}
         />
