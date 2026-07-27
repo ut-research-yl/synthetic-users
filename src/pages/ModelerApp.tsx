@@ -4,9 +4,9 @@ import { createPortal } from 'react-dom'
 import { SigChipV2, SigDomainObject } from '@signavio/sap-signavio-uixtension'
 import { useNavigate } from 'react-router-dom'
 import '@ui5/webcomponents-icons/dist/chain-link.js'
+import bpmnModelImg from '../assets/bpmn-model.svg'
 import { CollaborativeCursors, type Collaborator } from '../components/CollaborativeCursors'
 import { PresenceAvatarGroup, type PresenceUser } from '../components/PresenceAvatarGroup'
-import { BpmnProcurementModel } from './BpmnProcurementModel'
 import DictionaryPanel from '../components/DictionaryPanel'
 import DataPanel from '../components/DataPanel'
 import ElementsPanel from '../components/ElementsPanel'
@@ -33,6 +33,15 @@ type CanvasElement = ElementData & ElementGeometry & {
   drivingWidgetName?: string
   linkedDictId?: string
   linkedDictName?: string
+}
+
+export function getAssetName(assetId?: string): string {
+  return assetId === 'a1' ? 'HR Hiring Process GER'
+    : assetId === 'a2' ? 'Incident Management'
+    : assetId === 'a3' ? 'Order-to-Cash Value Chain'
+    : assetId === '5' ? 'Procurement Experience Analysis'
+    : assetId ? `Asset ${assetId}`
+    : 'Untitled'
 }
 
 export type LiShape = {
@@ -1083,7 +1092,16 @@ function BpmnCanvas({
   const [panY, setPanY] = useState(80)
 
   // Canvas element state
-  const [elements, setElements] = useState<CanvasElement[]>(() => assetId === '5' ? [] : buildInitialElements())
+  const [elements, setElements] = useState<CanvasElement[]>(() => {
+    if (assetId === '5') {
+      return [{
+        id: 'se-1', type: 'event', subtype: 'Start',
+        cx: 330, cy: 290, hw: 16, hh: 16,
+        name: '',
+      } as CanvasElement]
+    }
+    return buildInitialElements()
+  })
   const [liShapes, setLiShapes] = useState<LiShape[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const selectedId = [...selectedIds][0] ?? null  // compat: first selected
@@ -1314,7 +1332,7 @@ function BpmnCanvas({
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
     const hit = hitTestElement(svgPt.x, svgPt.y, elementsRef.current)
-    if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'li-shape' || hit.type === 'data' || hit.type === 'artifact')) {
+    if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'li-shape' || hit.type === 'data' || hit.type === 'artifact' || hit.type === 'event' || hit.type === 'gateway')) {
       if (e.shiftKey) {
         // Shift+click: toggle element in/out of selection
         setSelectedIds(prev => {
@@ -1776,12 +1794,19 @@ function BpmnCanvas({
         {/* Dot grid background */}
         <rect x={panX} y={panY} width={vbW} height={vbH} fill="url(#dot-grid)" />
 
-        {/* BPMN model — Procurement Experience Analysis */}
+        {/* BPMN model diagram */}
         {assetId === '5' && (
-          <g transform="translate(50, 20)">
-            <BpmnProcurementModel />
-          </g>
+          <image
+            href={bpmnModelImg}
+            x={150} y={80}
+            width={1123} height={713}
+            style={{ pointerEvents: 'none' }}
+          />
         )}
+
+
+
+
 
         {/* Connections */}
         {CONNECTIONS.map(conn => {
@@ -2346,11 +2371,9 @@ function BpmnCanvas({
 
       {createPortal(
         <Menu ref={overflowMenuRef}>
-          <MenuItem text="Open Latest Draft" />
+          <MenuItem text="Save Revision" />
           <MenuSeparator />
-          <MenuItem text="Open in QuickModel" />
-          <MenuSeparator />
-          <MenuItem text="Share" /><MenuItem text="Add to Favorites" /><MenuItem text="Copy To" />
+          <MenuItem text="Export as" />
           <MenuSeparator />
           <MenuItem text="Rename" /><MenuItem text="Move" /><MenuItem text="Delete" />
         </Menu>,
@@ -2429,13 +2452,7 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
   const toggleData = () => { setDataOpen(v => !v); setDictOpen(false); setShapesOpen(false); setMoreElementsOpen(false) }
   const toggleShapes = () => { setShapesOpen(v => !v); setMoreElementsOpen(false); setDictOpen(false); setDataOpen(false) }
 
-  const assetName =
-    assetId === 'a1' ? 'HR Hiring Process GER'
-    : assetId === 'a2' ? 'Incident Management'
-    : assetId === 'a3' ? 'Order-to-Cash Value Chain'
-    : assetId === '5' ? 'Procurement Experience Analysis'
-    : assetId ? `Asset ${assetId}`
-    : 'Untitled'
+  const assetName = getAssetName(assetId)
 
   const assetObjectType = 'Process Model'
 

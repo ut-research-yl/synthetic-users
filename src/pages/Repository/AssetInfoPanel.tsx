@@ -996,8 +996,7 @@ export default function AssetInfoPanel({
             </div>
           </div>
         </Tab>,
-        <Tab text="Details" key="details"><div /></Tab>,
-    
+
       ]
     }
     return [
@@ -1010,9 +1009,6 @@ export default function AssetInfoPanel({
         return <ModelAttributesTab description={externalSelectedAsset.description} />
       })()}
     </Tab>,
-    <Tab text="Details" key="details"><div /></Tab>,
-    <Tab text="Relations" key="relations"><RelationsTab /></Tab>,
-
     <Tab text="Activity" key="activity"><ActivityFeed assetType={externalSelectedAsset.objectType} /></Tab>,
   ]
   })() : []

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { Button } from '@ui5/webcomponents-react'
 import { useParams } from 'react-router-dom'
-import ModelerApp, { type LiShape } from './ModelerApp'
+import ModelerApp, { type LiShape, getAssetName } from './ModelerApp'
 import { SuiteContextPanelContent, SuiteContextRail } from '../components/SuiteContextPanel'
 import s from './ModelerLayout.module.css'
 
@@ -127,6 +127,7 @@ export default function ModelerLayout() {
                 activePanel={activePanel}
                 onTogglePanel={togglePanel}
                 assetId={assetId}
+                assetName={getAssetName(assetId)}
                 selectedElementId={selectedElementId}
                 selectedLiShape={selectedLiShape}
                 onLiShapeUpdate={(id, changes) => {

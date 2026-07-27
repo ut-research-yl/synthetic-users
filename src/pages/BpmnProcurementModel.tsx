@@ -1,25 +1,17 @@
 import React from 'react'
 
-// Exact values extracted from the provided SVG source
-// viewBox: 0 0 1947 1234
-// Pool outer path corner radii: rx≈17.86
-// Horizontal lane divider: y=617, x=97→1943
-// Outer label col divider: x=94.71
-// Inner lane col: derived from label text positions (x≈136)
-// IT system icon (Approval System): rect x=982,y=441,w=74,h=74 → cx=1019,cy=478
-// Approval System text box: x=946,y=532 → x=1094,y=573
-
 const FONT = "'72', Arial, Helvetica, sans-serif"
 const INK = '#131e29'
-const BORDER = '#83888b'
+const BORDER = '#556b81'       // sapField_BorderColor — new design spec
 const SEQ_ARR = 'bpmn-p-seq'
 const ASSOC_ARR = 'bpmn-p-assoc'
 
-// Pool geometry (from SVG)
+// Pool geometry
 const W = 1947, H = 1234
-const LANE_Y = 617          // horizontal divider
-const LBL_X = 94.71         // outer label col right edge
-const LANE_X = 136          // inner lane col right edge
+const LANE_Y = 617             // horizontal divider between HR and IT lanes
+const LBL_X = 95               // outer label col right edge
+const LANE_X = 137             // inner lane col right edge
+const POOL_RX = 12             // border-radius on left corners (per Figma spec)
 
 // HR lane vertical center
 const HR_CY = LANE_Y / 2    // 308.5 → use 270 for task midpoints (tasks offset up)
@@ -146,25 +138,23 @@ export function BpmnProcurementModel() {
         </marker>
       </defs>
 
-      {/* ── Pool outer boundary (from SVG path data) ─────────────────────── */}
+      {/* ── Pool outer boundary — rounded left corners only (Figma spec) ── */}
       <path
-        d={`M17.856 0.744H1943.26C1944.49 0.744 1945.49 1.743 1945.49 2.976V1230.53
-            C1945.49 1231.76 1944.49 1232.76 1943.26 1232.76H17.856
-            C8.405 1232.76 0.744 1225.1 0.744 1215.65V17.856
-            C0.744 8.405 8.405 0.744 17.856 0.744Z`}
-        fill="white" stroke={BORDER} strokeWidth={1.49}
+        d={`M${POOL_RX},0 L${W},0 L${W},${H} L${POOL_RX},${H}
+            Q0,${H} 0,${H - POOL_RX} L0,${POOL_RX} Q0,0 ${POOL_RX},0 Z`}
+        fill="white" stroke={BORDER} strokeWidth={1}
       />
 
-      {/* ── Lane dividers (exact from SVG) ───────────────────────────────── */}
-      {/* Horizontal lane divider */}
-      <line x1={LBL_X} y1={LANE_Y} x2={1943.26} y2={LANE_Y}
-        stroke={BORDER} strokeWidth={1.19} strokeLinecap="round" />
+      {/* ── Lane dividers ─────────────────────────────────────────────────── */}
+      {/* Horizontal lane divider (HR / IT) */}
+      <line x1={LBL_X} y1={LANE_Y} x2={W} y2={LANE_Y}
+        stroke={BORDER} strokeWidth={1} />
       {/* Outer label col divider */}
-      <line x1={LBL_X} y1={4.46} x2={LBL_X} y2={1230.52}
-        stroke={BORDER} strokeWidth={1.49} />
+      <line x1={LBL_X} y1={0} x2={LBL_X} y2={H}
+        stroke={BORDER} strokeWidth={1} />
       {/* Inner lane col divider */}
-      <line x1={LANE_X} y1={4.46} x2={LANE_X} y2={1230.52}
-        stroke={BORDER} strokeWidth={1.2} />
+      <line x1={LANE_X} y1={0} x2={LANE_X} y2={H}
+        stroke={BORDER} strokeWidth={1} />
 
       {/* ── Pool labels ──────────────────────────────────────────────────── */}
       {/* "Human Resource Department" — rotated, outer col */}
@@ -194,10 +184,10 @@ export function BpmnProcurementModel() {
       {/* ── HR Lane elements ─────────────────────────────────────────────── */}
 
       {/* Start event: "Employee Hired" */}
-      <circle cx={SE_CX} cy={SE_CY} r={24}
-        fill="#d4f5d4" stroke="#5db15d" strokeWidth={2.5} />
+      <circle cx={SE_CX} cy={SE_CY} r={16}
+        fill="#ebf5cb" stroke="#256f3a" strokeWidth={1.5} />
       {['Employee', 'Hired'].map((l, i) => (
-        <text key={i} x={SE_CX} y={SE_CY + 36 + i * 14}
+        <text key={i} x={SE_CX} y={SE_CY + 24 + i * 13}
           textAnchor="middle" fontSize={11} fontFamily={FONT} fill={INK}>{l}</text>
       ))}
 
@@ -218,7 +208,7 @@ export function BpmnProcurementModel() {
 
       {/* ── Sequence flows ───────────────────────────────────────────────── */}
       {/* Start → T1 */}
-      <Seq x1={SE_CX + 24} y1={SE_CY} x2={T1.x} y2={cy()} />
+      <Seq x1={SE_CX + 16} y1={SE_CY} x2={T1.x} y2={cy()} />
       {/* T1 → T2 */}
       <Seq x1={T1.x + TASK_W} y1={cy()} x2={T2.x} y2={cy()} />
       {/* T2 → T3 */}

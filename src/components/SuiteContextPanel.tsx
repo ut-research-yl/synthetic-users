@@ -54,13 +54,16 @@ type SharedProps = {
 // ── Mock asset data for the modeler context ──────────────────────────────────
 // In the real app this would be driven by the loaded asset; here we match the
 // Onboarding Process fixture that matches the canvas placeholder.
-function makeMockAsset(assetId?: string): SelectedAssetInfo {
+function makeMockAsset(assetId?: string, assetName?: string): SelectedAssetInfo {
+  const name = assetName ?? (
+    assetId === 'a1' ? 'Onboarding Process'
+    : assetId === 'a2' ? 'Incident Management'
+    : assetId === 'a3' ? 'Order-to-Cash Value Chain'
+    : 'Untitled'
+  )
   return {
     id: assetId ?? 'a1',
-    name: assetId === 'a1' ? 'Onboarding Process'
-        : assetId === 'a2' ? 'Incident Management'
-        : assetId === 'a3' ? 'Order-to-Cash Value Chain'
-        : 'Untitled',
+    name,
     objectType: 'Process Model',
     typeName: 'BPMN Model',
     folder: 'Human Resources',
@@ -74,7 +77,7 @@ function makeMockAsset(assetId?: string): SelectedAssetInfo {
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape }: SharedProps & { assetId?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, assetName, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape }: SharedProps & { assetId?: string; assetName?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void }) {
   if (!activePanel) return null
 
   // li shape detail
@@ -113,7 +116,7 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
 
   // element-detail with nothing selected — show diagram attributes as fallback
   if (activePanel === 'element-detail') {
-    const asset = makeMockAsset(assetId)
+    const asset = makeMockAsset(assetId, assetName)
     return (
       <div className={s.panelContent}>
         <AssetInfoPanel
@@ -140,7 +143,7 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
 
   // diagram-attributes uses the existing AssetInfoPanel which owns its own SigRightSidePanel
   if (activePanel === 'diagram-attributes') {
-    const asset = makeMockAsset(assetId)
+    const asset = makeMockAsset(assetId, assetName)
     return (
       <div className={s.panelContent}>
         <AssetInfoPanel
