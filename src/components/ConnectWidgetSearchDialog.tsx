@@ -408,14 +408,14 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
                             if (!meta) return null
                             return (
                               <ListItemCustom key={id} data-id={id} selected={selectedBrowseId === id}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0.25rem 0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0.25rem 0.5rem 0.25rem 0' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '0.375rem', background: '#d1efff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                       <Icon name={TYPE_ICON[meta.type] ?? 'bar-chart'} style={{ width: '0.875rem', height: '0.875rem', color: '#0064d9' } as React.CSSProperties} />
                                     </div>
                                     <Text style={{ fontSize: 'var(--sapFontSize)' } as React.CSSProperties}>{meta.name}</Text>
                                   </div>
-                                  <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>{meta.type}</Text>
+                                  <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', flexShrink: 0 } as React.CSSProperties}>{meta.type}</Text>
                                 </div>
                               </ListItemCustom>
                             )

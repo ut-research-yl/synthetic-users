@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Button, Dialog, Bar, Title, RadioButton, Table, TableRow, TableCell, TableHeaderRow, TableHeaderCell, Input, Icon, Label, Select, Option, Text, Wizard, WizardStep, IllustratedMessage, List, ListItemCustom, Breadcrumbs, BreadcrumbsItem } from '@ui5/webcomponents-react'
+import { Button, Dialog, Bar, Title, RadioButton, Input, Icon, Label, Select, Option, Text, Wizard, WizardStep, IllustratedMessage, List, ListItemCustom, Breadcrumbs, BreadcrumbsItem } from '@ui5/webcomponents-react'
+import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 
 type PageMap = Record<string, string[]>
 type SectionMap = Record<string, { pages: PageMap }>
@@ -17,7 +18,7 @@ const CWD_DATA: Record<string, CwdProcess> = {
   'Hire to Retire':     { cases: '47k', events: '3m', investigations: 9, dashboards: 10, lastEdited: '06/10/2025', Investigation: { 'HR Analysis': { pages: { Overview: ['ring-I-001','value-I-002'], Flow: ['sankey-I-001'] } }, 'Headcount Analysis': { pages: { Overview: ['treemap-I-003'] } } }, Dashboard: { 'HR Dashboard': { pages: { Overview: ['value-D-002','bar-chart-D-002'], Trends: ['line-I-002'] } }, 'Recruitment KPIs': { pages: { Summary: ['value-I-002'] } } } },
 }
 
-const WIDGET_META: Record<string, { name: string; type: string }> = {
+export const WIDGET_META: Record<string, { name: string; type: string }> = {
   'value-I-001': { name: 'Active Cases', type: 'Value' },
   'value-I-002': { name: 'Avg Onboarding Days', type: 'Value' },
   'value-D-001': { name: 'Total Orders', type: 'Value' },
@@ -50,7 +51,7 @@ const WIDGET_META: Record<string, { name: string; type: string }> = {
   'ring-I-002': { name: 'Completion Rate', type: 'Ring Chart' },
 }
 
-type Props = { open: boolean; onClose: () => void }
+type Props = { open: boolean; onClose: () => void; onAdd?: (widgetId: string, widgetName: string, widgetType: string) => void }
 
 const LINE_DATA = [120, 260, 400, 320, 370, 240]
 const BAR_DATA  = [60, 90, 45, 120, 80, 100, 70]
@@ -153,7 +154,7 @@ function Breadcrumb({ parts }: { parts: string[] }) {
   )
 }
 
-export default function ConnectWidgetDialog({ open, onClose }: Props) {
+export default function ConnectWidgetDialog({ open, onClose, onAdd }: Props) {
   const [step, setStep] = useState(1)
   const [selectedProcess, setSelectedProcess] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<'Investigation' | 'Dashboard' | null>(null)
@@ -177,10 +178,12 @@ export default function ConnectWidgetDialog({ open, onClose }: Props) {
       if (content) content.style.display = 'none'
       wiz.shadowRoot.querySelectorAll('.ui5-wiz-step-root').forEach((el: Element) => {
         (el as HTMLElement).style.paddingInlineEnd = '0';
-        (el as HTMLElement).style.paddingRight = '0'
+        (el as HTMLElement).style.paddingRight = '0';
+        (el as HTMLElement).style.flex = '1';
+        (el as HTMLElement).style.minWidth = '0';
       })
     }, 50)
-  }, [open])
+  }, [open, step])
 
   const reset = () => {
     setStep(1); setSelectedProcess(null); setSelectedType(null)
@@ -202,19 +205,34 @@ export default function ConnectWidgetDialog({ open, onClose }: Props) {
 
   const nextDisabled = step === 1 ? !selectedProcess : step === 2 ? !selectedType : !selectedWidget
 
+  // tree expand state
+  const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({})
+  const toggleSection = (key: string) => setExpandedSections(p => ({ ...p, [key]: !p[key] }))
+
   return (
     <Dialog
       ref={dialogRef}
       open={open}
       onClose={handleClose}
-      style={{ width: '1100px', height: '700px', maxHeight: '700px', '--_ui5_dialog_width': '1100px', '--_ui5_dialog_max_height': '700px', '--_ui5_dialog_min_height': '700px', '--_ui5_dialog_content_padding': '0' } as React.CSSProperties}
-      header={<Bar design="Header"><Title slot="startContent" level="H4">Add Widget to Canvas</Title></Bar>}
+      style={{ width: '900px', height: '560px', maxHeight: '560px', '--_ui5_dialog_width': '900px', '--_ui5_dialog_max_height': '560px', '--_ui5_dialog_min_height': '560px', '--_ui5_dialog_content_padding': '0' } as React.CSSProperties}
+      header={<Bar design="Header"><Title slot="startContent" level="H4">Browse Widgets</Title></Bar>}
       footer={
         <Bar design="Footer">
-          {step > 1 && <Button slot="startContent" design="Transparent" onClick={() => setStep(s => s - 1)}>Back</Button>}
+          {step > 1 && <Button slot="startContent" design="Transparent" onClick={() => { setStep(s => s - 1); if (step === 3) { setSelectedWidget(null) } if (step === 2) { setSelectedType(null); setSelectedSource(''); setSelectedPage(''); setSelectedWidget(null) } }}>Back</Button>}
           <div slot="endContent" style={{ display: 'flex', gap: 8 }}>
-            <Button design="Emphasized" disabled={nextDisabled} onClick={() => step < 3 ? setStep(s => s + 1) : handleClose()}>
-              {step === 3 ? 'Connect' : 'Next'}
+            <Button design="Emphasized" disabled={nextDisabled} onClick={() => {
+              if (step < 3) { setStep(s => s + 1); return }
+              if (selectedWidget) {
+                const meta = WIDGET_META[selectedWidget]
+                const widgetId = selectedWidget
+                const widgetName = meta?.name ?? selectedWidget
+                const widgetType = meta?.type ?? 'Value'
+                onAdd?.(widgetId, widgetName, widgetType)
+                reset()
+                onClose()
+              }
+            }}>
+              {step === 3 ? 'Add to Canvas' : 'Next'}
             </Button>
             <Button design="Transparent" onClick={handleClose}>Cancel</Button>
           </div>
@@ -222,8 +240,9 @@ export default function ConnectWidgetDialog({ open, onClose }: Props) {
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-        <div style={{ overflow: 'hidden', height: 62, flexShrink: 0, borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', boxShadow: '0 2px 4px rgba(34,53,72,0.06)', width: '100%' }}>
+        <div style={{ overflow: 'hidden', height: '3.875rem', flexShrink: 0, borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', boxShadow: '0 2px 4px rgba(34,53,72,0.06)', width: '100%' }}>
           <Wizard
+            ref={wizardRef}
             contentLayout={'SingleStep' as any}
             style={{ width: '100%', minWidth: '100%' } as React.CSSProperties}
             onStepChange={(e: any) => {
@@ -231,91 +250,85 @@ export default function ConnectWidgetDialog({ open, onClose }: Props) {
               if (idx) setStep(Number(idx))
             }}
           >
-            <WizardStep data-step-index="1" titleText="Select Process" selected={step === 1} disabled={false} icon={step > 1 ? 'accept' : undefined}>{' '}</WizardStep>
+            <WizardStep data-step-index="1" titleText="Select Analysis Configuration" selected={step === 1} disabled={false} icon={step > 1 ? 'accept' : undefined}>{' '}</WizardStep>
             <WizardStep data-step-index="2" titleText="Choose Type" selected={step === 2} disabled={step < 2} icon={step > 2 ? 'accept' : undefined}>{' '}</WizardStep>
             <WizardStep data-step-index="3" titleText="Select Widget" selected={step === 3} disabled={step < 3}>{' '}</WizardStep>
           </Wizard>
         </div>
 
-        <div style={{ padding: '1rem 2rem', height: 460, overflowY: 'auto', boxSizing: 'border-box', flex: 1 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 2rem' }}>
 
           {/* ── Step 1: Select Process ── */}
           {step === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div>
-                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: 2 } as React.CSSProperties}>Select Process</Text>
-                <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the process you want to add a widget from</Text>
+                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Analysis Configuration</Text>
+                <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the analysis configuration you want to add a widget from</Text>
               </div>
-              <Input placeholder="Search by process name" type={'Search' as any} value={search}
+              <Input placeholder="Search by analysis configuration name" type={'Search' as any} value={search}
                 onInput={(e: any) => setSearch(e.target.value)} style={{ width: '100%' } as React.CSSProperties}>
                 <Icon slot="icon" name="search" />
               </Input>
-              <Table
-                style={{ width: '100%' } as React.CSSProperties}
-                headerRow={
-                  <TableHeaderRow>
-                    <TableHeaderCell style={{ width: '2rem' } as React.CSSProperties} />
-                    <TableHeaderCell><b>Name</b></TableHeaderCell>
-                    <TableHeaderCell><b>Cases</b></TableHeaderCell>
-                    <TableHeaderCell><b>Events</b></TableHeaderCell>
-                    <TableHeaderCell><b>Last Modified</b></TableHeaderCell>
-                  </TableHeaderRow>
-                }
-              >
+              <div style={{ width: '100%', borderTop: '1px solid var(--sapList_BorderColor)', borderBottom: '1px solid var(--sapList_BorderColor)' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', background: 'var(--sapList_HeaderBackground)', borderBottom: '1px solid var(--sapList_BorderColor)', padding: '0.5rem 0' }}>
+                  <div style={{ width: '2.5rem', flexShrink: 0 }} />
+                  <div style={{ flex: '0 0 40%', minWidth: 0, fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapList_HeaderTextColor)' }}>Name</div>
+                  <div style={{ flex: 1, fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapList_HeaderTextColor)' }}>Cases</div>
+                  <div style={{ flex: 1, fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapList_HeaderTextColor)' }}>Events</div>
+                  <div style={{ width: '9rem', flexShrink: 0, fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapList_HeaderTextColor)', textAlign: 'right', paddingRight: '1rem' }}>Last Updated</div>
+                </div>
                 {filtered.map(([name, data]) => (
-                  <TableRow
+                  <div
                     key={name}
                     onClick={() => setSelectedProcess(name)}
                     style={{
+                      display: 'flex', alignItems: 'center', minHeight: '2.75rem',
+                      borderBottom: '1px solid var(--sapList_BorderColor)',
                       cursor: 'pointer',
-                      background: selectedProcess === name ? 'var(--sapList_SelectionBackgroundColor, #e8f3ff)' : undefined,
-                    } as React.CSSProperties}
-                    onMouseEnter={(e: any) => { if (selectedProcess !== name) e.currentTarget.style.background = 'var(--sapList_Hover_Background, #f5f6f7)' }}
-                    onMouseLeave={(e: any) => { e.currentTarget.style.background = selectedProcess === name ? 'var(--sapList_SelectionBackgroundColor, #e8f3ff)' : '' }}
+                      background: selectedProcess === name ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapList_Background)',
+                    }}
+                    onMouseEnter={e => { if (selectedProcess !== name) (e.currentTarget as HTMLElement).style.background = 'var(--sapList_Hover_Background)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = selectedProcess === name ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapList_Background)' }}
                   >
-                    <TableCell>
+                    <div style={{ width: '2.5rem', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <RadioButton checked={selectedProcess === name} onChange={() => setSelectedProcess(name)} />
-                    </TableCell>
-                    <TableCell><span style={{ whiteSpace: 'nowrap', fontWeight: selectedProcess === name ? 700 : 400 }}>{name}</span></TableCell>
-                    <TableCell>{data.cases}</TableCell>
-                    <TableCell>{data.events}</TableCell>
-                    <TableCell>{data.lastEdited}</TableCell>
-                  </TableRow>
+                    </div>
+                    <div style={{ flex: '0 0 40%', minWidth: 0, fontSize: 'var(--sapFontSize)', fontWeight: selectedProcess === name ? 700 : 400, color: 'var(--sapList_TextColor)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+                    <div style={{ flex: 1, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor)' }}>{data.cases}</div>
+                    <div style={{ flex: 1, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor)' }}>{data.events}</div>
+                    <div style={{ width: '9rem', flexShrink: 0, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor)', textAlign: 'right', paddingRight: '1rem' }}>{data.lastEdited}</div>
+                  </div>
                 ))}
-              </Table>
+              </div>
             </div>
           )}
 
           {/* ── Step 2: Choose Type ── */}
           {step === 2 && selectedProcess && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <Breadcrumb parts={['Process', selectedProcess]} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ marginBottom: '-0.75rem' }}>
+                <Breadcrumb parts={['Analysis Configuration', selectedProcess]} style={{ marginBottom: 0 } as React.CSSProperties} />
+              </div>
               <div>
-                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: 2 } as React.CSSProperties}>Select Widget Source</Text>
+                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Widget Source</Text>
                 <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Choose whether to add a widget from an Investigation or a Dashboard</Text>
               </div>
-              <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                 {(['Investigation', 'Dashboard'] as const).map(type => {
                   const sections = procData?.[type]
                   if (!sections) return null
                   const isSelected = selectedType === type
                   return (
                     <div key={type} onClick={() => setSelectedType(type)} style={{
-                      flex: 1, padding: '1.25rem', borderRadius: 8, cursor: 'pointer',
-                      border: `1px solid ${isSelected ? 'var(--sapHighlightColor, #0064d9)' : 'var(--sapPageHeader_BorderColor, #d9d9d9)'}`,
-                      background: isSelected ? 'var(--sapList_SelectionBackgroundColor, #e8f3ff)' : 'var(--sapBaseColor, #fff)',
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      boxShadow: isSelected ? `0 0 0 1px var(--sapHighlightColor, #0064d9)` : undefined,
+                      flex: 1, padding: '1.25rem', borderRadius: '0.5rem', cursor: 'pointer',
+                      border: `1px solid ${isSelected ? 'var(--sapHighlightColor)' : 'var(--sapPageHeader_BorderColor, #d9d9d9)'}`,
+                      background: isSelected ? 'var(--sapList_SelectionBackgroundColor, #e8f3ff)' : '#fff',
+                      display: 'flex', alignItems: 'center', gap: '0.75rem',
+                      boxShadow: isSelected ? '0 0 0 1px var(--sapHighlightColor)' : undefined,
                     }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                        background: 'var(--sapAvatar_6_Background, #d1efff)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Icon
-                          name={type === 'Investigation' ? 'SAP-icons-v5/business-objects-experience' : 'SAP-icons-v5/business-objects-mobile'}
-                          style={{ width: 20, height: 20, color: '#0057d2' } as React.CSSProperties}
-                        />
+                      <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name={type === 'Investigation' ? 'SAP-icons-v5/business-objects-experience' : 'SAP-icons-v5/business-objects-mobile'} style={{ width: '1.25rem', height: '1.25rem', color: '#0057d2' } as React.CSSProperties} />
                       </div>
                       <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', flex: 1 } as React.CSSProperties}>{type}s</Text>
                       <RadioButton checked={isSelected} onChange={() => setSelectedType(type)} />
@@ -328,117 +341,100 @@ export default function ConnectWidgetDialog({ open, onClose }: Props) {
 
           {/* ── Step 3: Select Widget ── */}
           {step === 3 && selectedProcess && selectedType && (
-            <div style={{ display: 'flex', gap: 16, height: '100%' }}>
-              {/* Left: selectors + list */}
-              <div style={{ flex: '0 0 420px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <Breadcrumb parts={['Process', selectedProcess, selectedType]} />
+            <div style={{ display: 'flex', gap: '1rem', height: '100%' }}>
+              {/* Left: selectors + widget list */}
+              <div style={{ flex: '0 0 45%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ marginBottom: '-0.75rem' }}>
+                  <Breadcrumb parts={['Analysis Configuration', selectedProcess, selectedType + 's']} style={{ marginBottom: 0 } as React.CSSProperties} />
+                </div>
 
                 <div>
-                  <Label required style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: 4 } as React.CSSProperties}>
-                    {`1. Select ${selectedType}:`}
+                  <Label required style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.25rem' } as React.CSSProperties}>
+                    1. Select {selectedType}:
                   </Label>
                   <Select style={{ width: '100%' } as React.CSSProperties}
                     onChange={(e: any) => { setSelectedSource(e.detail?.selectedOption?.value ?? ''); setSelectedPage(''); setSelectedWidget(null) }}>
                     <Option value="">Select</Option>
-                    {sources.map(s => <Option key={s} value={s}>{s}</Option>)}
+                    {selectedType && procData?.[selectedType] && Object.keys(procData[selectedType]!).map(s => (
+                      <Option key={s} value={s} selected={selectedSource === s}>{s}</Option>
+                    ))}
                   </Select>
                 </div>
 
                 <div>
-                  <Label required style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: 4 } as React.CSSProperties}>
+                  <Label required style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.25rem' } as React.CSSProperties}>
                     2. Select Page:
                   </Label>
                   <Select style={{ width: '100%' } as React.CSSProperties} disabled={!selectedSource}
                     onChange={(e: any) => { setSelectedPage(e.detail?.selectedOption?.value ?? ''); setSelectedWidget(null) }}>
                     <Option value="">Select</Option>
-                    {pages.map(p => <Option key={p} value={p}>{p}</Option>)}
+                    {selectedType && selectedSource && procData?.[selectedType]?.[selectedSource] && Object.keys(procData[selectedType]![selectedSource].pages).map(p => (
+                      <Option key={p} value={p} selected={selectedPage === p}>{p}</Option>
+                    ))}
                   </Select>
                 </div>
 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Label required style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: 4 } as React.CSSProperties}>
+                {/* Widget list */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.375rem', overflowY: 'auto' }}>
+                  <Label required style={{ color: 'var(--sapContent_LabelColor)', display: 'block', marginBottom: '0.25rem' } as React.CSSProperties}>
                     3. Select Widget:
                   </Label>
-                  <Input placeholder="Search for widget name" type={'Search' as any}
-                    style={{ width: '100%' } as React.CSSProperties} disabled={!selectedPage}>
-                    <Icon slot="icon" name="search" />
-                  </Input>
-                  <div style={{ flex: 1, overflow: 'auto', marginTop: 4 }}>
-                    {!selectedPage && (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 24, color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)', textAlign: 'center' }}>
-                        Select a {selectedType?.toLowerCase()} and page to see available widgets
-                      </div>
-                    )}
-                    {selectedPage && (
-                      <List
-                        selectionMode="SingleStart"
-                        onSelectionChange={(e: any) => {
-                          const item = e.detail?.selectedItems?.[0]
-                          if (item) setSelectedWidget(item.dataset.id)
-                        }}
-                      >
-                        {widgetIds.map(id => {
-                          const meta = WIDGET_META[id]
-                          if (!meta) return null
-                          const iconName =
-                            meta.type === 'Value' ? 'SAP-icons-v4/number'
-                            : meta.type === 'Bar Chart' ? 'bar-chart'
-                            : meta.type === 'Line Chart' ? 'line-chart'
-                            : meta.type === 'Area Chart' ? 'area-chart'
-                            : meta.type === 'Dual Axis Chart' ? 'line-chart-dual-axis'
-                            : meta.type === 'Pie Chart' ? 'pie-chart'
-                            : meta.type === 'Treemap' ? 'Chart-Tree-Map'
-                            : meta.type === 'Heat Map' ? 'heatmap-chart'
-                            : meta.type === 'Sankey Chart' ? 'SAP-icons-v4/graph-sankey'
-                            : meta.type === 'Histogram' ? 'SAP-icons-v4/graph-histogram'
-                            : meta.type === 'Ring Chart' ? 'donut-chart'
-                            : 'overview-chart'
-                          return (
-                            <ListItemCustom key={id} data-id={id} selected={selectedWidget === id}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '4px 0' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <div style={{ width: 28, height: 28, borderRadius: 6, background: '#d1efff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <Icon name={iconName} style={{ width: 14, height: 14, color: '#0064d9' } as React.CSSProperties} />
-                                  </div>
-                                  <Text style={{ fontSize: 'var(--sapFontSize)' } as React.CSSProperties}>{meta.name}</Text>
+                  {!selectedPage ? (
+                    <div style={{ padding: '1.5rem 0', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)', textAlign: 'center' }}>
+                      Select a {selectedType?.toLowerCase() ?? 'type'} and page first
+                    </div>
+                  ) : (
+                    <List separators="Inner" className="widget-list">
+                      {((selectedType && selectedSource && selectedPage && procData?.[selectedType]?.[selectedSource]?.pages[selectedPage]) ?? []).map(id => {
+                        const meta = WIDGET_META[id]
+                        if (!meta) return null
+                        const iconName =
+                          meta.type === 'Value' ? 'SAP-icons-v4/number'
+                          : meta.type === 'Bar Chart' ? 'bar-chart'
+                          : meta.type === 'Line Chart' ? 'line-chart'
+                          : meta.type === 'Area Chart' ? 'area-chart'
+                          : meta.type === 'Dual Axis Chart' ? 'line-chart-dual-axis'
+                          : meta.type === 'Pie Chart' ? 'pie-chart'
+                          : meta.type === 'Treemap' ? 'Chart-Tree-Map'
+                          : meta.type === 'Heat Map' ? 'heatmap-chart'
+                          : meta.type === 'Sankey Chart' ? 'SAP-icons-v4/graph-sankey'
+                          : meta.type === 'Histogram' ? 'SAP-icons-v4/graph-histogram'
+                          : meta.type === 'Ring Chart' ? 'donut-chart'
+                          : 'overview-chart'
+                        const isSelected = selectedWidget === id
+                        return (
+                          <ListItemCustom key={id} type="Active" style={{ background: isSelected ? 'var(--sapList_SelectionBackgroundColor)' : undefined, padding: 0 }} onClick={() => setSelectedWidget(id)}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0.25rem 0.5rem 0.25rem 0' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <RadioButton checked={isSelected} onChange={() => setSelectedWidget(id)} style={{ pointerEvents: 'none' } as React.CSSProperties} />
+                                <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '0.375rem', background: '#d1efff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Icon name={iconName} style={{ width: '0.875rem', height: '0.875rem', color: '#0064d9' } as React.CSSProperties} />
                                 </div>
-                                <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>{meta.type}</Text>
+                                <Text style={{ fontSize: 'var(--sapFontSize)' } as React.CSSProperties}>{meta.name}</Text>
                               </div>
-                            </ListItemCustom>
-                          )
-                        })}
-                      </List>
-                    )}
-                  </div>
+                              <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', flexShrink: 0 } as React.CSSProperties}>{meta.type}</Text>
+                            </div>
+                          </ListItemCustom>
+                        )
+                      })}
+                    </List>
+                  )}
                 </div>
               </div>
 
               {/* Right: preview */}
-              <div style={{
-                flex: 1, borderRadius: 8, background: 'var(--sapPageSection_Background, #f8f9fa)',
-                display: 'flex', flexDirection: 'column',
-                padding: '1.5rem', gap: 8,
-              }}>
+              <div style={{ flex: 1, borderRadius: '0.5rem', background: 'var(--sapPageSection_Background, #f5f6f7)', display: 'flex', flexDirection: 'column', padding: '1.5rem', gap: '0.5rem' }}>
                 {!selectedWidget ? (
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <IllustratedMessage
-                      name="NoEntries"
-                      titleText="No widget selected"
-                      subtitleText="Select a widget from the list to preview it"
-                    />
+                    <IllustratedMessage name="NoEntries" titleText="No widget selected" subtitleText="Select a widget from the list to preview it" />
                   </div>
                 ) : (
                   <>
-                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block' } as React.CSSProperties}>
-                      {WIDGET_META[selectedWidget]?.name}
-                    </Text>
+                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block' } as React.CSSProperties}>{WIDGET_META[selectedWidget]?.name}</Text>
                     <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)', display: 'block', marginBottom: '0.5rem' } as React.CSSProperties}>
                       {selectedProcess} / {selectedSource} / {selectedPage}
                     </Text>
-                    <div style={{
-                      background: '#fff', borderRadius: 12, border: '1px solid var(--sapPageHeader_BorderColor, #e5e5e5)',
-                      padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    }}>
+                    <div style={{ background: '#fff', borderRadius: '0.75rem', border: '1px solid var(--sapPageHeader_BorderColor, #e5e5e5)', padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                       <PreviewChart type={WIDGET_META[selectedWidget]?.type ?? 'Bar Chart'} />
                     </div>
                   </>

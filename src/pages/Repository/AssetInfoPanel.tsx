@@ -271,7 +271,7 @@ function ModelAttributesTab({ description }: { description?: string }) {
 
   const labelStyle: React.CSSProperties = { fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block', marginBottom: '4px' }
   const attrRow: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px 0' }
-  const listItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 16px', background: 'var(--sapList_Background)' }
+  const listItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', background: 'var(--sapList_Background)' }
   const boldText: React.CSSProperties = { fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }
   const subText: React.CSSProperties = { fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }
 

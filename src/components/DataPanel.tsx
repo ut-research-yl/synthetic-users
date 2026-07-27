@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button, Icon, Input, MessageStrip, Text, Menu, MenuItem, SplitButton } from '@ui5/webcomponents-react'
+import { Button, Icon, Input, MessageStrip, Text, Menu, MenuItem, Popover, List, ListItemStandard } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 import ConnectWidgetDialog from './ConnectWidgetDialog'
 import AddExternalWidgetDialog from './AddExternalWidgetDialog'
@@ -69,11 +69,11 @@ const CWD_DATA: Record<string, ProcessData> = {
 
 // ── Widget types ──────────────────────────────────────────────────────────────
 
-type WidgetType = 'Value' | 'Bar Chart' | 'Line Chart' | 'Area Chart' | 'Dual Axis Chart' | 'Pie Chart' | 'Treemap' | 'Heat Map' | 'Sankey Chart' | 'Histogram'
+export type WidgetType = 'Value' | 'Bar Chart' | 'Line Chart' | 'Area Chart' | 'Dual Axis Chart' | 'Pie Chart' | 'Treemap' | 'Heat Map' | 'Sankey Chart' | 'Histogram'
 
-type Widget = { id: string; name: string; type: WidgetType; process?: string; source?: string }
+export type Widget = { id: string; name: string; type: WidgetType; process?: string; source?: string }
 
-type ExternalWidget = { id: string; name: string; source: string; url: string; shapeType?: string }
+export type ExternalWidget = { id: string; name: string; source: string; url: string; shapeType?: string }
 
 const WIDGETS: Widget[] = [
   { id: 'value-I-001',     name: 'Active Cases',              type: 'Value',           process: 'Order to Cash',  source: 'O2C Performance' },
@@ -157,9 +157,9 @@ const EXTERNAL_WIDGETS: ExternalWidget[] = [
 
 // ── Widget card ───────────────────────────────────────────────────────────────
 
-function WidgetCard({ widget }: { widget: Widget }) {
+function WidgetCard({ widget, onSelect }: { widget: Widget; onSelect?: () => void }) {
   return (
-    <div className={s.card} draggable onDragStart={(e: React.DragEvent) => {
+    <div className={s.card} draggable onClick={onSelect} style={{ cursor: 'pointer' }} onDragStart={(e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', widget.id)
         e.dataTransfer.setData('application/di-widget', widget.id)
         e.dataTransfer.setData('application/di-widget-name', widget.name)
@@ -172,7 +172,7 @@ function WidgetCard({ widget }: { widget: Widget }) {
           <Text style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: '700', color: 'var(--sapTextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {widget.name}
           </Text>
-          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Process Intelligence"
+          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Analysis Configuration"
             style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties}
             onClick={(e: React.MouseEvent) => e.stopPropagation()} />
         </div>
@@ -188,9 +188,9 @@ function WidgetCard({ widget }: { widget: Widget }) {
 
 // ── External Widget card ──────────────────────────────────────────────────────
 
-function ExternalWidgetCard({ widget }: { widget: ExternalWidget }) {
+function ExternalWidgetCard({ widget, onSelect }: { widget: ExternalWidget; onSelect?: () => void }) {
   return (
-    <div className={s.card} draggable onDragStart={(e: React.DragEvent) => {
+    <div className={s.card} draggable onClick={onSelect} style={{ cursor: 'pointer' }} onDragStart={(e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', widget.id)
         e.dataTransfer.setData('application/di-widget', widget.id)
         e.dataTransfer.setData('application/di-widget-name', widget.name)
@@ -227,9 +227,9 @@ type LocationState = {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-type Props = { onClose: () => void }
+type Props = { onClose: () => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onAddFromBrowse?: (widgetId: string, widgetName: string, widgetType: string) => void }
 
-export default function DataPanel({ onClose }: Props) {
+export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: Props) {
   const [query, setQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [selectedSource, setSelectedSource] = useState<string | null>(null)
@@ -238,11 +238,13 @@ export default function DataPanel({ onClose }: Props) {
   const [locationOpen, setLocationOpen] = useState(false)
   const [connectOpen, setConnectOpen] = useState(false)
   const [addExternalOpen, setAddExternalOpen] = useState(false)
+  const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'last-edited' | 'recently-added'>('name-asc')
   const [externalWidgets, setExternalWidgets] = useState<ExternalWidget[]>(EXTERNAL_WIDGETS)
 
   const typeMenuRef = useRef<any>(null)
   const sourceMenuRef = useRef<any>(null)
   const locationBtnRef = useRef<any>(null)
+  const sortMenuRef = useRef<any>(null)
 
   // derive available sections and pages from location state
   const processData = location.process ? CWD_DATA[location.process] : null
@@ -260,7 +262,7 @@ export default function DataPanel({ onClose }: Props) {
     ? `${location.process} › ${location.section}`
     : location.type
     ? `${location.process} › ${location.type}`
-    : location.process ?? 'Location'
+    : location.process ?? 'Process'
 
   const filtered = WIDGETS.filter(w => {
     if (selectedSource === 'External Widget') return false
@@ -272,7 +274,7 @@ export default function DataPanel({ onClose }: Props) {
   })
 
   const filteredExternal = externalWidgets.filter(w => {
-    if (selectedSource === 'Process Intelligence') return false
+    if (selectedSource === 'Analysis Configuration') return false
     if (selectedType) return false
     if (pageWidgetIds) return false
     if (!query) return true
@@ -282,44 +284,38 @@ export default function DataPanel({ onClose }: Props) {
 
   const totalCount = filtered.length + filteredExternal.length
 
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (sortOrder === 'name-asc') return a.name.localeCompare(b.name)
+    if (sortOrder === 'name-desc') return b.name.localeCompare(a.name)
+    if (sortOrder === 'recently-added') return WIDGETS.indexOf(b) - WIDGETS.indexOf(a)
+    return 0 // last-edited: keep original order
+  })
+
   const hasFilters = !!selectedType || !!selectedSource || !!location.process
 
   const addMenuRef = useRef<any>(null)
 
   return (
     <div className={s.panel}>
-      <div className={s.header}>
+      <div className={s.header} style={{ gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader5Size)', color: 'var(--sapTextColor)', whiteSpace: 'nowrap' }}>
             Data Integration
           </Text>
-          <SplitButton
-            id="data-add-btn"
-            design="Default"
-            onArrowClick={() => {
-              if (addMenuRef.current) {
-                addMenuRef.current.opener = 'data-add-btn'
-                addMenuRef.current.open = true
-              }
-            }}
-          >Add</SplitButton>
-          {createPortal(
-            <Menu ref={addMenuRef} onItemClick={(e: any) => {
-              if (e.detail?.text === 'Add Manually') setConnectOpen(true)
-              if (e.detail?.text === 'Add External Widget') setAddExternalOpen(true)
-            }}>
-              <MenuItem text="Add External Widget" icon="add" />
-              <MenuItem text="Add Manually" icon="edit" />
-            </Menu>,
-            document.body
-          )}
-          <ConnectWidgetDialog open={connectOpen} onClose={() => setConnectOpen(false)} />
-          <AddExternalWidgetDialog
-            open={addExternalOpen}
-            onClose={() => setAddExternalOpen(false)}
-            onSave={w => setExternalWidgets(prev => [...prev, w])}
-          />
         </div>
+        {/* Add External Widget button next to X */}
+        <Button
+          design="Default"
+          icon="add"
+          onClick={() => setAddExternalOpen(true)}
+          style={{ flexShrink: 0 } as React.CSSProperties}
+        >Add External Widget</Button>
+        <ConnectWidgetDialog open={connectOpen} onClose={() => setConnectOpen(false)} onAdd={onAddFromBrowse} />
+        <AddExternalWidgetDialog
+          open={addExternalOpen}
+          onClose={() => setAddExternalOpen(false)}
+          onSave={w => setExternalWidgets(prev => [...prev, w])}
+        />
         <Button icon="decline" design="Transparent" className={s.closeBtn} tooltip="Close"
           style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', flexShrink: 0 } as React.CSSProperties}
           onClick={onClose} />
@@ -328,7 +324,7 @@ export default function DataPanel({ onClose }: Props) {
       <div className={s.body}>
         {infoVisible && (
           <MessageStrip className={s.messageStrip} design="Information" hideCloseButton={false} onClose={() => setInfoVisible(false)}>
-            Drag widgets onto a Task or IT System to attach data, or onto empty canvas to create a Live Insights shape.
+            Drag widgets onto the canvas to add them directly, or drop them onto an existing element to connect it to live data.
           </MessageStrip>
         )}
 
@@ -390,8 +386,20 @@ export default function DataPanel({ onClose }: Props) {
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapTextColor)' }}>
             {hasFilters || query ? 'Result' : 'All'} ({totalCount})
           </Text>
-          <Button icon="sort" design="Transparent"
-            style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Button id="data-browse-btn" icon="browse-folder" design="Transparent" tooltip="Browse"
+              style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties}
+              onClick={() => setConnectOpen(true)}
+            />
+            <Button id="data-sort-btn" icon="sort" design="Transparent"
+              style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties}
+              onClick={() => {
+                if (sortMenuRef.current) {
+                  sortMenuRef.current.opener = 'data-sort-btn'
+                  sortMenuRef.current.open = !sortMenuRef.current.open
+                }
+              }} />
+          </div>
         </div>
 
         {/* Widget list */}
@@ -399,8 +407,8 @@ export default function DataPanel({ onClose }: Props) {
           {totalCount === 0
             ? <div className={s.empty}><Text style={{ color: 'var(--sapContent_LabelColor)' }}>No results found</Text></div>
             : <>
-                {filtered.map(w => <WidgetCard key={w.id} widget={w} />)}
-                {filteredExternal.map(w => <ExternalWidgetCard key={w.id} widget={w} />)}
+                {sortedFiltered.map(w => <WidgetCard key={w.id} widget={w} onSelect={() => onWidgetSelect?.(w)} />)}
+                {filteredExternal.map(w => <ExternalWidgetCard key={w.id} widget={w} onSelect={() => onWidgetSelect?.(w)} />)}
               </>
           }
         </div>
@@ -472,9 +480,31 @@ export default function DataPanel({ onClose }: Props) {
           setSelectedSource(txt === 'All' ? null : txt)
         }}>
           <MenuItem text="All" />
-          <MenuItem text="Process Intelligence" />
+          <MenuItem text="Analysis Configuration" />
           <MenuItem text="External Widget" />
         </Menu>,
+        document.body
+      )}
+
+      {createPortal(
+        <Popover ref={sortMenuRef} placement="Bottom" horizontalAlign="End" className="no-padding-popover"
+          onClose={() => {}}>
+          <List onItemClick={(e: any) => {
+            const key = e.detail?.item?.dataset?.sort
+            if (key) { setSortOrder(key); sortMenuRef.current.open = false }
+          }}>
+            {(['name-asc', 'name-desc', 'last-edited', 'recently-added'] as const).map((key, _, arr) => {
+              const labels: Record<string, string> = { 'name-asc': 'Name (A–Z)', 'name-desc': 'Name (Z–A)', 'last-edited': 'Last edited', 'recently-added': 'Recently added' }
+              return (
+                <ListItemStandard key={key} data-sort={key}
+                  selected={sortOrder === key}
+                  style={{ fontWeight: sortOrder === key ? '700' : undefined }}>
+                  {labels[key]}
+                </ListItemStandard>
+              )
+            })}
+          </List>
+        </Popover>,
         document.body
       )}
 

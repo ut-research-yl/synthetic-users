@@ -1,20 +1,25 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Text, Menu, MenuItem, MenuSeparator, SplitButton, Dialog, Bar, Input, Toast } from '@ui5/webcomponents-react'
+import { Button, Icon, Text, Menu, MenuItem, MenuSeparator, SplitButton, Dialog, Bar, Input, ToggleButton, Toast } from '@ui5/webcomponents-react'
 import { createPortal } from 'react-dom'
-import { SigChipV2, SigDomainObject } from '@signavio/sap-signavio-uixtension'
+import { SigChipV2, SigDomainObject, SigInlineEdit } from '@signavio/sap-signavio-uixtension'
 import { useNavigate } from 'react-router-dom'
 import '@ui5/webcomponents-icons/dist/chain-link.js'
 import bpmnModelImg from '../assets/bpmn-model.svg'
 import { CollaborativeCursors, type Collaborator } from '../components/CollaborativeCursors'
 import { PresenceAvatarGroup, type PresenceUser } from '../components/PresenceAvatarGroup'
 import DictionaryPanel from '../components/DictionaryPanel'
+import DictionarySuggestionPopup from '../components/DictionarySuggestionPopup'
 import DataPanel from '../components/DataPanel'
+import type { Widget, ExternalWidget } from '../components/DataPanel'
+import { LinkedDictPopup, UnlinkedDictPopup, getDictName, DICT_DATA } from '../components/DictionaryLinkPopup'
+import NewDiagramOverlay from '../components/NewDiagramOverlay'
 import ElementsPanel from '../components/ElementsPanel'
 import MoreElementsPanel from '../components/MoreElementsPanel'
 import {
   ELEMENT_GEOMETRY,
   CONNECTIONS,
   elementData as INITIAL_ELEMENT_DATA,
+  dictionaryItems,
   type ElementData,
   type ElementGeometry,
   type Connection,
@@ -23,7 +28,7 @@ import s from './ModelerApp.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; panelOffset?: number }
+type Props = { assetId?: string; onTogglePanel?: () => void; onElementSelect?: (id: string | null, hasLinkedDict?: boolean, dictId?: string) => void; onLiShapeSelect?: (shape: LiShape | null) => void; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void; onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void; onSelectElementById?: (fn: (id: string) => void) => void; onRegisterSelectLiShapeById?: (fn: (id: string) => void) => void; onRegisterLinkDictToElement?: (fn: (elementId: string, dictId: string, dictName: string) => void) => void; onLiShapesChange?: (shapes: LiShape[]) => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onOpenDictPanel?: () => void; onDictItemSelect?: (item: any) => void; onAddBrowseWidget?: (widgetId: string, widgetName: string, widgetType: string) => void; panelOffset?: number }
 
 type SaveState = 'draft' | 'saved' | 'saving' | 'offline' | 'error'
 
@@ -121,13 +126,17 @@ function getConnectionPoints(
 
   const scx = sg.cx, scy = sg.cy
   const tcx = tg.cx, tcy = tg.cy
+  const dx = tcx - scx, dy = tcy - scy
 
-  if (conn.dir === 'h') {
-    return { x1: scx + sg.hw, y1: scy, x2: tcx - tg.hw, y2: tcy }
-  } else if (conn.dir === 'v') {
-    return { x1: scx, y1: scy + sg.hh, x2: tcx, y2: tcy - tg.hh }
-  } else { // vu
-    return { x1: scx, y1: scy - sg.hh, x2: tcx, y2: tcy + tg.hh }
+  // Dynamic: pick the closest pair of edges based on relative position
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    // horizontal dominant
+    if (dx >= 0) return { x1: scx + sg.hw, y1: scy, x2: tcx - tg.hw, y2: tcy, dir: 'h' as const }
+    else         return { x1: scx - sg.hw, y1: scy, x2: tcx + tg.hw, y2: tcy, dir: 'h' as const }
+  } else {
+    // vertical dominant
+    if (dy >= 0) return { x1: scx, y1: scy + sg.hh, x2: tcx, y2: tcy - tg.hh, dir: 'v' as const }
+    else         return { x1: scx, y1: scy - sg.hh, x2: tcx, y2: tcy + tg.hh, dir: 'vu' as const }
   }
 }
 
@@ -296,17 +305,17 @@ function GatewayShape({ el, selected, hovered, ringW }: { el: CanvasElement; sel
   )
 }
 
-function EventShape({ el, selected, hovered, ringW }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number }) {
+function EventShape({ el, selected, hovered, ringW, aiPreview }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; aiPreview?: boolean }) {
   const isStart = el.subtype?.includes('Start')
   const isSuccess = el.id === 'el-end4'
-  const r = el.hw  // outer radius
+  const r = el.hw
   const { cx, cy } = el
 
   if (isStart) {
     const subtype = el.subtype ?? 'Start'
     const s = r / 16
-    const bg = 'var(--sapAvatar_8_Background)'
-    const ic = 'var(--sapAccentColor8)'
+    const bg = aiPreview ? '#e8f3ff' : 'var(--sapAvatar_8_Background)'
+    const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAccentColor8)'
     const selectionEl = <rect x={cx - r - 1.5} y={cy - r - 1.5} width={(r + 1.5) * 2} height={(r + 1.5) * 2} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
     const outerCircle = (dashed = false) => dashed
@@ -537,8 +546,8 @@ function EventShape({ el, selected, hovered, ringW }: { el: CanvasElement; selec
   // End events — sapAccentColor3b bg, sapAccentColor2 icon, thick outer circle
   const sub = el.subtype ?? 'End'
   const s = r / 16
-  const bg = 'var(--sapAccentBackgroundColor3)'
-  const ic = 'var(--sapAccentColor2)'
+  const bg = aiPreview ? '#e8f3ff' : 'var(--sapAccentBackgroundColor3)'
+  const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAccentColor2)'
   const selectionEl = <rect x={cx - r - 1.5} y={cy - r - 1.5} width={(r + 1.5) * 2} height={(r + 1.5) * 2} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
   const endIcon = () => {
@@ -611,11 +620,11 @@ function SystemShape({ el, selected, hovered, ringW, editing }: { el: CanvasElem
 }
 
 // Data Object / Data Store / IT System shapes — circular bg with icon inside
-function DataObjectShape({ el, selected, hovered, ringW }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number }) {
+function DataObjectShape({ el, selected, hovered, ringW, aiPreview }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; aiPreview?: boolean }) {
   const { cx, cy } = el
   const r = el.hw
-  const bg = 'var(--sapAvatar_6_Background)'
-  const ic = 'var(--sapAvatar_6_TextColor)'
+  const bg = aiPreview ? '#e8f3ff' : 'var(--sapAvatar_6_Background)'
+  const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAvatar_6_TextColor)'
   const selectionEl = <rect x={cx - r - 1.5} y={cy - r - 1.5} width={(r + 1.5) * 2} height={(r + 1.5) * 2} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
   if (el.subtype === 'DataStore') {
@@ -939,11 +948,11 @@ function LiShapeComp({ shape, editing = false }: { shape: LiShape; editing?: boo
 
 // ── LI connector line ─────────────────────────────────────────────────────────
 
-function ArtifactShape({ el, selected, hovered, ringW, editing }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; editing?: boolean }) {
+function ArtifactShape({ el, selected, hovered, ringW, editing, aiPreview }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; editing?: boolean; aiPreview?: boolean }) {
   const { cx, cy } = el
   const w = el.hw * 2, h = el.hh * 2
   const x = cx - el.hw, y = cy - el.hh
-  const tc = 'var(--sapTextColor)'
+  const tc = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapTextColor)'
   const selectionEl = <rect x={x - ringW / 2 - 0.5} y={y - ringW / 2 - 0.5} width={w + ringW + 1} height={h + ringW + 1} rx={0} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={ringW} />
 
   if (el.subtype === 'Group') {
@@ -970,8 +979,8 @@ function ArtifactShape({ el, selected, hovered, ringW, editing }: { el: CanvasEl
   }
 
   if (el.subtype === 'ITSystem') {
-    const bg = 'var(--sapAvatar_6_Background)'
-    const ic = 'var(--sapAvatar_6_TextColor)'
+    const bg = aiPreview ? '#e8f3ff' : 'var(--sapAvatar_6_Background)'
+    const ic = aiPreview ? 'var(--sapHighlightColor)' : 'var(--sapAvatar_6_TextColor)'
     const r = el.hw  // 28.5
     const scale = 0.98
     const pillW = Math.max(el.name.length * 6.2 + 16, 60)
@@ -1034,6 +1043,7 @@ function BpmnCanvas({
   onClose,
   dictOpen,
   onToggleDict,
+  dictInitialQuery,
   onTogglePanel,
   onToggleData,
   shapesOpen,
@@ -1042,8 +1052,16 @@ function BpmnCanvas({
   onLiShapeSelect,
   onLiShapeUpdate,
   onRegisterLiShapeUpdater,
+  onRegisterAddLiShape,
+  onRegisterSelectLiShapeById,
+  onRegisterLinkDictToElement,
   onSelectElementById,
   onLiShapesChange,
+  onWidgetSelect,
+  onOpenDictPanel,
+  onDictItemSelect,
+  onExploreDict,
+  onAddBrowseWidget,
   panelOffset = 0,
 }: {
   assetName: string
@@ -1052,19 +1070,29 @@ function BpmnCanvas({
   onClose: () => void
   dictOpen: boolean
   onToggleDict: () => void
+  dictInitialQuery?: string
   onTogglePanel?: () => void
   onToggleData?: () => void
   shapesOpen?: boolean
   onToggleShapes?: () => void
-  onElementSelect?: (id: string | null) => void
+  onElementSelect?: (id: string | null, hasLinkedDict?: boolean, dictId?: string) => void
   onLiShapeSelect?: (shape: LiShape | null) => void
   onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void
   onRegisterLiShapeUpdater?: (fn: (id: string, changes: Partial<LiShape>) => void) => void
+  onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void
+  onRegisterSelectLiShapeById?: (fn: (id: string) => void) => void
+  onRegisterLinkDictToElement?: (fn: (elementId: string, dictId: string, dictName: string) => void) => void
   onSelectElementById?: (fn: (id: string) => void) => void
   onLiShapesChange?: (shapes: LiShape[]) => void
+  onWidgetSelect?: (widget: Widget | ExternalWidget) => void
+  onOpenDictPanel?: () => void
+  onDictItemSelect?: (item: any) => void
+  onExploreDict?: (query: string) => void
+  onAddBrowseWidget?: (widgetId: string, widgetName: string, widgetType: string) => void
   panelOffset?: number
 }) {
   const [lang, setLang] = useState('ENG')
+  const [editableTitle, setEditableTitle] = useState(assetName)
   const [saveState, setSaveState] = useState<SaveState>('saved')
   const [shareOpen, setShareOpen] = useState(false)
   const [toastOpen, setToastOpen] = useState(false)
@@ -1100,6 +1128,7 @@ function BpmnCanvas({
         name: '',
       } as CanvasElement]
     }
+    if (assetId === 'new') return []
     return buildInitialElements()
   })
   const [liShapes, setLiShapes] = useState<LiShape[]>([])
@@ -1110,10 +1139,23 @@ function BpmnCanvas({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingLiId, setEditingLiId] = useState<string | null>(null)
   const [editingLiLabel, setEditingLiLabel] = useState('')
+  const [suggestionQuery, setSuggestionQuery] = useState('')
+  const [suggestionPos, setSuggestionPos] = useState<{ x: number; y: number } | null>(null)
+  const suppressSuggestionClose = useRef(false)
+  const suggestionMenuOpen = useRef(false)
   const [isDragging, setIsDragging] = useState(false)
   const [connHover, setConnHover] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [fontSizeMenuOpen, setFontSizeMenuOpen] = useState(false)
+  const [selectedFontSize, setSelectedFontSize] = useState(48)
+  const [dictPopup, setDictPopup] = useState<{ elId: string; rect: DOMRect } | null>(null)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [overlayDismissed, setOverlayDismissed] = useState(false)
+  const [isAiPreview, setIsAiPreview] = useState(false)
+  const [dictHoveredId, setDictHoveredId] = useState<string | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [dropInvalidId, setDropInvalidId] = useState<string | null>(null)
+  const [liDragOverBpmnId, setLiDragOverBpmnId] = useState<string | null>(null)
 
   // Undo/Redo history
   const [history, setHistory] = useState<{ elements: CanvasElement[]; liShapes: LiShape[] }[]>([])
@@ -1130,6 +1172,30 @@ function BpmnCanvas({
   useEffect(() => {
     onRegisterLiShapeUpdater?.(handleLiShapeUpdate)
   }, [handleLiShapeUpdate, onRegisterLiShapeUpdater])
+
+  useEffect(() => {
+    onRegisterAddLiShape?.((shape: LiShape) => {
+      setLiShapes(ls => [...ls, shape])
+      setToastMsg(`"${shape.widgetName}" added to canvas`)
+    })
+  }, [onRegisterAddLiShape])
+
+  useEffect(() => {
+    onRegisterSelectLiShapeById?.((id: string) => {
+      const shape = liShapesRef.current.find(s => s.id === id)
+      if (shape) {
+        setSelectedIds(new Set([id]))
+        onLiShapeSelect?.(shape)
+      }
+    })
+  }, [onRegisterSelectLiShapeById])
+
+  useEffect(() => {
+    onRegisterLinkDictToElement?.((elementId: string, dictId: string, dictName: string) => {
+      setElements(els => els.map(el => el.id === elementId ? { ...el, linkedDictId: dictId, linkedDictName: dictName } : el))
+      setToastMsg(`"${dictName}" linked`)
+    })
+  }, [onRegisterLinkDictToElement])
 
   useEffect(() => {
     onLiShapesChange?.(liShapes)
@@ -1175,6 +1241,7 @@ function BpmnCanvas({
   const panYRef = useRef(panY)
   useEffect(() => { panXRef.current = panX }, [panX])
   useEffect(() => { panYRef.current = panY }, [panY])
+  useEffect(() => { if (dictPopup) setDictPopup(null) }, [panX, panY])
 
   const overflowMenuRef = useRef<any>(null)
   const modeMenuRef = useRef<any>(null)
@@ -1329,6 +1396,9 @@ function BpmnCanvas({
   // ── Mouse handlers for element dragging ──────────────────────────────────────
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (isAiPreview) return  // read-only in preview mode
+    setFontSizeMenuOpen(false)
+    setDictPopup(null)
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
     const hit = hitTestElement(svgPt.x, svgPt.y, elementsRef.current)
@@ -1345,8 +1415,7 @@ function BpmnCanvas({
         if (!selectedIds.has(hit.id)) {
           setSelectedIds(new Set([hit.id]))
         }
-        onElementSelect?.(hit.id)
-        dragState.current = { id: hit.id, startX: e.clientX, startY: e.clientY, origCx: hit.cx, origCy: hit.cy }
+        onElementSelect?.(hit.id, !!hit.linkedDictId, hit.linkedDictId)
       }
     } else if (!hit) {
       setSelectedIds(new Set())
@@ -1366,7 +1435,7 @@ function BpmnCanvas({
         })
       } else {
         setSelectedIds(new Set([hit.id]))
-        onElementSelect?.(hit.id)
+        onElementSelect?.(hit.id, !!hit.linkedDictId, hit.linkedDictId)
       }
     }
   }
@@ -1375,6 +1444,7 @@ function BpmnCanvas({
     if (!svgRef.current) return
     if (panState.current) {
       const moved = Math.abs(e.clientX - panState.current.startX) + Math.abs(e.clientY - panState.current.startY)
+      if (moved > 3) setDictPopup(null)
       if (moved < 3) return
       const pt = clientToSvg(e.clientX, e.clientY, svgRef.current)
       const ptStart = clientToSvg(panState.current.startX, panState.current.startY, svgRef.current)
@@ -1412,13 +1482,50 @@ function BpmnCanvas({
       ? { ...s, cx: (s.id === id ? origCx : s.cx) + dx, cy: (s.id === id ? origCy : s.cy) + dy }
       : s
     ))
+    // highlight BPMN shape when a single LI shape is dragged over it
+    const draggedLi = liShapesRef.current.find(s => s.id === id)
+    if (draggedLi && selectedIds.size === 1) {
+      const liCx = origCx + dx, liCy = origCy + dy
+      const overBpmn = elementsRef.current.find(el =>
+        (el.type === 'task' || el.type === 'system' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') &&
+        liCx >= el.cx - el.hw && liCx <= el.cx + el.hw &&
+        liCy >= el.cy - el.hh && liCy <= el.cy + el.hh
+      )
+      setLiDragOverBpmnId(overBpmn?.id ?? null)
+    } else {
+      setLiDragOverBpmnId(null)
+    }
   }
 
-  const handleSvgMouseUp = () => {
+  const handleSvgMouseUp = (e: React.MouseEvent<SVGSVGElement>) => {
+    const ds = dragState.current
     dragState.current = null
     panState.current = null
     setIsDragging(false)
     setRubberBand(null)
+    setLiDragOverBpmnId(null)
+
+    // auto-link LI shape when dropped onto a BPMN shape
+    if (ds && svgRef.current) {
+      const draggedLi = liShapesRef.current.find(s => s.id === ds.id)
+      if (draggedLi && selectedIds.size === 1) {
+        const overBpmn = elementsRef.current.find(el =>
+          (el.type === 'task' || el.type === 'system' || el.type === 'gateway' || el.type === 'event' || el.type === 'data') &&
+          draggedLi.cx >= el.cx - el.hw && draggedLi.cx <= el.cx + el.hw &&
+          draggedLi.cy >= el.cy - el.hh && draggedLi.cy <= el.cy + el.hh
+        )
+        if (overBpmn && overBpmn.id !== draggedLi.linkedBpmnId) {
+          pushHistory(elementsRef.current, liShapesRef.current)
+          const pos = findLiShapePosition(overBpmn, elementsRef.current, liShapesRef.current.filter(s => s.id !== draggedLi.id), draggedLi.shapeType)
+          setLiShapes(ls => ls.map(s =>
+            s.id === draggedLi.id
+              ? { ...s, linkedBpmnId: overBpmn.id, linkedBpmnName: overBpmn.name, cx: pos.cx, cy: pos.cy }
+              : s
+          ))
+          setToastMsg(`Connected to "${overBpmn.name}"`)
+        }
+      }
+    }
   }
 
   // Non-passive wheel handler to prevent browser zoom
@@ -1461,14 +1568,29 @@ function BpmnCanvas({
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
     const hit = hitTestElement(svgPt.x, svgPt.y, elements)
-    setDropTargetId(hit?.id ?? null)
+    if (!hit) { setDropTargetId(null); setDropInvalidId(null); return }
+
+    const et = (window as any).__dictDragElementType as string | null
+    if (et && e.dataTransfer.types.includes('application/dict-item')) {
+      const compatible = (et === 'task' && hit.type === 'task')
+        || (et === 'artifact' && (hit.type === 'artifact' || hit.type === 'system'))
+        || (et === 'data' && hit.type === 'data')
+        || (et === 'event' && hit.type === 'event')
+        || (et === 'gateway' && hit.type === 'gateway')
+      if (compatible) { setDropTargetId(hit.id); setDropInvalidId(null) }
+      else             { setDropTargetId(null); setDropInvalidId(hit.id) }
+    } else {
+      setDropTargetId(hit.id)
+      setDropInvalidId(null)
+    }
   }
 
-  const handleDragLeave = () => setDropTargetId(null)
+  const handleDragLeave = () => { setDropTargetId(null); setDropInvalidId(null) }
 
   const handleDrop = (e: React.DragEvent<SVGSVGElement>) => {
     e.preventDefault()
     setDropTargetId(null)
+    setDropInvalidId(null)
     if (!svgRef.current) return
     const svgPt = clientToSvg(e.clientX, e.clientY, svgRef.current)
 
@@ -1479,7 +1601,7 @@ function BpmnCanvas({
       const diWidgetShape = e.dataTransfer.getData('application/di-widget-shape')
       pushHistory(elements, liShapes)
       const hit = hitTestElement(svgPt.x, svgPt.y, elements)
-      if (hit && (hit.type === 'task' || hit.type === 'system')) {
+      if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'gateway' || hit.type === 'event' || hit.type === 'data')) {
         // Create LI shape next to the element, linked via dashed connector
         const ID_TO_TYPE2: Record<string, string> = {
           'value': 'Value', 'bar': 'Bar Chart', 'line': 'Line Chart', 'area': 'Area Chart',
@@ -1615,11 +1737,56 @@ function BpmnCanvas({
       try {
         const dictItem = JSON.parse(dictRaw)
         const hit = hitTestElement(svgPt.x, svgPt.y, elements)
-        if (hit && (hit.type === 'task' || hit.type === 'system')) {
-          setElements(els => els.map(el => el.id === hit.id
-            ? { ...el, linkedDictId: dictItem.id, linkedDictName: dictItem.name }
-            : el
-          ))
+        if (hit && (hit.type === 'task' || hit.type === 'system' || hit.type === 'gateway' || hit.type === 'event' || hit.type === 'data' || hit.type === 'artifact')) {
+          // only allow linking when elementType matches shape type
+          const et = dictItem.elementType
+          const typeMatch = !et
+            || (et === 'task' && (hit.type === 'task'))
+            || (et === 'artifact' && (hit.type === 'artifact' || hit.type === 'system'))
+            || (et === 'data' && hit.type === 'data')
+            || (et === 'event' && hit.type === 'event')
+            || (et === 'gateway' && hit.type === 'gateway')
+          if (typeMatch) {
+            setElements(els => els.map(el => el.id === hit.id
+              ? { ...el, linkedDictId: dictItem.id, linkedDictName: dictItem.name }
+              : el
+            ))
+            setToastMsg(`"${dictItem.name}" linked to "${hit.name}"`)
+          } else {
+            setToastMsg(`Cannot link ${dictItem.type ?? 'this item'} to this element`)
+          }
+        } else {
+          // elementType 우선 사용, 없으면 category로 fallback
+          const sub = (dictItem.subCategory ?? '').toLowerCase()
+          const cat = dictItem.type ?? ''
+          const et = dictItem.elementType ?? ''
+          let shapeType = et || 'task'
+          let subtype = 'User Task'
+          let hw = 50, hh = 40
+
+          if (et === 'artifact' || (!et && (cat === 'IT System' || cat === 'IT Systems'))) {
+            shapeType = 'artifact'; subtype = 'ITSystem'; hw = 28.5; hh = 28.5
+          } else if (et === 'data' || (!et && cat === 'Documents')) {
+            shapeType = 'data'; subtype = 'DataObject'; hw = 40; hh = 40
+          } else if (et === 'event' || (!et && cat === 'Events')) {
+            shapeType = 'event'; hw = 16; hh = 16
+            subtype = sub.includes('start') ? 'Start' : 'End'
+          } else if (et === 'gateway' || (!et && cat === 'Gateway')) {
+            shapeType = 'gateway'; subtype = 'Exclusive'; hw = 20; hh = 20
+          }
+          const newId = `el-drop-${Date.now()}`
+          setElements(els => [...els, {
+            id: newId,
+            type: shapeType,
+            subtype,
+            name: dictItem.name,
+            description: '',
+            cx: svgPt.x, cy: svgPt.y,
+            hw, hh,
+            linkedDictId: dictItem.id,
+            linkedDictName: dictItem.name,
+          }])
+          setSelectedId(newId)
         }
       } catch {}
       return
@@ -1710,7 +1877,12 @@ function BpmnCanvas({
         <Button design="Transparent" icon="slim-arrow-left" tooltip="Back to list" onClick={onClose} className={s.backBtn} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SigDomainObject object={assetObjectType as any} size="XS" />
-          <span className={s.titleText}>{assetName}</span>
+          <SigInlineEdit
+            text={editableTitle}
+            placeholder="Untitled"
+            size="H4"
+            onChange={(e: any) => setEditableTitle(e.detail?.value ?? e.target?.value ?? editableTitle)}
+          />
           <Button id="modeler-overflow" icon="slim-arrow-down" design="Transparent" tooltip="More options" className={s.overflowBtn}
             onClick={() => openMenu(overflowMenuRef, 'modeler-overflow')} />
         </div>
@@ -1742,7 +1914,7 @@ function BpmnCanvas({
       {/* ── Interactive SVG Canvas ──────────────────────────────────────────── */}
       <svg
         ref={svgRef}
-        className={s.bpmnSvg}
+        className={`${s.bpmnSvg}${isAiPreview ? ' ai-preview' : ''}`}
         viewBox={viewBox}
         preserveAspectRatio="xMidYMid meet"
         onMouseDown={handleSvgMouseDown}
@@ -1751,6 +1923,7 @@ function BpmnCanvas({
         onMouseLeave={handleSvgMouseUp}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onDragEnd={() => { setDropTargetId(null); setDropInvalidId(null) }}
         onDrop={handleDrop}
         style={{ cursor: panState.current ? 'grabbing' : isDragging ? 'grabbing' : 'default' }}
       >
@@ -1841,29 +2014,31 @@ function BpmnCanvas({
             'flabel-gateway1-reject1': 'No', 'flabel-gateway2-reject2': 'No', 'flabel-gateway3-end3': 'No',
           }
 
-          if (conn.dir === 'h') {
+          if (pts.dir === 'h') {
             const lbl = conn.flowLabel ? labels[conn.flowLabel] : undefined
-            const x1 = hasStart ? pts.x1 + AW : pts.x1
-            const x2 = hasEnd ? pts.x2 - AW : pts.x2
-            const mx = (pts.x1 + pts.x2) / 2, my = pts.y1
+            const mx = (pts.x1 + pts.x2) / 2, my = (pts.y1 + pts.y2) / 2
+            // compute angle of the line for arrowhead rotation
+            const adx = pts.x2 - pts.x1, ady = pts.y2 - pts.y1
+            const angle = Math.atan2(ady, adx) * 180 / Math.PI
+            const lineLen = Math.sqrt(adx * adx + ady * ady)
+            const x1 = hasStart ? pts.x1 + (adx / lineLen) * AW : pts.x1
+            const y1a = hasStart ? pts.y1 + (ady / lineLen) * AW : pts.y1
+            const x2 = hasEnd ? pts.x2 - (adx / lineLen) * AW : pts.x2
+            const y2a = hasEnd ? pts.y2 - (ady / lineLen) * AW : pts.y2
             return (
               <g key={conn.id}>
                 {t === 'message' && <circle cx={pts.x1} cy={pts.y1} r={5} fill="white" stroke={stroke} strokeWidth={1.5} />}
-                <line x1={x1} y1={pts.y1} x2={x2} y2={pts.y2}
+                <line x1={x1} y1={y1a} x2={x2} y2={y2a}
                   stroke={stroke} strokeWidth={1.5} strokeLinecap={dashed ? 'round' : 'butt'}
                   {...(dashed ? { strokeDasharray: dashed } : {})}
                 />
-                {renderArrowEnd(x2, pts.y1)}
-                {renderArrowStart(pts.x1, pts.y1)}
-                {lbl && (
-                  <g>
-                    <rect x={mx - 14} y={my - 10} width={lbl.length > 2 ? 30 : 27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
-                    <text x={mx} y={my + 4} fontSize={11} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
-                  </g>
-                )}
+                {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-11,-5.5)`} fill={stroke} />}
+                {hasEnd && t !== 'sequence' && t !== 'message' && <polyline points="0,0 7,5.5 0,11" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-7,-5.5)`} />}
+                {hasEnd && t === 'message' && <path d={arrowPath} fill="white" stroke={stroke} strokeWidth="1.5" transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-11,-5.5)`} />}
+                {hasStart && <polyline points="7,0 0,5.5 7,11" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" transform={`translate(${pts.x1},${pts.y1}) rotate(${angle + 180}) translate(-7,-5.5)`} />}
               </g>
             )
-          } else if (conn.dir === 'v') {
+          } else if (pts.dir === 'v') {
             const lbl = conn.flowLabel ? labels[conn.flowLabel] : undefined
             const mx = pts.x1, my = (pts.y1 + pts.y2) / 2
             // vertical with optional label — may be straight or elbow
@@ -1880,42 +2055,36 @@ function BpmnCanvas({
                   <path d={path} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinecap="butt"
                     {...(dashed ? { strokeDasharray: dashed } : {})}
                   />
-                  {renderArrowEnd(pts.x2, pts.y2, 'v')}
-                  {lbl && (
-                    <g>
-                      <rect x={mx - 14} y={my - 10} width={27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
-                      <text x={mx} y={my + 4} fontSize={11} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
-                    </g>
-                  )}
+                  {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2 + 5.5}, ${pts.y2 - 10}) rotate(90)`} fill={stroke} />}
+                  {hasEnd && t !== 'sequence' && <polyline points={`${pts.x2-5},${pts.y2-9} ${pts.x2},${pts.y2} ${pts.x2+5},${pts.y2-9}`} fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
                 </g>
               )
             }
-            const y1adj = pts.y1
             const y2adj = hasEnd ? pts.y2 - 10 : pts.y2
             return (
               <g key={conn.id}>
-                <line x1={pts.x1} y1={y1adj} x2={pts.x2} y2={y2adj}
+                <line x1={pts.x1} y1={pts.y1} x2={pts.x2} y2={y2adj}
                   stroke={stroke} strokeWidth={1.5} strokeLinecap={dashed ? 'round' : 'butt'}
                   {...(dashed ? { strokeDasharray: dashed } : {})}
                 />
-                {renderArrowEnd(pts.x2, pts.y2, 'v')}
-                {lbl && (
-                  <g>
-                    <rect x={mx - 14} y={my - 10} width={27} height={20} rx={7} fill="#fff" stroke="#758ca4" strokeWidth={1} />
-                    <text x={mx} y={my + 4} fontSize={11} fill="#556b82" textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
-                  </g>
-                )}
+                {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2 + 5.5}, ${pts.y2 - 10}) rotate(90)`} fill={stroke} />}
+                {hasEnd && t !== 'sequence' && <polyline points={`${pts.x2-5},${pts.y2-9} ${pts.x2},${pts.y2} ${pts.x2+5},${pts.y2-9}`} fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
               </g>
             )
           } else {
-            // vu: vertical upward
-            const y1adj = hasEnd ? pts.y1 + AW : pts.y1
+            // vu: vertical upward — use same angle-based approach
+            const adx = pts.x2 - pts.x1, ady = pts.y2 - pts.y1
+            const angle = Math.atan2(ady, adx) * 180 / Math.PI
+            const lineLen = Math.sqrt(adx * adx + ady * ady)
+            const x2 = hasEnd ? pts.x2 - (adx / lineLen) * AW : pts.x2
+            const y2a = hasEnd ? pts.y2 - (ady / lineLen) * AW : pts.y2
             return (
               <g key={conn.id}>
-                <line x1={pts.x1} y1={y1adj} x2={pts.x2} y2={pts.y2}
+                <line x1={pts.x1} y1={pts.y1} x2={x2} y2={y2a}
                   stroke={stroke} strokeWidth={1.5} strokeLinecap={dashed ? 'round' : 'butt'}
                   {...(dashed ? { strokeDasharray: dashed ?? '4 3' } : { strokeDasharray: '4 3' })}
                 />
+                {hasEnd && t === 'sequence' && <path d={arrowPath} transform={`translate(${pts.x2},${pts.y2}) rotate(${angle}) translate(-11,-5.5)`} fill={stroke} />}
               </g>
             )
           }
@@ -1928,11 +2097,14 @@ function BpmnCanvas({
         {elements.map(el => {
           const selected = selectedIds.has(el.id) && selectedIds.size === 1
           const hovered = el.id === hoveredId && !selected
-          const isDropTarget = el.id === dropTargetId
+          const isDropTarget = el.id === dropTargetId || el.id === liDragOverBpmnId
+          const isDropInvalid = el.id === dropInvalidId
           const hw = el.hw, hh = el.hh
           const ringW = 2 / (zoom / 100)
-          const dotR = Math.min(6, Math.max(2.5, 4.5 / (zoom / 100)))
-          const dotOff = 1.5 + dotR + 6
+          const DOT_R_PX = 4.5
+          const DOT_GAP_PX = 16  // fixed screen px gap between element edge and dot center
+          const dotR = DOT_R_PX / (zoom / 100)
+          const dotOff = DOT_GAP_PX / (zoom / 100)
           // connection points (4 edges) — sit outside the ring
           const connPts = [
             { x: el.cx,                y: el.cy - hh - dotOff },
@@ -1960,19 +2132,64 @@ function BpmnCanvas({
                 setSelectedId(el.id)
               }}
             >
-              {isDropTarget && (el.type === 'task' || el.type === 'system') && (
-                <rect
-                  x={el.cx - el.hw - 6} y={el.cy - el.hh - 6}
-                  width={(el.hw + 6) * 2} height={(el.hh + 6) * 2}
-                  rx={14} fill="none" stroke="var(--sapHighlightColor)" strokeWidth={2} strokeDasharray="5 4" opacity={0.8}
-                />
-              )}
+              {(isDropTarget || isDropInvalid) && (() => {
+                const stroke = isDropInvalid ? 'var(--sapNegativeColor, #bb0000)' : 'var(--sapHighlightColor)'
+                const pad = 6
+                if (el.type === 'gateway') {
+                  const r = el.hw + pad
+                  return <polygon points={`${el.cx},${el.cy - r} ${el.cx + r},${el.cy} ${el.cx},${el.cy + r} ${el.cx - r},${el.cy}`} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+                }
+                if (el.type === 'event') {
+                  return <circle cx={el.cx} cy={el.cy} r={el.hw + pad} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+                }
+                if (el.type === 'system' || el.type === 'artifact') {
+                  return <circle cx={el.cx} cy={el.cy} r={el.hw + pad} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+                }
+                return <rect x={el.cx - el.hw - pad} y={el.cy - el.hh - pad} width={(el.hw + pad) * 2} height={(el.hh + pad) * 2} rx={14} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
+              })()}
               {el.type === 'task'    && <TaskShape    el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {el.type === 'gateway' && <GatewayShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
-              {el.type === 'event'   && <EventShape   el={el} selected={selected} hovered={hovered} ringW={ringW} />}
+              {el.type === 'event'   && <EventShape   el={el} selected={selected} hovered={hovered} ringW={ringW} aiPreview={isAiPreview} />}
               {el.type === 'system'  && <SystemShape  el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
-              {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} />}
-              {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
+              {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} aiPreview={isAiPreview} />}
+              {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} aiPreview={isAiPreview} />}
+              {/* ── Dictionary icon (selected only) ── */}
+              {(el.type === 'task' || el.type === 'system' || el.type === 'artifact' || el.type === 'event' || el.type === 'data') && selected && (() => {
+                const btnSize = 24 / (zoom / 100)
+                const pad = 2 / (zoom / 100)
+                const bx = el.cx - el.hw + pad
+                const by = el.cy + el.hh - pad - btnSize
+                const linked = !!el.linkedDictId
+                return (
+                  <foreignObject x={bx} y={by} width={btnSize} height={btnSize} style={{ overflow: 'visible' }}>
+                    <ToggleButton
+                      icon={linked ? 'course-book' : 'add-coursebook'}
+                      pressed={linked}
+                      design={linked ? 'Emphasized' : 'Default'}
+                      tooltip={linked ? 'Show Dictionary Item' : 'Link to Dictionary Item'}
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                        setDictPopup({ elId: el.id, rect })
+                      }}
+                      onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
+                      style={{
+                        width: `${btnSize * (zoom / 100)}px`,
+                        height: `${btnSize * (zoom / 100)}px`,
+                        '--_ui5_button_base_min_width': `${btnSize * (zoom / 100)}px`,
+                        transform: `scale(${100 / zoom})`,
+                        transformOrigin: '0 0',
+                        ...(linked ? {
+                          '--_ui5_button_emphasized_background': 'var(--sapHighlightColor)',
+                          '--_ui5_toggle_btn_pressed_background': 'var(--sapHighlightColor)',
+                          background: 'var(--sapHighlightColor)',
+                          color: 'white',
+                        } : {}),
+                      } as React.CSSProperties}
+                    />
+                  </foreignObject>
+                )
+              })()}
               {(el.type as string) === 'pool' && (() => {
                 const x = el.cx - el.hw, y = el.cy - el.hh
                 const w = el.hw * 2, h = el.hh * 2
@@ -2042,30 +2259,7 @@ function BpmnCanvas({
                 )
               })()}
               {/* Resize handles on selected — corners: white+blue border (task/system/data/artifact only) */}
-              {/* Element name label pill for events/gateways — rendered BEFORE conn points so points appear on top */}
-              {(el.type === 'event' || el.type === 'gateway') && el.name && (
-                <g>
-                  {(() => {
-                    const words = el.name.split(' ')
-                    const multiLine = words.length > 2
-                    const mid = Math.ceil(words.length / 2)
-                    const line1 = multiLine ? words.slice(0, mid).join(' ') : el.name
-                    const line2 = multiLine ? words.slice(mid).join(' ') : null
-                    const charW = 6.2
-                    const pad = 16
-                    const w = Math.max(line1.length, line2?.length ?? 0) * charW + pad
-                    const h = multiLine ? 32 : 20
-                    const pillY = el.cy + el.hh + 4
-                    return <>
-                      <rect x={el.cx - w / 2} y={pillY} width={w} height={h} rx={8} fill="#f5f6f7" />
-                      {editingId !== el.id && (multiLine ? <>
-                        <text x={el.cx} y={pillY + 13} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line1}</text>
-                        <text x={el.cx} y={pillY + 26} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line2}</text>
-                      </> : <text x={el.cx} y={pillY + 14} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>)}
-                    </>
-                  })()}
-                </g>
-              )}
+              {/* Element name label pill — now rendered separately at the end */}
 
               {selected && el.type !== 'gateway' && el.type !== 'event' && (el.type as string) !== 'connector' && resizeHandles.map((pt, i) => (
                 <circle key={i} cx={pt.x} cy={pt.y} r={dotR}
@@ -2084,6 +2278,7 @@ function BpmnCanvas({
         })}
 
         {/* LI shapes */}
+
         {liShapes.map(ls => (
           <g key={ls.id}
             style={{ cursor: 'grab' }}
@@ -2135,6 +2330,47 @@ function BpmnCanvas({
             <LiShapeComp shape={ls} editing={editingLiId === ls.id} />
           </g>
         ))}
+
+        {/* Gateway/Event labels — rendered after LI shapes */}
+        {/* Flow labels (Yes/No) — also rendered last */}
+        {CONNECTIONS.map(conn => {
+          const pts = getConnectionPoints(conn, geomMap)
+          if (!pts || !conn.flowLabel) return null
+          const labels: Record<string, string> = {
+            'flabel-gateway1-plan': 'Yes', 'flabel-gateway2-offer': 'Yes', 'flabel-gateway3-onboard': 'Yes',
+            'flabel-gateway1-reject1': 'No', 'flabel-gateway2-reject2': 'No', 'flabel-gateway3-end3': 'No',
+          }
+          const lbl = labels[conn.flowLabel]
+          if (!lbl) return null
+          const mx = (pts.x1 + pts.x2) / 2, my = (pts.y1 + pts.y2) / 2
+          return (
+            <g key={`flabel-${conn.id}`} style={{ pointerEvents: 'none' }}>
+              <rect x={mx - 14} y={my - 10} width={lbl.length > 2 ? 30 : 27} height={20} rx={7} fill={isAiPreview ? '#e8f3ff' : '#f5f6f7'} stroke={isAiPreview ? 'var(--sapHighlightColor)' : '#758ca4'} strokeWidth={1} />
+              <text x={mx} y={my + 4} fontSize={11} fill={isAiPreview ? 'var(--sapHighlightColor)' : '#556b82'} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{lbl}</text>
+            </g>
+          )
+        })}
+        {elements.filter(el => (el.type === 'event' || el.type === 'gateway') && el.name).map(el => {
+          const words = el.name.split(' ')
+          const multiLine = words.length > 2
+          const mid = Math.ceil(words.length / 2)
+          const line1 = multiLine ? words.slice(0, mid).join(' ') : el.name
+          const line2 = multiLine ? words.slice(mid).join(' ') : null
+          const charW = 6.2
+          const pad = 16
+          const w = Math.max(line1.length, line2?.length ?? 0) * charW + pad
+          const h = multiLine ? 32 : 20
+          const pillY = el.cy + el.hh + 8
+          return (
+            <g key={`label-${el.id}`} style={{ pointerEvents: 'none' }}>
+              <rect x={el.cx - w / 2} y={pillY} width={w} height={h} rx={8} fill={isAiPreview ? '#e8f3ff' : '#f5f6f7'} />
+              {multiLine ? <>
+                <text x={el.cx} y={pillY + 13} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line1}</text>
+                <text x={el.cx} y={pillY + 26} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{line2}</text>
+              </> : <text x={el.cx} y={pillY + 14} fill="var(--sapTextColor)" fontSize={11} textAnchor="middle" fontFamily="'72',Arial,sans-serif">{el.name}</text>}
+            </g>
+          )
+        })}
 
         {/* Guidance lines while dragging */}
         {isDragging && dragState.current && (() => {
@@ -2235,14 +2471,27 @@ function BpmnCanvas({
             <input
               autoFocus
               defaultValue={el.name}
+              onChange={e => {
+                setSuggestionQuery(e.target.value)
+                setSuggestionPos({ x: px, y: py + ph })
+              }}
               onBlur={e => {
+                if (suppressSuggestionClose.current || suggestionMenuOpen.current) {
+                  suppressSuggestionClose.current = false
+                  ;(e.target as HTMLInputElement).focus()
+                  return
+                }
                 setElements(els => els.map(el2 => el2.id === el.id ? { ...el2, name: e.target.value } : el2))
                 setEditingId(null)
+                setSuggestionQuery('')
+                setSuggestionPos(null)
               }}
               onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === 'Escape') {
                   if (e.key === 'Enter') setElements(els => els.map(el2 => el2.id === el.id ? { ...el2, name: (e.target as HTMLInputElement).value } : el2))
                   setEditingId(null)
+                  setSuggestionQuery('')
+                  setSuggestionPos(null)
                   e.stopPropagation()
                 }
               }}
@@ -2258,6 +2507,62 @@ function BpmnCanvas({
               }}
             />
           </div>
+        )
+      })()}
+
+      {suggestionPos && suggestionQuery.length > 0 && (() => {
+        const POPUP_W = 340
+        const containerW = (svgRef.current?.closest('[style*="position"]') as HTMLElement)?.offsetWidth ?? window.innerWidth
+        const rightEdge = containerW - (panelOffset ?? 0) - 8
+        const clampedX = Math.min(suggestionPos.x, rightEdge - POPUP_W)
+        return (
+          <DictionarySuggestionPopup
+            query={suggestionQuery}
+            x={clampedX}
+            y={suggestionPos.y}
+            elementType={editingId ? elements.find(e => e.id === editingId)?.type : undefined}
+            onViewDetails={(dictId) => {
+              const dictItem = dictionaryItems.find(d => d.id === dictId)
+              if (dictItem) {
+                onDictItemSelect?.({
+                  id: dictItem.id,
+                  name: dictItem.name,
+                  category: dictItem.type,
+                  subCategory: dictItem.subCategory,
+                  description: dictItem.description,
+                  lastUpdated: dictItem.lastUpdated,
+                })
+              }
+            }}
+            onMenuOpenChange={(open) => { suggestionMenuOpen.current = open }}
+          onSelect={(dictId) => {
+            const dictItem = dictionaryItems.find(d => d.id === dictId)
+            if (dictItem && editingId) {
+              setElements(els => els.map(el2 => el2.id === editingId
+                ? { ...el2, name: dictItem.name, linkedDictId: dictId, linkedDictName: dictItem.name }
+                : el2
+              ))
+              setToastMsg(`"${dictItem.name}" linked`)
+            }
+            setEditingId(null)
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+          }}
+          onCreateNew={() => {
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+          }}
+          onExploreMore={(q) => {
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+            setEditingId(null)
+            onExploreDict?.(q)
+          }}
+          onClose={() => {
+            setSuggestionQuery('')
+            setSuggestionPos(null)
+          }}
+        />
         )
       })()}
 
@@ -2367,7 +2672,245 @@ function BpmnCanvas({
         <Button icon="add" design="Transparent" tooltip="Zoom in" className={s.zoomBtn} onClick={zoomIn} />
       </div>
 
-      {dictOpen && <DictionaryPanel onClose={onToggleDict} />}
+      {dictOpen && <DictionaryPanel onClose={onToggleDict} onItemSelect={(item) => onDictItemSelect?.(item)} initialQuery={dictInitialQuery} />}
+
+      {/* ── AI preview floating bar ── */}
+      {isAiPreview && (
+        <div style={{
+          position: 'absolute', bottom: '5.5rem', left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 20,
+          background: 'var(--sapPageFooter_Background, #fff)',
+          borderRadius: '0.5rem',
+          boxShadow: '0 0 0 1px rgba(34,53,72,0.48), 0 2px 8px rgba(34,53,72,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0.25rem 0.75rem 0.25rem 1rem',
+          gap: '1.5rem',
+          whiteSpace: 'nowrap',
+          maxWidth: 'calc(100vw - 4rem)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Icon name="ai" style={{ width: '1.25rem', height: '1.25rem', color: 'var(--sapHighlightColor)', flexShrink: 0 } as React.CSSProperties} />
+            <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
+              This process was created by AI from your text input.
+            </Text>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <Button design="Emphasized" onClick={() => setIsAiPreview(false)}>Accept</Button>
+            <Button design="Default" onClick={() => { setElements([]); setIsAiPreview(false); setOverlayDismissed(false) }}>Decline</Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── New diagram empty state overlay ── */}
+      {assetId === 'new' && elements.length === 0 && !overlayDismissed && (
+        <NewDiagramOverlay
+          onGenerate={() => {
+            pushHistory(elements, liShapes)
+            const newEls = buildInitialElements()
+            elementsRef.current = newEls
+            setElements(newEls)
+            setIsAiPreview(true)
+            setTimeout(() => zoomFit(), 50)
+          }}
+          onDismiss={() => setOverlayDismissed(true)}
+        />
+      )}
+      {toastMsg && (
+        <Toast open placement="BottomCenter" onClose={() => setToastMsg(null)}>
+          {toastMsg}
+        </Toast>
+      )}
+
+      {/* ── Dictionary link popups ── */}
+      {dictPopup && (() => {
+        const el = elements.find(e => e.id === dictPopup.elId)
+        if (!el) return null
+        if (el.linkedDictId) {
+          return (
+            <LinkedDictPopup
+              dictId={el.linkedDictId}
+              elementName={el.name}
+              anchorRect={dictPopup.rect}
+              onClose={() => setDictPopup(null)}
+              onLink={(dictId) => {
+                pushHistory(elements, liShapes)
+                setElements(els => els.map(e => e.id === el.id ? { ...e, linkedDictId: dictId } : e))
+                setToastMsg(`Replaced with "${getDictName(dictId)}"`)
+              }}
+              onUnlink={() => {
+                pushHistory(elements, liShapes)
+                setElements(els => els.map(e => e.id === el.id ? { ...e, linkedDictId: undefined, linkedDictName: undefined } : e))
+                setDictPopup(null)
+                setToastMsg(`Unlinked "${el.name}" from Dictionary`)
+              }}
+              onViewDetails={() => {
+                setDictPopup(null)
+                onOpenDictPanel?.()
+              }}
+            />
+          )
+        } else {
+          return (
+            <UnlinkedDictPopup
+              elementName={el.name}
+              anchorRect={dictPopup.rect}
+              onClose={() => setDictPopup(null)}
+              onLink={(dictId) => {
+                pushHistory(elements, liShapes)
+                setElements(els => els.map(e => e.id === el.id ? { ...e, linkedDictId: dictId } : e))
+                setToastMsg(`Linked to "${getDictName(dictId)}"`)
+              }}
+              onCreateDictItem={() => {
+                setDictPopup(null)
+                onDictItemSelect?.({ __createNew: true, elementName: el.name, elementId: el.id } as any)
+              }}
+              onViewDetails={(dictId) => {
+                const d = DICT_DATA[dictId]
+                onDictItemSelect?.({
+                  id: dictId,
+                  name: d?.name ?? getDictName(dictId),
+                  category: d?.category ?? 'Activities',
+                  subCategory: d?.subCategory,
+                  description: d?.description ?? '',
+                  lastUpdated: '',
+                })
+              }}
+            />
+          )
+        }
+      })()}
+
+      {/* ── Shape context menu ───────────────────────────────────────────────── */}
+      {(() => {
+        if (selectedIds.size !== 1 || isDragging) return null
+        const id = [...selectedIds][0]
+        const el = elements.find(e => e.id === id)
+        if (!el || (el.type !== 'task' && el.type !== 'system' && el.type !== 'gateway' && el.type !== 'event' && el.type !== 'data' && el.type !== 'artifact')) return null
+        const svgRect = svgRef.current?.getBoundingClientRect()
+        if (!svgRect) return null
+        const DOT_GAP_PX = 16
+        const elTopPx = svgRect.top + (el.cy - el.hh - panY) / scale
+        const menuBottomPx = elTopPx - 2 * DOT_GAP_PX
+        const centerPx = svgRect.left + (el.cx - panX) / scale
+        const btnStyle: React.CSSProperties = { width: '2.25rem', height: '2.25rem', color: 'var(--sapTextColor)', '--_ui5_button_base_min_width': '2.25rem' } as React.CSSProperties
+        const sep = <div style={{ width: 1, height: '1.125rem', background: 'var(--sapNeutralBorderColor)', flexShrink: 0, margin: '0 0.125rem' }} />
+        return createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              left: centerPx,
+              top: menuBottomPx,
+              transform: 'translateX(-50%) translateY(-100%)',
+              zIndex: 8,
+              background: 'var(--sapBaseColor, #fff)',
+              border: '1px solid var(--sapNeutralBorderColor, #d9d9d9)',
+              borderRadius: '0.75rem',
+              boxShadow: '0 2px 8px rgba(34,53,72,0.15)',
+              padding: '0.25rem 0.375rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.125rem',
+              pointerEvents: 'auto',
+            }}
+            onMouseDown={e => e.stopPropagation()}
+          >
+            <Button design="Transparent" icon="SAP-icons-v4/task-activity" tooltip="Shape type" style={btnStyle} />
+            {sep}
+            <div style={{ position: 'relative' }}>
+              <button
+                ref={(btn) => {
+                  if (btn && fontSizeMenuOpen) {
+                    const r = btn.getBoundingClientRect()
+                    ;(btn as any)._rect = r
+                  }
+                }}
+                id="font-size-btn"
+                onClick={(e) => {
+                  setFontSizeMenuOpen(v => !v)
+                  ;(e.currentTarget as any)._rect = e.currentTarget.getBoundingClientRect()
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.25rem',
+                  padding: '0 0.5rem', height: '2.25rem', cursor: 'pointer',
+                  background: fontSizeMenuOpen ? 'var(--sapButton_Selected_Background, #dbeafe)' : 'none',
+                  border: fontSizeMenuOpen ? '1px solid var(--sapHighlightColor)' : '1px solid transparent',
+                  borderRadius: '0.375rem',
+                  fontFamily: 'var(--sapFontFamily)',
+                }}
+                onMouseEnter={e => { if (!fontSizeMenuOpen) e.currentTarget.style.background = 'var(--sapButton_Lite_Hover_Background, #e8f3ff)' }}
+                onMouseLeave={e => { if (!fontSizeMenuOpen) e.currentTarget.style.background = 'none' }}
+              >
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--sapTextColor)', lineHeight: 1, minWidth: '1.5rem', textAlign: 'center' }}>{selectedFontSize}</span>
+                <Icon name="expand" style={{ width: '0.875rem', height: '0.875rem', color: 'var(--sapTextColor)' } as React.CSSProperties} />
+              </button>
+              {fontSizeMenuOpen && (() => {
+                const SIZES = [8, 10, 12, 14, 16, 18, 24, 32, 36, 48, 64, 72]
+                const ITEM_H = 32
+                const btn = document.getElementById('font-size-btn')
+                const r = btn?.getBoundingClientRect()
+                if (!r) return null
+                const selectedIdx = SIZES.indexOf(selectedFontSize)
+                return createPortal(
+                  <div
+                    ref={(el) => { if (el) el.scrollTop = Math.max(0, selectedIdx * ITEM_H - ITEM_H * 3) }}
+                    style={{
+                      position: 'fixed',
+                      left: r.left + r.width / 2,
+                      top: r.bottom,
+                      transform: 'translateX(-50%)',
+                      zIndex: 10000,
+                      background: 'var(--sapBaseColor, #fff)',
+                      border: '1px solid var(--sapNeutralBorderColor)',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 12px rgba(34,53,72,0.18)',
+                      overflow: 'auto',
+                      minWidth: '4rem',
+                      maxHeight: `${ITEM_H * 7}px`,
+                    }}
+                    onMouseDown={e => e.stopPropagation()}
+                  >
+                    {SIZES.map(size => (
+                      <div
+                        key={size}
+                        onClick={() => { setSelectedFontSize(size); setFontSizeMenuOpen(false) }}
+                        style={{
+                          padding: '0 1rem',
+                          height: ITEM_H,
+                          lineHeight: `${ITEM_H}px`,
+                          fontSize: '0.875rem',
+                          fontWeight: size === selectedFontSize ? 700 : 400,
+                          color: size === selectedFontSize ? 'var(--sapHighlightColor)' : 'var(--sapTextColor)',
+                          background: size === selectedFontSize ? 'var(--sapList_SelectionBackgroundColor, #dbeafe)' : 'none',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          fontFamily: 'var(--sapFontFamily)',
+                        }}
+                        onMouseEnter={e => { if (size !== selectedFontSize) (e.currentTarget as HTMLElement).style.background = 'var(--sapList_Hover_Background)' }}
+                        onMouseLeave={e => { if (size !== selectedFontSize) (e.currentTarget as HTMLElement).style.background = 'none' }}
+                      >
+                        {size}
+                      </div>
+                    ))}
+                  </div>,
+                  document.body
+                )
+              })()}
+            </div>
+            <Button design="Transparent" icon="text-formatting" tooltip="Text formatting" style={btnStyle} />
+            <Button design="Transparent" icon="text-align-center" tooltip="Text alignment" style={btnStyle} />
+            {sep}
+            <Button design="Transparent" icon="text-color" tooltip="Text color" style={btnStyle} />
+            <Button design="Transparent" icon="border" tooltip="Shape border" style={btnStyle} />
+            <Button design="Transparent" icon="color-fill" tooltip="Color fill" style={btnStyle} />
+            {sep}
+            <Button design="Transparent" icon="SAP-icons-v4/align-left" tooltip="Align" style={btnStyle} />
+            {sep}
+            <Button design="Transparent" icon="overflow" tooltip="More" style={btnStyle} />
+          </div>,
+          document.body
+        )
+      })()}
 
       {createPortal(
         <Menu ref={overflowMenuRef}>
@@ -2441,9 +2984,10 @@ function BpmnCanvas({
 
 // ── ModelerApp ─────────────────────────────────────────────────────────────────
 
-export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onSelectElementById, onLiShapesChange, panelOffset = 0 }: Props) {
+export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, onLiShapeSelect, onLiShapeUpdate, onRegisterLiShapeUpdater, onRegisterAddLiShape, onSelectElementById, onRegisterSelectLiShapeById, onRegisterLinkDictToElement, onLiShapesChange, onWidgetSelect, onOpenDictPanel, onDictItemSelect, onAddBrowseWidget, panelOffset = 0 }: Props) {
   const navigate = useNavigate()
   const [dictOpen, setDictOpen] = useState(false)
+  const [dictInitialQuery, setDictInitialQuery] = useState('')
   const [dataOpen, setDataOpen] = useState(false)
   const [shapesOpen, setShapesOpen] = useState(false)
   const [moreElementsOpen, setMoreElementsOpen] = useState(false)
@@ -2465,6 +3009,7 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onClose={() => navigate('/modeler')}
         dictOpen={dictOpen}
         onToggleDict={toggleDict}
+        dictInitialQuery={dictInitialQuery}
         onTogglePanel={onTogglePanel}
         onToggleData={toggleData}
         shapesOpen={shapesOpen}
@@ -2473,11 +3018,18 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onLiShapeSelect={onLiShapeSelect}
         onLiShapeUpdate={onLiShapeUpdate}
         onRegisterLiShapeUpdater={onRegisterLiShapeUpdater}
+        onRegisterAddLiShape={onRegisterAddLiShape}
+        onRegisterSelectLiShapeById={onRegisterSelectLiShapeById}
+        onRegisterLinkDictToElement={onRegisterLinkDictToElement}
         onSelectElementById={onSelectElementById}
         onLiShapesChange={onLiShapesChange}
+        onOpenDictPanel={onOpenDictPanel}
+        onExploreDict={(q) => { setDictInitialQuery(q); setDictOpen(true) }}
+        onDictItemSelect={onDictItemSelect}
+        onAddBrowseWidget={onAddBrowseWidget}
         panelOffset={panelOffset}
       />
-      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} />}
+      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} />}
       {shapesOpen && !moreElementsOpen && (
         <ElementsPanel
           onClose={() => setShapesOpen(false)}

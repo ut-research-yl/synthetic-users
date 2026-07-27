@@ -157,7 +157,9 @@ ui5-dialog::part(content) {
 }
 
 .connect-widget-dialog ui5-li-custom::part(native-li) {
-  padding-inline-start: 0.5rem;
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+  padding-block: 0 !important;
   overflow: visible;
 }
 
@@ -511,4 +513,155 @@ ui5-illustrated-message {
 /* Remove diagram-attributes panel sub-header divider line */
 [class*="subHeaderSlot"] {
   display: none;
+}
+
+/* AI preview mode — shape elements turn blue, labels/chips stay neutral */
+svg.ai-preview text:not([fill="#556b82"]):not([fill="#758ca4"]),
+svg.ai-preview tspan:not([fill="#556b82"]):not([fill="#758ca4"]) {
+  fill: var(--sapHighlightColor) !important;
+}
+/* shape strokes */
+svg.ai-preview line,
+svg.ai-preview polyline,
+svg.ai-preview polygon {
+  stroke: var(--sapHighlightColor) !important;
+}
+svg.ai-preview > g path {
+  stroke: var(--sapHighlightColor) !important;
+}
+svg.ai-preview > g path[fill]:not([fill="none"]):not([fill="white"]):not([fill="#fff"]) {
+  fill: var(--sapHighlightColor) !important;
+}
+svg.ai-preview > defs ~ g path {
+  stroke: var(--sapHighlightColor) !important;
+}
+svg.ai-preview > defs ~ g path[fill]:not([fill="none"]):not([fill="white"]):not([fill="#fff"]) {
+  fill: var(--sapHighlightColor) !important;
+}
+svg.ai-preview g rect:not([fill="#fff"]):not([fill="white"]):not([rx="7"]):not([rx="8"]) {
+  stroke: var(--sapHighlightColor) !important;
+}
+svg.ai-preview circle:not([fill="#d9d9d9"]):not([fill="white"]):not([fill="#fff"]) {
+  fill: #e8f3ff !important;
+  stroke: var(--sapHighlightColor) !important;
+}
+/* shape background fill — very light blue */
+svg.ai-preview g rect[fill="white"],
+svg.ai-preview g rect[fill="#fff"] {
+  fill: #e8f3ff !important;
+  stroke: var(--sapHighlightColor) !important;
+}
+/* green/red status fills → light blue */
+svg.ai-preview circle[fill="#5C8A00"],
+svg.ai-preview circle[fill="#BB0000"],
+svg.ai-preview circle[fill="#E9730C"],
+svg.ai-preview circle[fill="#949494"],
+svg.ai-preview circle[fill="white"],
+svg.ai-preview circle[fill="#fff"] {
+  fill: #e8f3ff !important;
+  stroke: var(--sapHighlightColor) !important;
+}
+/* gateway — fill with light blue */
+svg.ai-preview polygon[fill="white"],
+svg.ai-preview polygon[fill="#fff"] {
+  fill: #e8f3ff !important;
+  stroke: var(--sapHighlightColor) !important;
+}
+/* IT system outer circle bg → light blue */
+svg.ai-preview circle[fill*="Avatar"],
+svg.ai-preview circle[r="28.5"],
+svg.ai-preview circle[r="30"] {
+  fill: #e8f3ff !important;
+  stroke: var(--sapHighlightColor) !important;
+}
+/* label border → remove, text only */
+svg.ai-preview g rect[rx="7"][fill="#f5f6f7"],
+svg.ai-preview g rect[rx="8"][fill="#f5f6f7"] {
+  fill: #e8f3ff !important;
+  stroke: none !important;
+}
+
+/* NewDiagramOverlay close button hover fix */
+.new-diagram-close-btn::part(button) {
+  background: transparent !important;
+}
+.new-diagram-close-btn:hover::part(button) {
+  background: rgba(255,255,255,0.15) !important;
+}
+
+.new-diagram-close-btn ui5-icon,
+.new-diagram-close-btn [ui5-icon] {
+  color: rgba(255,255,255,0.8) !important;
+  fill: rgba(255,255,255,0.8) !important;
+}
+
+/* DictionaryLinkedPanel SegmentedButton compact */
+.dict-linked-toggle ui5-segmented-button-item::part(button) {
+  padding: 0 0.5rem;
+  min-width: unset;
+}
+
+/* ElementDetailPanel SegmentedButton item — remove horizontal padding */
+.element-dict-toggle li.ui5-segmented-button-item-root {
+  padding-inline: 0 !important;
+}
+
+/* DictionaryDetailPanel: white TabContainer content background */
+.dict-detail-panel ui5-tabcontainer::part(content) {
+  background: var(--sapBaseColor, #fff);
+  padding: 0;
+}
+
+/* DictionaryDetailPanel: tab header shadow matching SigRightSidePanel */
+.dict-detail-panel ui5-tabcontainer {
+  --_ui5_tc_header_box_shadow: 0px 2px 1px rgba(34, 53, 72, 0.05), inset 0px -1px 0px #d9d9d9;
+}
+.dict-detail-panel ui5-tabcontainer::part(tabstrip) {
+  box-shadow: 0px 2px 1px rgba(34, 53, 72, 0.05), inset 0px -1px 0px #d9d9d9;
+}
+.dict-detail-panel ui5-tabcontainer::part(tabStrip) {
+  box-shadow: 0px 2px 1px rgba(34, 53, 72, 0.05), inset 0px -1px 0px #d9d9d9;
+}
+/* ConnectWidgetDialog tree: remove top padding */
+.connect-widget-tree ui5-tree::part(content),
+.connect-widget-tree ui5-list {
+  padding-top: 0 !important;
+}
+
+/* ConnectWidgetDialog table: remove radio cell padding */
+.connect-widget-table ui5-radio-button {
+  --_ui5_radio_button_outer_ring_padding: 0 !important;
+  --_ui5_radio_button_outer_ring_padding_with_label: 0 !important;
+}
+
+/* ConnectWidgetDialog: remove breadcrumbs bottom margin */
+.connect-widget-dialog ui5-breadcrumbs {
+  margin-bottom: 0 !important;
+}
+
+/* ConnectWidgetDialog widget list: remove ListItemCustom inner padding */
+.connect-widget-dialog .widget-list ui5-li-custom::part(native-li) {
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+  padding-block: 0 !important;
+}
+
+/* ConnectWidgetDialog widget list: remove Active ListItemCustom focus border */
+.connect-widget-dialog .widget-list ui5-li-custom::part(native-li) {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* CreateDictionaryItemPanel: reduce SigInlineEdit title size */
+.create-dict-panel sig-inline-edit,
+.create-dict-panel [data-component="sig-inline-edit"] {
+  font-size: var(--sapFontHeader5Size, 1rem) !important;
+  font-weight: 700 !important;
+}
+
+/* Modeler title: SigInlineEdit placeholder font weight */
+.modeler-title-inline sig-inline-edit [data-testid="title"],
+.modeler-title-inline sig-inline-edit span {
+  font-weight: 700 !important;
 }
