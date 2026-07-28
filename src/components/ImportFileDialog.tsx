@@ -43,8 +43,7 @@ function FolderPopover({ selected, onSelect, onClose }: { selected: string; onSe
   const [highlighted, setHighlighted] = useState(selected)
   return (
     <div style={{
-      position: 'fixed', top: '50%', left: '50%',
-      transform: 'translate(-50%, -50%)',
+      position: 'absolute', top: '36px', right: '0',
       width: '340px', background: 'white',
       borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
       zIndex: 9999, overflow: 'hidden',
@@ -106,7 +105,7 @@ function FileRow({ filename, destination, onClear, onChangeFolder, folderPickerO
       <Button design="Default" style={{ height: '28px' }} onClick={onClear}>Select</Button>
       <Label style={{ whiteSpace: 'nowrap', marginLeft: '0.25rem' }}>To:</Label>
       <Input readonly value={destination} style={{ flex: 1, minWidth: '160px', fontSize: '0.8rem' }} />
-      <div>
+      <div style={{ position: 'relative' }}>
         <Button design="Default" style={{ height: '28px' }} onClick={onChangeFolder}>Change</Button>
         {folderPickerOpen && (
           <FolderPopover selected={destination} onSelect={onSelect} onClose={onClosePicker} />
