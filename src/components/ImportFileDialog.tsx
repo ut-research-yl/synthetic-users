@@ -230,9 +230,9 @@ export default function ImportFileDialog({ open, onClose, onSuccess }: Props) {
     <Dialog
       open={open}
       onClose={handleClose}
-      style={{ width: '680px' }}
+      style={{ width: '700px' }}
       header={
-        <div style={{ padding: '0.75rem 1.5rem' }}>
+        <div style={{ padding: '0.75rem 1.5rem', width: '100%' }}>
           <Title level="H4">{dialogTitle}</Title>
         </div>
       }
