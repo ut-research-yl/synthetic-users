@@ -454,6 +454,11 @@ section[id^="ObjectPageSection-"] > [class*="outlineSpacerDiv"] {
   background: var(--sapList_Hover_Background) !important;
 }
 
+/* ElementDetailPanel: suppress the empty TabContainer content panel (gray area below tab strip) */
+.element-detail-panel ui5-tabcontainer::part(content) {
+  display: none;
+}
+
 /* Asset type detail two-column layout — mirrors DynamicPage container-query padding (S/M/L: 1rem inline, XL: 2rem) */
 .asset-detail-layout {
   padding: 1rem 1rem 0;

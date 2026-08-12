@@ -431,7 +431,7 @@ export default function ElementDetailPanel({ elementId, onClose, dictId, onViewD
               <SigInlineEdit text={el.name} size="H3" level="H3" />
             </div>
             {/* Tabs */}
-            <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.08)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', flexShrink: 0 }}>
+            <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.06)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', flexShrink: 0 }}>
               <TabContainer onTabSelect={(e: any) => setActiveTab(e.detail?.tab?.text ?? 'Attributes')} style={{ width: '100%' } as React.CSSProperties}>
                 <Tab text="Attributes" selected={activeTab === 'Attributes'} />
                 <Tab text="Relations" selected={activeTab === 'Relations'} />
@@ -517,7 +517,7 @@ export default function ElementDetailPanel({ elementId, onClose, dictId, onViewD
               </div>
             )}
             {/* Tabs */}
-            <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.08)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', flexShrink: 0 }}>
+            <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.06)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', flexShrink: 0 }}>
               <TabContainer onTabSelect={(e: any) => setDictActiveTab(e.detail?.tab?.text ?? 'Attributes')} style={{ width: '100%' } as React.CSSProperties}>
                 <Tab text="Attributes" selected={dictActiveTab === 'Attributes'} />
                 <Tab text="Relations" selected={dictActiveTab === 'Relations'} />

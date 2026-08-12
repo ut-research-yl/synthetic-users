@@ -188,7 +188,7 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate, onSelectL
         <div style={{ padding: '0.25rem 1rem 1rem' }}>
           <SigInlineEdit text={shape.widgetName} size="H3" level="H3" />
         </div>
-        <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.08)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)' }}>
+        <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.06)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)' }}>
           <TabContainer
             onTabSelect={(e: any) => setActiveTab(e.detail?.tab?.text ?? 'Attributes')}
             style={{ width: '100%' } as React.CSSProperties}
