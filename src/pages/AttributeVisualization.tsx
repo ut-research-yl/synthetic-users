@@ -43,101 +43,21 @@ const PALETTE_COLORS = [
 ]
 
 const ICON_OPTIONS: { name: string; label: string }[] = [
-  { name: 'status-positive', label: 'status positive' },
-  { name: 'status-negative', label: 'status negative' },
-  { name: 'status-critical', label: 'status critical' },
-  { name: 'status-error', label: 'status error' },
-  { name: 'status-in-process', label: 'in process' },
-  { name: 'status-inactive', label: 'inactive' },
-  { name: 'accept', label: 'accept' },
-  { name: 'decline', label: 'decline' },
-  { name: 'alert', label: 'alert' },
-  { name: 'warning', label: 'warning' },
-  { name: 'warning2', label: 'warning 2' },
-  { name: 'information', label: 'information' },
-  { name: 'error', label: 'error' },
-  { name: 'circle-task', label: 'circle task' },
-  { name: 'circle-task-2', label: 'circle task 2' },
-  { name: 'flag', label: 'flag' },
-  { name: 'flag-2', label: 'flag 2' },
-  { name: 'bookmark', label: 'bookmark' },
-  { name: 'favorite', label: 'favorite' },
-  { name: 'favorite-list', label: 'starred' },
-  { name: 'thumb-up', label: 'thumb up' },
-  { name: 'thumb-down', label: 'thumb down' },
-  { name: 'high-priority', label: 'high priority' },
-  { name: 'key', label: 'key' },
-  { name: 'locked', label: 'locked' },
-  { name: 'pie-chart', label: 'pie chart' },
-  { name: 'bar-chart', label: 'bar chart' },
-  { name: 'line-chart', label: 'line chart' },
-  { name: 'area-chart', label: 'area chart' },
-  { name: 'full-stacked-column-chart', label: 'column chart' },
-  { name: 'scatter-chart', label: 'scatter chart' },
-  { name: 'donut-chart', label: 'donut chart' },
-  { name: 'kpi-corporate-performance', label: 'kpi' },
-  { name: 'trend-up', label: 'trend up' },
-  { name: 'trend-down', label: 'trend down' },
-  { name: 'horizontal-bullet-chart', label: 'bullet chart' },
-  { name: 'simulate', label: 'simulate' },
-  { name: 'employee', label: 'employee' },
-  { name: 'customer', label: 'customer' },
-  { name: 'supplier', label: 'supplier' },
-  { name: 'product', label: 'product' },
-  { name: 'technical-object', label: 'technical object' },
-  { name: 'target-group', label: 'target group' },
-  { name: 'org-chart', label: 'org chart' },
-  { name: 'opportunity', label: 'opportunity' },
-  { name: 'contacts', label: 'business partner' },
-  { name: 'role', label: 'role' },
-  { name: 'group', label: 'group' },
-  { name: 'people-connected', label: 'team' },
-  { name: 'process', label: 'process' },
-  { name: 'workflow-tasks', label: 'workflow tasks' },
-  { name: 'task', label: 'task' },
-  { name: 'checklist-item', label: 'to do' },
-  { name: 'checklist', label: 'checklist' },
-  { name: 'approvals', label: 'approvals' },
-  { name: 'decision', label: 'decision' },
-  { name: 'connected', label: 'connected' },
-  { name: 'map', label: 'map' },
-  { name: 'journey-change', label: 'journey' },
-  { name: 'database', label: 'database' },
-  { name: 'cloud', label: 'cloud' },
-  { name: 'it-system', label: 'it system' },
-  { name: 'developer-settings', label: 'developer' },
-  { name: 'source-code', label: 'coding' },
-  { name: 'settings', label: 'settings' },
-  { name: 'action-settings', label: 'configuration' },
-  { name: 'official-service', label: 'api' },
-  { name: 'share-2', label: 'integration' },
-  { name: 'chain-link', label: 'link' },
-  { name: 'money-bills', label: 'money' },
-  { name: 'expense-report', label: 'expense' },
-  { name: 'document-text', label: 'audit' },
-  { name: 'permission', label: 'certificate' },
-  { name: 'shield', label: 'shield' },
-  { name: 'insurance-house', label: 'insurance' },
-  { name: 'filter', label: 'requirement' },
-  { name: 'goal', label: 'goal' },
+  { name: 'lead', label: 'lead' },
+  { name: 'person-placeholder', label: 'person placeholder' },
+  { name: 'action-settings', label: 'action settings' },
+  { name: 'SAP-icons-v4/flash', label: 'flash' },
+  { name: 'away', label: 'away' },
+  { name: 'performance', label: 'performance' },
   { name: 'document', label: 'document' },
-  { name: 'attachment', label: 'attachment' },
-  { name: 'notes', label: 'notes' },
-  { name: 'comment', label: 'comment' },
-  { name: 'tag', label: 'tag' },
+  { name: 'high-priority', label: 'high priority' },
+  { name: 'sys-monitor', label: 'sys monitor' },
+  { name: 'email', label: 'email' },
+  { name: 'activity-items', label: 'activity items' },
+  { name: 'sys-enter', label: 'sys enter' },
+  { name: 'sys-cancel', label: 'sys cancel' },
+  { name: 'circle-task', label: 'circle task' },
   { name: 'text', label: 'text' },
-  { name: 'education', label: 'education' },
-  { name: 'course-book', label: 'course book' },
-  { name: 'time-entry-request', label: 'time' },
-  { name: 'calendar', label: 'calendar' },
-  { name: 'geographic-bubble-chart', label: 'geography' },
-  { name: 'building', label: 'building' },
-  { name: 'factory', label: 'factory' },
-  { name: 'batch-payments', label: 'batch' },
-  { name: 'lightbulb', label: 'idea' },
-  { name: 'add-activity', label: 'activity' },
-  { name: 'physical-activity', label: 'physical' },
-  { name: 'question-mark', label: 'question' },
 ]
 
 type Condition = { id: string; property: string; relation: string; value: string }
@@ -147,11 +67,11 @@ type Layer = {
 }
 
 const INITIAL_LAYERS: Layer[] = [
-  { id: '1', active: true, name: 'KPI Definition', rules: [{ id: 'r1', name: '', color: '#009900', icon: 'pie-chart', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c1', property: 'KPI Definition', relation: 'is', value: 'Yes' }] }] },
-  { id: '2', active: true, name: 'Requirements fulfilled', rules: [{ id: 'r2', name: '', color: '#99CC00', icon: 'accept', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c2', property: 'Status', relation: 'is', value: 'Build Phase' }] }] },
+  { id: '1', active: true, name: 'KPI Definition', rules: [{ id: 'r1', name: '', color: '#009900', icon: 'performance', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c1', property: 'KPI Definition', relation: 'is', value: 'Yes' }] }] },
+  { id: '2', active: true, name: 'Requirements fulfilled', rules: [{ id: 'r2', name: '', color: '#99CC00', icon: 'sys-enter', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c2', property: 'Status', relation: 'is', value: 'Build Phase' }] }] },
   { id: '3', active: true, name: 'Requirements open', rules: [{ id: 'r3', name: '', color: '#CCCC00', icon: 'circle-task', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c3', property: 'Status', relation: 'is', value: 'Design Phase' }] }] },
-  { id: '4', active: true, name: 'Is critical component', rules: [{ id: 'r4', name: '', color: '#FF9933', icon: 'alert', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c4', property: 'Critical Application', relation: 'is', value: 'Yes' }] }] },
-  { id: '5', active: true, name: 'SAP Transactions', rules: [{ id: 'r5', name: '', color: '#0066FF', icon: 'technical-object', showIcon: true, showValue: true, logic: 'and', conditions: [{ id: 'c5', property: 'SAP Executable', relation: 'is', value: 'Yes' }] }] },
+  { id: '4', active: true, name: 'Is critical component', rules: [{ id: 'r4', name: '', color: '#FF9933', icon: 'high-priority', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c4', property: 'Critical Application', relation: 'is', value: 'Yes' }] }] },
+  { id: '5', active: true, name: 'SAP Transactions', rules: [{ id: 'r5', name: '', color: '#0066FF', icon: 'sys-monitor', showIcon: true, showValue: true, logic: 'and', conditions: [{ id: 'c5', property: 'SAP Executable', relation: 'is', value: 'Yes' }] }] },
 ]
 
 const AUDIENCES = ['General audience', 'Administrators', 'Acme Italy', 'Acme France']
@@ -214,7 +134,7 @@ const OverlayTabPanel = forwardRef<OverlayTabPanelHandle, { idPrefix: string; on
     const [renameName, setRenameName] = useState('')
     const [iconPickerOpen, setIconPickerOpen] = useState<string | null>(null)
     const [iconSearch, setIconSearch] = useState('')
-    const [iconPathData, setIconPathData] = useState<Record<string, IconPathData | null>>({})
+    const [, setIconPathData] = useState<Record<string, IconPathData | null>>({})
     const [openMenu, setOpenMenu] = useState<string | null>(null)
     const [collapsedRules, setCollapsedRules] = useState<Record<string, boolean>>({})
     const toggleRuleCollapse = (ruleId: string) => setCollapsedRules(prev => ({ ...prev, [ruleId]: !prev[ruleId] }))
@@ -505,8 +425,6 @@ const OverlayTabPanel = forwardRef<OverlayTabPanelHandle, { idPrefix: string; on
                 {(() => {
                   const firstRule = selectedCfgLayerData.rules[0]
                   if (!firstRule) return null
-                  const previewColor = firstRule.color
-                  const layerIconColor = isLightColor(previewColor) ? '#000000' : '#ffffff'
                   const layerIconBtnId = `${p}-layer-icon-btn-${selectedCfgLayerData.id}`
                   const visMode = firstRule.showIcon && !firstRule.showValue ? 'icon' : firstRule.showIcon && firstRule.showValue ? 'both' : 'value'
                   const visLabel = visMode === 'icon' ? 'Colored Icon' : visMode === 'both' ? 'Icon & Attribute Value' : 'Attribute Value'
@@ -565,24 +483,6 @@ const OverlayTabPanel = forwardRef<OverlayTabPanelHandle, { idPrefix: string; on
                             </div>
                           </div>
                         </Popover>
-                      </div>
-
-                      {/* Preview */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <Label>Preview</Label>
-                        <div aria-hidden="true" style={{ background: 'var(--sapGroup_ContentBackground, #f5f6f7)', border: `1px solid ${border}`, borderRadius: 'var(--sapElement_BorderCornerRadius)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem 1.25rem', flexShrink: 0, minWidth: '120px' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px' }}>
-                            {(firstRule.showIcon || firstRule.showValue) && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: previewColor, borderRadius: '4px', width: firstRule.showIcon && !firstRule.showValue ? '20px' : 'auto', height: '20px', padding: firstRule.showValue ? '0 6px' : '0', justifyContent: 'center', flexShrink: 0 }}>
-                                {firstRule.showIcon && <Icon name={firstRule.icon} style={{ fontSize: '12px', width: '12px', height: '12px', color: layerIconColor, pointerEvents: 'none' }} />}
-                                {firstRule.showValue && <Text style={{ fontSize: '10px', fontWeight: '600', color: layerIconColor, fontFamily: "var(--sapFontFamily, '72', sans-serif)", whiteSpace: 'nowrap', lineHeight: '1' }}>{firstRule.conditions[0]?.value || 'Value'}</Text>}
-                              </div>
-                            )}
-                            <div style={{ width: '80px', height: '60px', border: '1.5px solid #1a1a1a', borderRadius: '8px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Text style={{ fontSize: '12px', color: '#131e29', fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>Task</Text>
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )
@@ -656,63 +556,8 @@ const OverlayTabPanel = forwardRef<OverlayTabPanelHandle, { idPrefix: string; on
                           {/* Collapsible content */}
                           {!collapsedRules[rule.id] && <div style={{ display: 'flex', alignItems: 'flex-start' }}>
 
-                          {/* Style */}
-                          {(() => {
-                            const pickerKey = `cfg-${selectedCfgLayerData.id}-${rule.id}`
-                            const colorBtnId = `${p}-color-btn-cfg-${selectedCfgLayerData.id}-${rule.id}`
-                            const ruleIconPathData = iconPathData[rule.id] ?? null
-                            const ruleIconColor = isLightColor(rule.color) ? '#000000' : '#ffffff'
-                            return (
-                              <div style={{ background: 'var(--sapList_Background)', borderRight: `1px solid ${border}`, flexShrink: 0, alignSelf: 'stretch' }}>
-                                <div style={{ padding: '8px 0.75rem 0 16px' }}>
-                                  <Text style={{ fontSize: '14px', fontWeight: '600' }}>Style</Text>
-                                </div>
-                                <div style={{ padding: '8px 0.75rem 0 16px' }}>
-                                  <Label>Color</Label>
-                                </div>
-                                <div style={{ padding: '0.25rem 0.75rem 0.5rem 16px' }}>
-                                  <SigChipV2
-                                    id={colorBtnId}
-                                    trailingIcon="slim-arrow-down"
-                                    avatarImageUrl={makeColoredIconUrl(rule.showIcon ? ruleIconPathData : null, rule.color, ruleIconColor)}
-                                    value=""
-                                    tooltip="Choose color"
-                                    onClick={() => { setOpenColorPicker(openColorPicker === pickerKey ? null : pickerKey); const h = rule.color.replace('#', ''); setColorHex(h); setLastValidHex(h); setHexBlurred(false) }}
-                                  />
-                                  <Popover opener={colorBtnId} open={openColorPicker === pickerKey} onClose={() => { setOpenColorPicker(null); setHexBlurred(false) }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                      <Title level="H6" style={{ fontSize: 'var(--sapFontSize)', fontWeight: 600, marginBottom: '0.25rem' }}>Color</Title>
-                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1.375rem)', gap: '0.2rem' }}>
-                                        {PALETTE_COLORS.map(c => (
-                                          <Button key={c} design="Transparent" tooltip={c.toUpperCase()} aria-label={c.toUpperCase()}
-                                            style={{ width: '1.375rem', height: '1.375rem', background: c, padding: 0, border: c.toLowerCase() === rule.color.toLowerCase() ? '2px solid var(--sapSelectedColor)' : '1px solid rgba(0,0,0,0.18)', borderRadius: '3px', boxShadow: c.toLowerCase() === rule.color.toLowerCase() ? '0 0 0 1px var(--sapSelectedColor)' : 'none', minWidth: 'unset', '--ui5-button-base-background': c, '--ui5-button-hover-background': c } as React.CSSProperties}
-                                            onClick={() => { updateRule(selectedCfgLayerData.id, rule.id, { color: c }); setColorHex(c.replace('#', '')); setLastValidHex(c.replace('#', '')); setHexBlurred(false); setOpenColorPicker(null) }}
-                                          />
-                                        ))}
-                                      </div>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                        <Text style={{ fontSize: 'var(--sapFontSmallSize)' }}>#</Text>
-                                        {(() => { const hexValid = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(colorHex); return (<>
-                                        <div onBlur={() => setHexBlurred(true)}>
-                                        <Input ref={hexInputRef} accessibleName="Hex color value" value={colorHex} maxlength={6} valueState={hexBlurred && !hexValid && colorHex !== '' ? 'Negative' : 'None'} style={{ width: '5rem' }} onInput={e => { const v = (e.target as unknown as HTMLInputElement).value; setColorHex(v); if (/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(v)) setLastValidHex(v) }} onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' && hexValid) { updateRule(selectedCfgLayerData.id, rule.id, { color: '#' + colorHex }); setOpenColorPicker(null) } }}>
-                                          {hexBlurred && !hexValid && colorHex !== '' && <div slot="valueStateMessage">Select a color or enter a valid hex color.</div>}
-                                        </Input>
-                                        </div>
-                                        <div style={{ width: '1.375rem', height: '1.375rem', flexShrink: 0, borderRadius: '3px', border: '1px solid rgba(0,0,0,0.18)', background: lastValidHex ? '#' + lastValidHex : 'transparent' }} />
-                                        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem' }}>
-                                          <Button design="Transparent" disabled={!hexValid} onClick={() => { updateRule(selectedCfgLayerData.id, rule.id, { color: '#' + colorHex }); setOpenColorPicker(null) }}>Apply Color</Button>
-                                        </div>
-                                        </>)})()}
-                                      </div>
-                                    </div>
-                                  </Popover>
-                                </div>
-                              </div>
-                            )
-                          })()}
-
                           {/* Conditions */}
-                          <div style={{ flex: 1, background: 'white', minWidth: 0 }}>
+                          <div style={{ flex: 1, background: 'white', minWidth: 0, borderRight: `1px solid ${border}` }}>
                             <div style={{ padding: '8px 0.75rem 0 16px' }}>
                               <Text style={{ fontSize: '14px', fontWeight: '600' }}>Conditions</Text>
                             </div>
@@ -761,6 +606,88 @@ const OverlayTabPanel = forwardRef<OverlayTabPanelHandle, { idPrefix: string; on
                               <Button design="Transparent" icon="add" onClick={() => addCondition(selectedCfgLayerData.id, rule.id)}>Add Condition</Button>
                             </div>
                           </div>
+
+                          {/* Style */}
+                          {(() => {
+                            const pickerKey = `cfg-${selectedCfgLayerData.id}-${rule.id}`
+                            const colorBtnId = `${p}-color-btn-cfg-${selectedCfgLayerData.id}-${rule.id}`
+                            const ruleIconColor = isLightColor(rule.color) ? '#000000' : '#ffffff'
+                            return (
+                              <div style={{ background: 'var(--sapList_Background)', borderRight: `1px solid ${border}`, flexShrink: 0, alignSelf: 'stretch' }}>
+                                <div style={{ padding: '8px 0.75rem 0 16px' }}>
+                                  <Text style={{ fontSize: '14px', fontWeight: '600' }}>Style</Text>
+                                </div>
+                                <div style={{ padding: '8px 0.75rem 0 16px' }}>
+                                  <Label>Color</Label>
+                                </div>
+                                <div style={{ padding: '0.25rem 0.75rem 0.5rem 16px' }}>
+                                  <SigChipV2
+                                    id={colorBtnId}
+                                    trailingIcon="slim-arrow-down"
+                                    avatarImageUrl={makeColoredIconUrl(null, rule.color, ruleIconColor)}
+                                    value=""
+                                    tooltip="Choose color"
+                                    onClick={() => { setOpenColorPicker(openColorPicker === pickerKey ? null : pickerKey); const h = rule.color.replace('#', ''); setColorHex(h); setLastValidHex(h); setHexBlurred(false) }}
+                                  />
+                                  <Popover opener={colorBtnId} open={openColorPicker === pickerKey} onClose={() => { setOpenColorPicker(null); setHexBlurred(false) }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                      <Title level="H6" style={{ fontSize: 'var(--sapFontSize)', fontWeight: 600, marginBottom: '0.25rem' }}>Color</Title>
+                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1.375rem)', gap: '0.2rem' }}>
+                                        {PALETTE_COLORS.map(c => (
+                                          <Button key={c} design="Transparent" tooltip={c.toUpperCase()} aria-label={c.toUpperCase()}
+                                            style={{ width: '1.375rem', height: '1.375rem', background: c, padding: 0, border: c.toLowerCase() === rule.color.toLowerCase() ? '2px solid var(--sapSelectedColor)' : '1px solid rgba(0,0,0,0.18)', borderRadius: '3px', boxShadow: c.toLowerCase() === rule.color.toLowerCase() ? '0 0 0 1px var(--sapSelectedColor)' : 'none', minWidth: 'unset', '--ui5-button-base-background': c, '--ui5-button-hover-background': c } as React.CSSProperties}
+                                            onClick={() => { updateRule(selectedCfgLayerData.id, rule.id, { color: c }); setColorHex(c.replace('#', '')); setLastValidHex(c.replace('#', '')); setHexBlurred(false); setOpenColorPicker(null) }}
+                                          />
+                                        ))}
+                                      </div>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                        <Text style={{ fontSize: 'var(--sapFontSmallSize)' }}>#</Text>
+                                        {(() => { const hexValid = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(colorHex); return (<>
+                                        <div onBlur={() => setHexBlurred(true)}>
+                                        <Input ref={hexInputRef} accessibleName="Hex color value" value={colorHex} maxlength={6} valueState={hexBlurred && !hexValid && colorHex !== '' ? 'Negative' : 'None'} style={{ width: '5rem' }} onInput={e => { const v = (e.target as unknown as HTMLInputElement).value; setColorHex(v); if (/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(v)) setLastValidHex(v) }} onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' && hexValid) { updateRule(selectedCfgLayerData.id, rule.id, { color: '#' + colorHex }); setOpenColorPicker(null) } }}>
+                                          {hexBlurred && !hexValid && colorHex !== '' && <div slot="valueStateMessage">Select a color or enter a valid hex color.</div>}
+                                        </Input>
+                                        </div>
+                                        <div style={{ width: '1.375rem', height: '1.375rem', flexShrink: 0, borderRadius: '3px', border: '1px solid rgba(0,0,0,0.18)', background: lastValidHex ? '#' + lastValidHex : 'transparent' }} />
+                                        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem' }}>
+                                          <Button design="Transparent" disabled={!hexValid} onClick={() => { updateRule(selectedCfgLayerData.id, rule.id, { color: '#' + colorHex }); setOpenColorPicker(null) }}>Apply Color</Button>
+                                        </div>
+                                        </>)})()}
+                                      </div>
+                                    </div>
+                                  </Popover>
+                                </div>
+                              </div>
+                            )
+                          })()}
+
+                          {/* Preview */}
+                          {(() => {
+                            const globalRule = selectedCfgLayerData.rules[0]
+                            const previewColor = rule.color
+                            const previewIconColor = isLightColor(previewColor) ? '#000000' : '#ffffff'
+                            const showIcon = globalRule?.showIcon ?? true
+                            const showValue = globalRule?.showValue ?? false
+                            const iconName = globalRule?.icon ?? 'circle-task'
+                            return (
+                              <div style={{ borderLeft: `1px solid ${border}`, flexShrink: 0, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', padding: '8px 0.75rem 0.5rem 0.75rem', gap: '0.25rem' }}>
+                                <Text style={{ fontSize: '14px', fontWeight: '600' }}>Preview</Text>
+                                <div aria-hidden="true" style={{ paddingTop: '0.5rem' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px' }}>
+                                    {(showIcon || showValue) && (
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: previewColor, borderRadius: '4px', width: showIcon && !showValue ? '20px' : 'auto', height: '20px', padding: showValue ? '0 6px' : '0', justifyContent: 'center', flexShrink: 0 }}>
+                                        {showIcon && <Icon name={iconName} style={{ fontSize: '12px', width: '12px', height: '12px', color: previewIconColor, pointerEvents: 'none' }} />}
+                                        {showValue && <Text style={{ fontSize: '10px', fontWeight: '600', color: previewIconColor, fontFamily: "var(--sapFontFamily, '72', sans-serif)", whiteSpace: 'nowrap', lineHeight: '1' }}>{rule.conditions[0]?.value || 'Value'}</Text>}
+                                      </div>
+                                    )}
+                                    <div style={{ width: '64px', height: '48px', border: '1.5px solid #1a1a1a', borderRadius: '8px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      <Text style={{ fontSize: '11px', color: '#131e29', fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>Task</Text>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })()}
 
                           </div>}
                         </div>
@@ -1005,44 +932,28 @@ const OverlayTabPanel = forwardRef<OverlayTabPanelHandle, { idPrefix: string; on
 )
 
 export default function AttributeVisualization() {
-  const [tool, setTool] = useState<'modeler' | 'pm-legacy'>('modeler')
-  const [modelerDirty, setModelerDirty] = useState(false)
   const [pmDirty, setPmDirty] = useState(false)
-  const modelerRef = useRef<OverlayTabPanelHandle>(null)
   const pmRef = useRef<OverlayTabPanelHandle>(null)
-  const isDirty = modelerDirty || pmDirty
 
   return (
     <ObjectPage
       style={{ height: '100%' } as React.CSSProperties}
       mode={ObjectPageMode.IconTabBar}
       hidePinButton
-      selectedSectionId={tool}
-      onSelectedSectionChange={(e: any) => {
-        const idx = e.detail?.selectedSectionIndex ?? 0
-        setTool(idx === 0 ? 'modeler' : 'pm-legacy')
-      }}
+      selectedSectionId="pm-legacy"
       titleArea={
         <ObjectPageTitle
           header="Attribute Overlays"
           subHeader="Define how attribute data is visually displayed on diagram elements."
         />
       }
-      footerArea={isDirty ? (
+      footerArea={pmDirty ? (
         <Bar design="FloatingFooter">
-          <Button slot="endContent" design="Emphasized" onClick={() => { modelerRef.current?.save(); pmRef.current?.save() }}>Save</Button>
-          <Button slot="endContent" onClick={() => { modelerRef.current?.reset(); pmRef.current?.reset() }}>Discard Changes</Button>
+          <Button slot="endContent" design="Emphasized" onClick={() => { pmRef.current?.save() }}>Save</Button>
+          <Button slot="endContent" onClick={() => { pmRef.current?.reset() }}>Discard Changes</Button>
         </Bar>
       ) : undefined}
     >
-      <ObjectPageSection id="modeler" titleText="Modeler" hideTitleText>
-        <div style={{ padding: '1rem 0 16px' }}>
-          <MessageStrip design="Critical" hideCloseButton>
-            This configuration applies to <strong>the new Modeler only</strong>. It has no effect on the legacy Process Manager.
-          </MessageStrip>
-        </div>
-        <OverlayTabPanel ref={modelerRef} idPrefix="modeler" onDirtyChange={setModelerDirty} />
-      </ObjectPageSection>
       <ObjectPageSection id="pm-legacy" titleText="Process Manager (legacy)" hideTitleText>
         <div style={{ padding: '1rem 0 16px' }}>
           <MessageStrip design="Critical" hideCloseButton>

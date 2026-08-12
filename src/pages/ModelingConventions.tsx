@@ -7,7 +7,6 @@ import {
 } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 
-type Tool = 'pm-legacy' | 'modeler'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,6 +25,7 @@ type RuleSubsection = {
   id: string
   num: string
   label: string
+  description?: string
   items: RuleItem[]
   canAddCustom?: boolean
 }
@@ -124,9 +124,9 @@ const BPMN_RULES: RuleSection[] = [
   {
     id: 's1', num: 1, label: 'Architecture',
     subsections: [
-      { id: 's1-1', num: '1.1', label: 'Incorporation of open comments', items: [{ id: 'r1-1', label: 'Incorporation of open comments' }] },
-      { id: 's1-2', num: '1.2', label: 'Usage of unique diagram names', items: [{ id: 'r1-2', label: 'Usage of unique diagram names' }] },
-      { id: 's1-3', num: '1.3', label: 'Usage of a numbering schema in diagram names', items: [{ id: 'r1-3', label: 'Usage of a numbering schema in diagram names', paramType: 'select', paramOptions: ['1 .. 4.3.5', '1.0.0 .. 4.3.5', '1 .. 9999'] }] },
+      { id: 's1-1', num: '1.1', label: 'Incorporation of open comments', description: 'Checks if all comments have been incorporated into the diagram.', items: [{ id: 'r1-1', label: 'Incorporation of open comments' }] },
+      { id: 's1-2', num: '1.2', label: 'Usage of unique diagram names', description: 'Checks if all diagram names are unique.', items: [{ id: 'r1-2', label: 'Usage of unique diagram names' }] },
+      { id: 's1-3', num: '1.3', label: 'Usage of a numbering schema in diagram names', description: 'Checks if all diagram names contain a numbered prefix.', items: [{ id: 'r1-3', label: 'Usage of a numbering schema in diagram names', paramType: 'select', paramOptions: ['1 .. 4.3.5', '1.0.0 .. 4.3.5', '1 .. 9999'] }] },
       { id: 's1-4', num: '1.4', label: 'Custom Rules', items: [], canAddCustom: true },
     ],
   },
@@ -134,7 +134,7 @@ const BPMN_RULES: RuleSection[] = [
     id: 's2', num: 2, label: 'Notation',
     subsections: [
       {
-        id: 's2-1', num: '2.1', label: 'Usage of a defined BPMN subset',
+        id: 's2-1', num: '2.1', label: 'Usage of a defined BPMN subset', description: 'Checks if the defined BPMN subset is used in the diagram.',
         items: [
           { id: 'r2-1a', label: 'BPMN (Core Elements)' }, { id: 'r2-1b', label: 'BPMN (Descriptive Elements)' },
           { id: 'r2-1c', label: 'BPMN (Analytic Elements)' }, { id: 'r2-1d', label: 'BPMN (Common Executable Elements)' },
@@ -144,7 +144,7 @@ const BPMN_RULES: RuleSection[] = [
         ],
       },
       {
-        id: 's2-2', num: '2.2', label: 'Definition of mandatory attributes',
+        id: 's2-2', num: '2.2', label: 'Definition of mandatory attributes', description: 'Checks if all mandatory attributes are set.',
         items: [
           { id: 'r2-2a', label: 'eCH Mandatory Attributes', paramType: 'attributemapping' },
           { id: 'r2-2b', label: 'Mandatory Subprocess Link', paramType: 'attributemapping' },
@@ -153,7 +153,7 @@ const BPMN_RULES: RuleSection[] = [
         ], canAddCustom: true,
       },
       {
-        id: 's2-3', num: '2.3', label: 'Definition of required dictionary links',
+        id: 's2-3', num: '2.3', label: 'Definition of required dictionary links', description: 'Checks if elements are linked to dictionary entries.',
         items: [
           { id: 'r2-3a', label: 'Roles' },
           { id: 'r2-3b', label: 'Activities' },
@@ -163,14 +163,14 @@ const BPMN_RULES: RuleSection[] = [
         ],
       },
       {
-        id: 's2-4', num: '2.4', label: 'Consistency with attributes of the linked dictionary item',
+        id: 's2-4', num: '2.4', label: 'Consistency with attributes of the linked dictionary item', description: 'Checks whether element attributes match linked dictionary attributes, i.e. the element has no local changes.',
         items: [
           { id: 'r2-4a', label: 'Roles' }, { id: 'r2-4b', label: 'Activities' }, { id: 'r2-4c', label: 'Events' },
           { id: 'r2-4d', label: 'Data objects' }, { id: 'r2-4e', label: 'IT systems' },
         ],
       },
       {
-        id: 's2-5', num: '2.5', label: 'Definition of required diagram links',
+        id: 's2-5', num: '2.5', label: 'Definition of required diagram links', description: 'Checks if elements are linked to diagrams.',
         items: [
           { id: 'r2-5a', label: 'Collapsed event subprocesses', paramType: 'select', paramOptions: ['Required', 'Prohibited', 'Optional'] },
           { id: 'r2-5b', label: 'Catching intermediate events', paramType: 'select', paramOptions: ['Required', 'Prohibited', 'Optional'] },
@@ -184,16 +184,16 @@ const BPMN_RULES: RuleSection[] = [
   {
     id: 's3', num: 3, label: 'Naming',
     subsections: [
-      { id: 's3-1', num: '3.1', label: 'Usage of consistent activity naming style', items: [{ id: 'r3-1', label: 'Usage of consistent activity naming style', paramType: 'select', paramOptions: ['Verb-object', 'Object-verb', 'Any'] }] },
-      { id: 's3-2', num: '3.2', label: 'Usage of unique element names', items: [{ id: 'r3-2', label: 'Usage of unique element names' }] },
-      { id: 's3-3', num: '3.3', label: 'Usage of same names for end events', items: [{ id: 'r3-3', label: 'Usage of same names for end events' }] },
-      { id: 's3-4', num: '3.4', label: 'Usage of same names for the process and elements', items: [{ id: 'r3-4', label: 'Usage of same names for the process and elements' }] },
+      { id: 's3-1', num: '3.1', label: 'Usage of consistent activity naming style', description: 'Checks if activities are named using a consistent style.', items: [{ id: 'r3-1', label: 'Usage of consistent activity naming style', paramType: 'select', paramOptions: ['Verb-object', 'Object-verb', 'Any'] }] },
+      { id: 's3-2', num: '3.2', label: 'Usage of unique element names', description: 'Checks if element names are unique within a diagram.', items: [{ id: 'r3-2', label: 'Usage of unique element names' }] },
+      { id: 's3-3', num: '3.3', label: 'Usage of same names for end events', description: 'Checks if all end events of the diagram have distinct names.', items: [{ id: 'r3-3', label: 'Usage of same names for end events' }] },
+      { id: 's3-4', num: '3.4', label: 'Usage of same names for the process and elements', description: 'Checks that the diagram does not contain any elements with the same name as the diagram.', items: [{ id: 'r3-4', label: 'Usage of same names for the process and elements' }] },
       {
-        id: 's3-5', num: '3.5', label: 'Definition of required element names',
+        id: 's3-5', num: '3.5', label: 'Definition of required element names', description: 'Checks if elements are named.',
         items: [{ id: 'r3-5a', label: 'Roles' }, { id: 'r3-5b', label: 'Events' }, { id: 'r3-5c', label: 'Activities' }, { id: 'r3-5d', label: 'Data objects' }, { id: 'r3-5e', label: 'Message flows' }],
       },
       {
-        id: 's3-6', num: '3.6', label: 'Usage of consistent event naming style',
+        id: 's3-6', num: '3.6', label: 'Usage of consistent event naming style', description: 'Checks if events are named using a consistent style.',
         items: [
           { id: 'r3-6a', label: 'End events', paramType: 'multiselect', paramOptions: ['State description', 'Categorisation', 'Conjunction', 'Activity description', 'Verb object', 'empty'] },
           { id: 'r3-6b', label: 'Start events', paramType: 'multiselect', paramOptions: ['State description', 'Categorisation', 'Conjunction', 'Activity description', 'Verb object', 'empty'] },
@@ -201,83 +201,83 @@ const BPMN_RULES: RuleSection[] = [
           { id: 'r3-6d', label: 'Catching intermediate events', paramType: 'multiselect', paramOptions: ['State description', 'Categorisation', 'Conjunction', 'Activity description', 'Verb object', 'empty'] },
         ],
       },
-      { id: 's3-7', num: '3.7', label: '"Method and Style"-conform labelings of events', items: [{ id: 'r3-7', label: '"Method and Style"-conform labelings of events' }] },
-      { id: 's3-8', num: '3.8', label: 'Consistent naming of subprocesses', items: [{ id: 'r3-8', label: 'Consistent naming of subprocesses' }] },
-      { id: 's3-9', num: '3.9', label: 'XOR gateway naming style', items: [{ id: 'r3-9', label: 'XOR gateway naming style' }] },
+      { id: 's3-7', num: '3.7', label: '"Method and Style"-conform labelings of events', description: 'Checks if all triggered start events, all intermediate events and all end events (in diagrams with several end states) are labeled.', items: [{ id: 'r3-7', label: '"Method and Style"-conform labelings of events' }] },
+      { id: 's3-8', num: '3.8', label: 'Consistent naming of subprocesses', description: 'Checks if collapsed subprocesses have the same name as the embedded diagrams.', items: [{ id: 'r3-8', label: 'Consistent naming of subprocesses' }] },
+      { id: 's3-9', num: '3.9', label: 'XOR gateway naming style', description: 'Checks if XOR gateways are named using a consistent style.', items: [{ id: 'r3-9', label: 'XOR gateway naming style' }] },
       { id: 's3-10', num: '3.10', label: 'Custom Rules', items: [], canAddCustom: true },
     ],
   },
   {
     id: 's4', num: 4, label: 'Process Structure',
     subsections: [
-      { id: 's4-1',  num: '4.1',  label: 'Usage of activities in pools', items: [{ id: 'r4-1', label: 'Usage of activities in pools' }] },
-      { id: 's4-2',  num: '4.2',  label: 'Usage of activities before or-splits', items: [{ id: 'r4-2', label: 'Usage of activities before or-splits' }] },
-      { id: 's4-3',  num: '4.3',  label: 'Correct usage of boundary events', items: [{ id: 'r4-3', label: 'Correct usage of boundary events' }] },
-      { id: 's4-4',  num: '4.4',  label: 'Correct usage of conditional and default flows', items: [{ id: 'r4-4', label: 'Correct usage of conditional and default flows' }] },
-      { id: 's4-5',  num: '4.5',  label: 'Test of subprocess end states', items: [{ id: 'r4-5', label: 'Test of subprocess end states' }] },
-      { id: 's4-6',  num: '4.6',  label: 'Consistency between superprocesses and subprocesses', items: [{ id: 'r4-6a', label: 'Boundary events' }, { id: 'r4-6b', label: 'Pools' }, { id: 'r4-6c', label: 'Message flows' }] },
-      { id: 's4-7',  num: '4.7',  label: 'Consistent usage of signals', items: [{ id: 'r4-7', label: 'Consistent usage of signals' }] },
-      { id: 's4-8',  num: '4.8',  label: 'Consistent usage of start and end events', items: [{ id: 'r4-8', label: 'Consistent usage of start and end events' }] },
-      { id: 's4-9',  num: '4.9',  label: 'Usage of correct syntax', items: [{ id: 'r4-9', label: 'Usage of correct syntax' }] },
-      { id: 's4-10', num: '4.10', label: 'SAP Signavio Process Governance conventions', items: [{ id: 'r4-10a', label: 'Usage of supported task types' }] },
-      { id: 's4-11', num: '4.11', label: 'Usage of a restricted number of expanded pools', items: [{ id: 'r4-11', label: 'Usage of a restricted number of expanded pools', paramType: 'number', paramPlaceholder: 'Max' }] },
-      { id: 's4-12', num: '4.12', label: 'Consistent usage of pools', items: [{ id: 'r4-12', label: 'Consistent usage of pools' }] },
-      { id: 's4-13', num: '4.13', label: 'Correct usage of OR gateways', items: [{ id: 'r4-13', label: 'Correct usage of OR gateways' }] },
-      { id: 's4-14', num: '4.14', label: 'Absence of loops', items: [{ id: 'r4-14', label: 'Absence of loops' }] },
-      { id: 's4-15', num: '4.15', label: 'Usage of a restricted number of activities', items: [{ id: 'r4-15', label: 'Usage of a restricted number of activities', paramType: 'number', paramPlaceholder: 'Max' }] },
-      { id: 's4-16', num: '4.16', label: 'Usage of a restricted number of consecutive or-splits', items: [{ id: 'r4-16', label: 'Usage of a restricted number of consecutive or-splits', paramType: 'number', paramPlaceholder: 'Max' }] },
-      { id: 's4-17', num: '4.17', label: 'Usage of meaningful gateways', items: [{ id: 'r4-17', label: 'Usage of meaningful gateways' }] },
-      { id: 's4-18', num: '4.18', label: 'Usage of multiple edges between nodes', items: [{ id: 'r4-18', label: 'Usage of multiple edges between nodes' }] },
-      { id: 's4-19', num: '4.19', label: 'Absence of deadlocks', items: [{ id: 'r4-19', label: 'Absence of deadlocks' }] },
-      { id: 's4-20', num: '4.20', label: 'Usage of start message events in subprocesses', items: [{ id: 'r4-20', label: 'Usage of start message events in subprocesses' }] },
-      { id: 's4-21', num: '4.21', label: 'Absence of multi merges', items: [{ id: 'r4-21', label: 'Absence of multi merges' }] },
-      { id: 's4-22', num: '4.22', label: 'Absence of subprocess relation cycles', items: [{ id: 'r4-22', label: 'Absence of subprocess relation cycles' }] },
-      { id: 's4-23', num: '4.23', label: 'Absence of pools, lanes and participants in subprocesses', items: [{ id: 'r4-23', label: 'Absence of pools, lanes and participants in subprocesses' }] },
-      { id: 's4-24', num: '4.24', label: 'Usage of message flows only on correct nodes', items: [{ id: 'r4-24', label: 'Usage of message flows only on correct nodes' }] },
-      { id: 's4-25', num: '4.25', label: 'Absence of multiple incoming sequence flows', items: [{ id: 'r4-25a', label: 'End events' }, { id: 'r4-25b', label: 'Activities' }, { id: 'r4-25c', label: 'Intermediate events' }] },
-      { id: 's4-26', num: '4.26', label: 'Absence of multiple outgoing sequence flows', items: [{ id: 'r4-26a', label: 'Activities' }, { id: 'r4-26b', label: 'Start events' }, { id: 'r4-26c', label: 'Intermediate events' }] },
-      { id: 's4-27', num: '4.27', label: 'Absence of split and join behavior on one element', items: [{ id: 'r4-27', label: 'Absence of split and join behavior on one element' }] },
-      { id: 's4-28', num: '4.28', label: 'Usage of only one start event', items: [{ id: 'r4-28a', label: 'within subprocesses' }, { id: 'r4-28b', label: 'within processes' }] },
-      { id: 's4-29', num: '4.29', label: 'Usage of attached boundary events', items: [{ id: 'r4-29', label: 'Usage of attached boundary events', paramType: 'select', paramOptions: ['Always', 'When available'] }] },
-      { id: 's4-30', num: '4.30', label: 'Message exchange between pools', items: [{ id: 'r4-30', label: 'Message exchange between pools' }] },
+      { id: 's4-1',  num: '4.1',  label: 'Usage of activities in pools', description: 'Checks if every none-blackbox pool contains at least one activity.', items: [{ id: 'r4-1', label: 'Usage of activities in pools' }] },
+      { id: 's4-2',  num: '4.2',  label: 'Usage of activities before or-splits', description: 'Checks if every or-split has an activity as predecessor.', items: [{ id: 'r4-2', label: 'Usage of activities before or-splits' }] },
+      { id: 's4-3',  num: '4.3',  label: 'Correct usage of boundary events', description: 'Checks if boundary events are correctly attached to an activity.', items: [{ id: 'r4-3', label: 'Correct usage of boundary events' }] },
+      { id: 's4-4',  num: '4.4',  label: 'Correct usage of conditional and default flows', description: 'Checks if conditional and default flows are only used if it is semantically correct.', items: [{ id: 'r4-4', label: 'Correct usage of conditional and default flows' }] },
+      { id: 's4-5',  num: '4.5',  label: 'Test of subprocess end states', description: 'Subprocesses with more than one non-Error end state must be followed by a gateway that tests the end state.', items: [{ id: 'r4-5', label: 'Test of subprocess end states' }] },
+      { id: 's4-6',  num: '4.6',  label: 'Consistency between superprocesses and subprocesses', description: 'Checks if errors, escalations and messages are consistent between super- and subprocesses.', items: [{ id: 'r4-6a', label: 'Boundary events' }, { id: 'r4-6b', label: 'Pools' }, { id: 'r4-6c', label: 'Message flows' }] },
+      { id: 's4-7',  num: '4.7',  label: 'Consistent usage of signals', description: 'Checks if throwing and catching signal events are used consistently.', items: [{ id: 'r4-7', label: 'Consistent usage of signals' }] },
+      { id: 's4-8',  num: '4.8',  label: 'Consistent usage of start and end events', description: 'Checks if start and end events are used in consistent combinations.', items: [{ id: 'r4-8', label: 'Consistent usage of start and end events' }] },
+      { id: 's4-9',  num: '4.9',  label: 'Usage of correct syntax', description: 'Checks if all diagrams are modeled using correct syntax.', items: [{ id: 'r4-9', label: 'Usage of correct syntax' }] },
+      { id: 's4-10', num: '4.10', label: 'SAP Signavio Process Governance conventions', description: 'Checks if the diagram follows the conventions required for interchange with SAP Signavio Process Governance.', items: [{ id: 'r4-10a', label: 'Usage of supported task types' }] },
+      { id: 's4-11', num: '4.11', label: 'Usage of a restricted number of expanded pools', description: 'Checks if diagrams are modeled not using more than a maximum number of expanded pools.', items: [{ id: 'r4-11', label: 'Usage of a restricted number of expanded pools', paramType: 'number', paramPlaceholder: 'Max' }] },
+      { id: 's4-12', num: '4.12', label: 'Consistent usage of pools', description: 'Checks if all events, activities and gateways reside within a pool.', items: [{ id: 'r4-12', label: 'Consistent usage of pools' }] },
+      { id: 's4-13', num: '4.13', label: 'Correct usage of OR gateways', description: 'Checks that an OR gateway does not merge exclusive alternative paths.', items: [{ id: 'r4-13', label: 'Correct usage of OR gateways' }] },
+      { id: 's4-14', num: '4.14', label: 'Absence of loops', description: 'Checks if all paths of the diagram are free from loops.', items: [{ id: 'r4-14', label: 'Absence of loops' }] },
+      { id: 's4-15', num: '4.15', label: 'Usage of a restricted number of activities', description: 'Checks if diagrams are modeled using a maximum number of activities.', items: [{ id: 'r4-15', label: 'Usage of a restricted number of activities', paramType: 'number', paramPlaceholder: 'Max' }] },
+      { id: 's4-16', num: '4.16', label: 'Usage of a restricted number of consecutive or-splits', description: 'Checks if all chains of consecutive or-splits are compressed into sufficiently small fragments.', items: [{ id: 'r4-16', label: 'Usage of a restricted number of consecutive or-splits', paramType: 'number', paramPlaceholder: 'Max' }] },
+      { id: 's4-17', num: '4.17', label: 'Usage of meaningful gateways', description: 'Checks if all gateways have splitting or merging behavior.', items: [{ id: 'r4-17', label: 'Usage of meaningful gateways' }] },
+      { id: 's4-18', num: '4.18', label: 'Usage of multiple edges between nodes', description: 'Checks if there are edges that have the same source and target node.', items: [{ id: 'r4-18', label: 'Usage of multiple edges between nodes' }] },
+      { id: 's4-19', num: '4.19', label: 'Absence of deadlocks', description: 'Checks if the diagram is free of deadlocks.', items: [{ id: 'r4-19', label: 'Absence of deadlocks' }] },
+      { id: 's4-20', num: '4.20', label: 'Usage of start message events in subprocesses', description: 'Checks if there is a start message event in a subprocess.', items: [{ id: 'r4-20', label: 'Usage of start message events in subprocesses' }] },
+      { id: 's4-21', num: '4.21', label: 'Absence of multi merges', description: 'Checks if the diagram is free of multi merges.', items: [{ id: 'r4-21', label: 'Absence of multi merges' }] },
+      { id: 's4-22', num: '4.22', label: 'Absence of subprocess relation cycles', description: 'Checks if all collapsed subprocesses only link diagrams contained in lower process levels.', items: [{ id: 'r4-22', label: 'Absence of subprocess relation cycles' }] },
+      { id: 's4-23', num: '4.23', label: 'Absence of pools, lanes and participants in subprocesses', description: 'Checks if only as call activity referenced subprocesses contain pools, lanes and participants.', items: [{ id: 'r4-23', label: 'Absence of pools, lanes and participants in subprocesses' }] },
+      { id: 's4-24', num: '4.24', label: 'Usage of message flows only on correct nodes', description: 'Checks if all message flows are annotated to sender and receiver elements.', items: [{ id: 'r4-24', label: 'Usage of message flows only on correct nodes' }] },
+      { id: 's4-25', num: '4.25', label: 'Absence of multiple incoming sequence flows', description: 'Checks if all elements have only one incoming sequence flow.', items: [{ id: 'r4-25a', label: 'End events' }, { id: 'r4-25b', label: 'Activities' }, { id: 'r4-25c', label: 'Intermediate events' }] },
+      { id: 's4-26', num: '4.26', label: 'Absence of multiple outgoing sequence flows', description: 'Checks if all elements have only one outgoing sequence flow.', items: [{ id: 'r4-26a', label: 'Activities' }, { id: 'r4-26b', label: 'Start events' }, { id: 'r4-26c', label: 'Intermediate events' }] },
+      { id: 's4-27', num: '4.27', label: 'Absence of split and join behavior on one element', description: 'Checks if all gateways are either splitting or merging.', items: [{ id: 'r4-27', label: 'Absence of split and join behavior on one element' }] },
+      { id: 's4-28', num: '4.28', label: 'Usage of only one start event', description: 'Checks if only one start event is used in a process or a subprocess.', items: [{ id: 'r4-28a', label: 'within subprocesses' }, { id: 'r4-28b', label: 'within processes' }] },
+      { id: 's4-29', num: '4.29', label: 'Usage of attached boundary events', description: 'Checks if interrupting, non-interrupting or no attached boundary events at all are used in the diagram.', items: [{ id: 'r4-29', label: 'Usage of attached boundary events', paramType: 'select', paramOptions: ['Always', 'When available'] }] },
+      { id: 's4-30', num: '4.30', label: 'Message exchange between pools', description: 'Checks if each pool exchanges messages with other pools modeled in same diagram.', items: [{ id: 'r4-30', label: 'Message exchange between pools' }] },
       { id: 's4-31', num: '4.31', label: 'Custom Rules', items: [], canAddCustom: true },
     ],
   },
   {
     id: 's5', num: 5, label: 'Layout',
     subsections: [
-      { id: 's5-1',  num: '5.1',  label: 'Usage of a restricted diagram size', items: [{ id: 'r5-1', label: 'Usage of a restricted diagram size', paramType: 'select', paramOptions: ['DIN A3', 'DIN A4', 'Letter', 'A0'] }] },
-      { id: 's5-2',  num: '5.2',  label: 'Usage of specified colors', items: [{ id: 'r5-2', label: 'Usage of specified colors' }] },
-      { id: 's5-3',  num: '5.3',  label: 'Usage of the defined edge direction', items: [{ id: 'r5-3a', label: 'Sequence flows' }, { id: 'r5-3b', label: 'Message flows' }, { id: 'r5-3c', label: 'Associations' }] },
+      { id: 's5-1',  num: '5.1',  label: 'Usage of a restricted diagram size', description: 'Checks if the diagram size does not exceed the defined page format.', items: [{ id: 'r5-1', label: 'Usage of a restricted diagram size', paramType: 'select', paramOptions: ['DIN A3', 'DIN A4', 'Letter', 'A0'] }] },
+      { id: 's5-2',  num: '5.2',  label: 'Usage of specified colors', description: 'Checks if the default colors have not been changed in the diagram.', items: [{ id: 'r5-2', label: 'Usage of specified colors' }] },
+      { id: 's5-3',  num: '5.3',  label: 'Usage of the defined edge direction', description: 'Checks if the direction of edges matches with the configured modeling orientation.', items: [{ id: 'r5-3a', label: 'Sequence flows' }, { id: 'r5-3b', label: 'Message flows' }, { id: 'r5-3c', label: 'Associations' }] },
       {
-        id: 's5-4', num: '5.4', label: 'Consistent edge folding',
+        id: 's5-4', num: '5.4', label: 'Consistent edge folding', description: 'Checks if the layout of edges is either straight or right-angled.',
         items: [
           { id: 'r5-4a', label: 'Sequence flows', paramType: 'select', paramOptions: ['Perpendicular', 'Horizontal/Vertical', 'Straight'] },
           { id: 'r5-4b', label: 'Message flows', paramType: 'select', paramOptions: ['Horizontal/Vertical', 'Perpendicular', 'Straight'] },
           { id: 'r5-4c', label: 'Associations', paramType: 'select', paramOptions: ['Straight', 'Perpendicular', 'Horizontal/Vertical'] },
         ],
       },
-      { id: 's5-5',  num: '5.5',  label: 'Absence of edge overlays', items: [{ id: 'r5-5', label: 'Absence of edge overlays' }] },
-      { id: 's5-6',  num: '5.6',  label: 'Usage of sufficient distances between elements', items: [{ id: 'r5-6', label: 'Usage of sufficient distances between elements' }] },
-      { id: 's5-7',  num: '5.7',  label: 'Placing messages between pools', items: [{ id: 'r5-7', label: 'Placing messages between pools' }] },
-      { id: 's5-8',  num: '5.8',  label: 'Definition of the correct modeling direction', items: [{ id: 'r5-8', label: 'Definition of the correct modeling direction', paramType: 'select', paramOptions: ['Horizontal', 'Vertical'] }] },
-      { id: 's5-9',  num: '5.9',  label: 'Absence of node intersections', items: [{ id: 'r5-9', label: 'Absence of node intersections' }] },
+      { id: 's5-5',  num: '5.5',  label: 'Absence of edge overlays', description: 'Checks if all edges run next to each other instead of overlaying each other.', items: [{ id: 'r5-5', label: 'Absence of edge overlays' }] },
+      { id: 's5-6',  num: '5.6',  label: 'Usage of sufficient distances between elements', description: 'Checks if a minimum distance between two elements is used in the diagrams.', items: [{ id: 'r5-6', label: 'Usage of sufficient distances between elements' }] },
+      { id: 's5-7',  num: '5.7',  label: 'Placing messages between pools', description: 'Checks if all message objects are located between two pools.', items: [{ id: 'r5-7', label: 'Placing messages between pools' }] },
+      { id: 's5-8',  num: '5.8',  label: 'Definition of the correct modeling direction', description: 'Checks if the modeling direction is set as defined.', items: [{ id: 'r5-8', label: 'Definition of the correct modeling direction', paramType: 'select', paramOptions: ['Horizontal', 'Vertical'] }] },
+      { id: 's5-9',  num: '5.9',  label: 'Absence of node intersections', description: 'Checks if all nodes lie next to other elements instead of overlapping each other.', items: [{ id: 'r5-9', label: 'Absence of node intersections' }] },
       {
-        id: 's5-10', num: '5.10', label: 'Consistent incoming and outgoing behavior of edges',
+        id: 's5-10', num: '5.10', label: 'Consistent incoming and outgoing behavior of edges', description: 'Checks if the modeled edges behave as defined by the modeling direction on diagram level.',
         items: [
           { id: 'r5-10a', label: 'Sequence flows', paramType: 'select', paramOptions: ['Perpendiculars allowed', 'Strictly perpendicular'] },
           { id: 'r5-10b', label: 'Message flows', paramType: 'select', paramOptions: ['Perpendiculars allowed', 'Strictly perpendicular'] },
         ],
       },
-      { id: 's5-11', num: '5.11', label: 'Usage of specified element sizes', items: [{ id: 'r5-11', label: 'Usage of specified element sizes' }] },
+      { id: 's5-11', num: '5.11', label: 'Usage of specified element sizes', description: 'Checks if the default element sizes have not been changed in the diagram.', items: [{ id: 'r5-11', label: 'Usage of specified element sizes' }] },
       { id: 's5-12', num: '5.12', label: 'Custom Rules', items: [], canAddCustom: true },
     ],
   },
   {
     id: 's6', num: 6, label: 'Consistency',
     subsections: [
-      { id: 's6-1', num: '6.1', label: 'Usage of decision logic for decisions', items: [{ id: 'r6-1', label: 'Usage of decision logic for decisions' }] },
-      { id: 's6-2', num: '6.2', label: 'Correct usage of gateways behind decisions', items: [{ id: 'r6-2', label: 'Correct usage of gateways behind decisions' }] },
+      { id: 's6-1', num: '6.1', label: 'Usage of decision logic for decisions', description: 'Checks if all existing decisions have a decision logic defined.', items: [{ id: 'r6-1', label: 'Usage of decision logic for decisions' }] },
+      { id: 's6-2', num: '6.2', label: 'Correct usage of gateways behind decisions', description: 'Checks if outputs of decisions match the gateways behind them.', items: [{ id: 'r6-2', label: 'Correct usage of gateways behind decisions' }] },
     ],
     canAddCustom: true,
   },
@@ -478,7 +478,6 @@ function ColumnHeaders() {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ModelingConventions() {
-  const [tool, setTool] = useState<Tool>('modeler')
   const addDialogId = useId()
   const [conventions, setConventions] = useState<Convention[]>(INITIAL_CONVENTIONS)
   const [selectedConvId, setSelectedConvId] = useState('sap-bp')
@@ -674,7 +673,7 @@ export default function ModelingConventions() {
   const toggle = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
 
   // ── Rule leaf row ──
-  const renderRuleRow = (item: RuleItem, paddingLeft: string, num?: string) => {
+  const renderRuleRow = (item: RuleItem, paddingLeft: string, num?: string, description?: string) => {
     const state    = conv.ruleStates[item.id]
     const enabled  = state?.enabled ?? false
     const severity = state?.severity ?? null
@@ -698,7 +697,10 @@ export default function ModelingConventions() {
           />
         )}
         {num && <Text style={{ color: 'var(--sapTextColor)', fontSize: 'var(--sapFontSize)', flexShrink: 0, opacity: dim, ...CF }}>{num}</Text>}
-        <Text style={{ flex: 1, minWidth: 0, fontSize: 'var(--sapFontSize)', opacity: dim, ...CF }}>{item.label}</Text>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1px', opacity: dim }}>
+          <Text style={{ fontSize: 'var(--sapFontSize)', ...CF }}>{item.label}</Text>
+          {description && <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', ...CF }}>{description}</Text>}
+        </div>
         {item.paramType === 'attributemapping' && (
           <Button
             icon="search"
@@ -930,7 +932,10 @@ export default function ModelingConventions() {
             />}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Text style={{ fontWeight: '600', flexShrink: 0, ...CF }}>{sub.num}</Text>
-              <Text style={{ fontWeight: '600', ...CF }}>{sub.label} ({allItems.length})</Text>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                <Text style={{ fontWeight: '600', ...CF }}>{sub.label} ({allItems.length})</Text>
+                {sub.description && <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', fontWeight: 'normal', ...CF }}>{sub.description}</Text>}
+              </div>
             </div>
             {sub.canAddCustom && !conv.isBuiltin && (
               <Button design="Transparent" icon="add" style={{ marginLeft: 'auto', '--ui5-button-base-padding': '0 4px', flexShrink: 0 } as React.CSSProperties} onClick={openCreateRule}>Create Custom Rule</Button>
@@ -944,7 +949,7 @@ export default function ModelingConventions() {
         }
       } else {
         // Single-item subsection: rule row with subsection number as prefix (depth 1)
-        allItems.forEach(item => rows.push(renderRuleRow(item, '3.5rem', sub.num)))
+        allItems.forEach(item => rows.push(renderRuleRow(item, '3.5rem', sub.num, sub.description)))
       }
     })
 
@@ -1257,11 +1262,7 @@ export default function ModelingConventions() {
       style={{ height: '100%' } as React.CSSProperties}
       mode={ObjectPageMode.IconTabBar}
       hidePinButton
-      selectedSectionId={tool}
-      onSelectedSectionChange={(e: any) => {
-        const idx = e.detail?.selectedSectionIndex ?? 0
-        setTool(idx === 0 ? 'modeler' : 'pm-legacy')
-      }}
+      selectedSectionId="pm-legacy"
       titleArea={
         <ObjectPageTitle
           header="Modeling Conventions"
@@ -1275,14 +1276,6 @@ export default function ModelingConventions() {
         </Bar>
       ) : undefined}
     >
-      <ObjectPageSection id="modeler" titleText="Modeler" hideTitleText>
-        <div style={{ padding: '1rem 0 16px' }}>
-          <MessageStrip design="Critical" hideCloseButton>
-            This configuration applies to <strong>the New Process Modeler only.</strong> It has no effect on the Old Process Modeler.
-          </MessageStrip>
-        </div>
-        {body}
-      </ObjectPageSection>
       <ObjectPageSection id="pm-legacy" titleText="Process Manager (legacy)" hideTitleText>
         <div style={{ padding: '1rem 0 16px' }}>
           <MessageStrip design="Critical" hideCloseButton>

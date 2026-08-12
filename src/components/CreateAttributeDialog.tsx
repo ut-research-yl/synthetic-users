@@ -1505,6 +1505,17 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                   ? Object.values(SUB_ELEMENTS).flat().filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i)
                   : (modelingSubElements ?? [])
 
+                // Build map: subElementId -> asset type names
+                const subElemAssetTypes: Record<string, string> = {}
+                Object.entries(SUB_ELEMENTS).forEach(([assetTypeId, elements]) => {
+                  const assetTypeName = ASSET_TYPES.find(t => t.id === assetTypeId)?.name ?? assetTypeId
+                  elements.forEach(el => {
+                    subElemAssetTypes[el.id] = subElemAssetTypes[el.id]
+                      ? `${subElemAssetTypes[el.id]}, ${assetTypeName}`
+                      : assetTypeName
+                  })
+                })
+
                 if (modelingItems.length > 0 && dictItems.length > 0) {
                   return (<>
                     <MultiComboBoxItemGroup headerText="Modeling Asset Types">
@@ -1512,7 +1523,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                     </MultiComboBoxItemGroup>
                     {subElems.length > 0 && (
                       <MultiComboBoxItemGroup headerText="Modeling Elements">
-                        {subElems.map(e => <MultiComboBoxItem key={e.id} text={e.name} selected={assignedTo.includes(e.name)} />)}
+                        {subElems.map(e => <MultiComboBoxItem key={e.id} text={e.name} additionalText={subElemAssetTypes[e.id]} selected={assignedTo.includes(e.name)} />)}
                       </MultiComboBoxItemGroup>
                     )}
                     <MultiComboBoxItemGroup headerText="Dictionary Categories">
@@ -1528,7 +1539,7 @@ export function CreateAttributeDialog({ open, initialType, initialName, initialD
                       </MultiComboBoxItemGroup>
                     )}
                     <MultiComboBoxItemGroup headerText="Modeling Elements">
-                      {subElems.map(e => <MultiComboBoxItem key={e.id} text={e.name} selected={assignedTo.includes(e.name)} />)}
+                      {subElems.map(e => <MultiComboBoxItem key={e.id} text={e.name} additionalText={subElemAssetTypes[e.id]} selected={assignedTo.includes(e.name)} />)}
                     </MultiComboBoxItemGroup>
                   </>)
                 }

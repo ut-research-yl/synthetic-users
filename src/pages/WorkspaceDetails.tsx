@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react'
-import { CheckBox, Label, Text, TextArea, Input, Select, Option, Button, Menu, MenuItem, MenuSeparator, List, ListItemCustom, ListItemStandard, Popover, Icon, Avatar } from '@ui5/webcomponents-react'
+import { CheckBox, Label, Text, TextArea, Input, Select, Option, Button, Menu, MenuItem, MenuSeparator, List, ListItemCustom, ListItemStandard, Popover, Icon, Avatar, Dialog, Bar } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 import { useWorkspace } from '../contexts/WorkspaceContext'
-import { ADMIN_USERS, type ContentLanguage } from '../contexts/WorkspaceContext'
+import { ADMIN_USERS, type ContentLanguage, type ExplorerColumn } from '../contexts/WorkspaceContext'
 import PageHeader from '../components/PageHeader'
 import SettingsPageLayout, { SettingsSection } from '../components/SettingsPageLayout'
 import { TransferOwnershipDialog } from '../components/TransferOwnershipDialog'
@@ -104,6 +104,12 @@ const AUTO_SUBSCRIPTION_OPTIONS = [
   'No automatic subscriptions',
 ]
 
+const AVAILABLE_ATTRIBUTES = [
+  'Description', 'Revision', 'Last change', 'Supporting Documents',
+  'Status', 'Author', 'Created', 'Category', 'Process Owner',
+  'Last modified by', 'Approval status', 'Custom attribute 1',
+]
+
 export default function WorkspaceDetails() {
   const [organization, setOrganization] = useState('Acme Inc.')
   const [currency, setCurrency] = useState('EUR')
@@ -115,6 +121,10 @@ export default function WorkspaceDetails() {
   const [addLangOpen, setAddLangOpen] = useState(false)
   const [addLangSearch, setAddLangSearch] = useState('')
   const [transferOpen, setTransferOpen] = useState(false)
+  const [disablePrivateFolderOpen, setDisablePrivateFolderOpen] = useState(false)
+  const [defaultLangDialogOpen, setDefaultLangDialogOpen] = useState(false)
+  const [pendingDefaultLang, setPendingDefaultLang] = useState<string | null>(null)
+  const [defaultLangExecCode, setDefaultLangExecCode] = useState('')
   const addLangBtnId = useRef('add-lang-btn').current
 
   const {
@@ -124,6 +134,7 @@ export default function WorkspaceDetails() {
     contentLanguages, setContentLanguages, addContentLanguage, removeContentLanguage,
     moveContentLanguage, reorderContentLanguage, setDefaultLanguage,
     ownerId, setOwnerId,
+    explorerColumns, setExplorerColumns,
   } = useWorkspace()
 
   const [draftWorkspaceName, setDraftWorkspaceName] = useState(workspaceName)
@@ -138,6 +149,12 @@ export default function WorkspaceDetails() {
   const savedPrivateFolder = useRef(privateFolder)
   const savedContentLanguages = useRef<ContentLanguage[]>(contentLanguages)
 
+  const [colOpenMenu, setColOpenMenu] = useState<string | null>(null)
+  const [addColOpen, setAddColOpen] = useState(false)
+  const [addColSearch, setAddColSearch] = useState('')
+  const addColBtnId = useRef('add-col-btn').current
+  const savedExplorerColumns = useRef<ExplorerColumn[]>(explorerColumns)
+
   const handleSave = () => {
     setWorkspaceName(draftWorkspaceName)
     savedWorkspaceName.current = draftWorkspaceName
@@ -149,6 +166,7 @@ export default function WorkspaceDetails() {
     savedAdditionalInfo.current = additionalInfo
     savedPrivateFolder.current = privateFolder
     savedContentLanguages.current = [...contentLanguages]
+    savedExplorerColumns.current = [...explorerColumns]
     setIsDirty(false)
   }
 
@@ -162,6 +180,7 @@ export default function WorkspaceDetails() {
     setAdditionalInfo(savedAdditionalInfo.current)
     setPrivateFolder(savedPrivateFolder.current)
     setContentLanguages([...savedContentLanguages.current])
+    setExplorerColumns([...savedExplorerColumns.current])
     setIsDirty(false)
   }
 
@@ -169,6 +188,28 @@ export default function WorkspaceDetails() {
   const query = addLangSearch.trim().toLowerCase()
   const availableLangs = ALL_LANGUAGES.filter(
     l => !activeCodes.has(l.code) && (!query || l.label.toLowerCase().includes(query))
+  )
+
+  // Build display labels: strip country suffix unless multiple variants of the same
+  // base language are active (e.g. "Portuguese (Brazil)" only if "Portuguese (Portugal)" is also active).
+  const baseLanguageCounts = new Map<string, number>()
+  for (const lang of contentLanguages) {
+    const base = lang.code.split('-')[0]
+    baseLanguageCounts.set(base, (baseLanguageCounts.get(base) ?? 0) + 1)
+  }
+  const getDisplayLabel = (lang: ContentLanguage) => {
+    const base = lang.code.split('-')[0]
+    if (!lang.code.includes('-') || (baseLanguageCounts.get(base) ?? 0) <= 1) {
+      // Single variant active: use base language name (strip country in parentheses)
+      return lang.label.replace(/\s*\([^)]+\)$/, '')
+    }
+    return lang.label
+  }
+
+  const colQuery = addColSearch.trim().toLowerCase()
+  const activeAttrs = new Set(explorerColumns.map(c => c.attribute))
+  const availableAttrs = AVAILABLE_ATTRIBUTES.filter(
+    a => !activeAttrs.has(a) && (!colQuery || a.toLowerCase().includes(colQuery))
   )
 
   const owner = ADMIN_USERS.find(u => u.id === ownerId)!
@@ -292,53 +333,11 @@ export default function WorkspaceDetails() {
               </Select>
             </div>
             <div className={s.rowFlush}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem' }}>
+              <div style={{ padding: '0 1rem' }}>
                 <Label className={s.fieldLabel}>Content Languages</Label>
-                <Button id={addLangBtnId} icon="add" design="Transparent" onClick={() => { setAddLangSearch(''); setAddLangOpen(true) }}>
-                  Add language
-                </Button>
-                <Popover
-                  opener={addLangBtnId}
-                  open={addLangOpen}
-                  onClose={() => setAddLangOpen(false)}
-                  placement="Bottom"
-                  horizontalAlign="End"
-                  className="no-padding-popover"
-                  style={{ width: '22rem' } as React.CSSProperties}
-                >
-                  <div style={{ padding: '0.5rem 0.75rem 0.25rem' }}>
-                    <Input
-                      placeholder="Search languages…"
-                      accessibleName="Search languages"
-                      value={addLangSearch}
-                      onInput={e => setAddLangSearch((e.target as unknown as HTMLInputElement).value)}
-                      className={s.fieldFull}
-                    />
-                  </div>
-                  <List style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                    {availableLangs.length === 0 && (
-                      <ListItemStandard>
-                        {query ? 'No languages match your search.' : 'All languages are already active.'}
-                      </ListItemStandard>
-                    )}
-                    {availableLangs.map(lang => (
-                      <ListItemStandard
-                        key={lang.code}
-                        onClick={() => {
-                          addContentLanguage({ code: lang.code, label: lang.label, isDefault: false })
-                          setAddLangOpen(false)
-                          setAddLangSearch('')
-                          setIsDirty(true)
-                        }}
-                      >
-                        {lang.label}
-                      </ListItemStandard>
-                    ))}
-                  </List>
-                </Popover>
               </div>
               <Text className={s.fieldDesc} style={{ padding: '0 1rem' }}>
-                Define the languages in which content can be created. The first language is the workspace default.
+                Define the languages in which content can be created.
               </Text>
               <List
                 onMoveOver={e => e.preventDefault()}
@@ -384,7 +383,7 @@ export default function WorkspaceDetails() {
                         name="horizontal-grip"
                         style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }}
                       />
-                      <span style={{ flex: 1 }}>{lang.label}</span>
+                      <span style={{ flex: 1 }}>{getDisplayLabel(lang)}</span>
                       {lang.isDefault && <SigChipV2 value="Default" design="positive" condensed />}
                       <Button
                         id={`lang-overflow-${lang.code}`}
@@ -403,7 +402,7 @@ export default function WorkspaceDetails() {
                         const text = (e.detail.item as HTMLElement).getAttribute('text') ?? ''
                         if (text === 'Move Up') moveContentLanguage(lang.code, 'up')
                         else if (text === 'Move Down') moveContentLanguage(lang.code, 'down')
-                        else if (text === 'Set as Default') setDefaultLanguage(lang.code)
+                        else if (text === 'Set as Default') { setPendingDefaultLang(lang.code); setDefaultLangExecCode(''); setDefaultLangDialogOpen(true); return }
                         else if (text === 'Remove') removeContentLanguage(lang.code)
                         setIsDirty(true)
                         setOpenMenuCode(null)
@@ -413,11 +412,225 @@ export default function WorkspaceDetails() {
                       <MenuItem text="Move Down" icon="slim-arrow-down" disabled={idx === contentLanguages.length - 1} />
                       {!lang.isDefault && <MenuItem text="Set as Default" icon="favorite" />}
                       {!lang.isDefault && <MenuSeparator />}
-                      <MenuItem text="Remove" icon="decline" disabled={contentLanguages.length === 1} />
+                      <MenuItem text="Remove" icon="decline" disabled={lang.isDefault || contentLanguages.length === 1} />
                     </Menu>
                   </ListItemCustom>
                 ))}
               </List>
+              <div style={{ padding: '0.5rem 1rem' }}>
+                <Button
+                  id={addLangBtnId}
+                  icon="add"
+                  design="Transparent"
+                  onClick={() => { setAddLangSearch(''); setAddLangOpen(true) }}
+                >
+                  Add language
+                </Button>
+                <Popover
+                  opener={addLangBtnId}
+                  open={addLangOpen}
+                  onClose={() => setAddLangOpen(false)}
+                  placement="Bottom"
+                  horizontalAlign="Start"
+                  className="no-padding-popover"
+                  style={{ width: '22rem' } as React.CSSProperties}
+                >
+                  <div style={{ padding: '0.5rem 0.75rem 0.25rem' }}>
+                    <Input
+                      placeholder="Search languages…"
+                      accessibleName="Search languages"
+                      value={addLangSearch}
+                      onInput={e => setAddLangSearch((e.target as unknown as HTMLInputElement).value)}
+                      className={s.fieldFull}
+                    />
+                  </div>
+                  <List style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                    {availableLangs.length === 0 && (
+                      <ListItemStandard>
+                        {query ? 'No languages match your search.' : 'All languages are already active.'}
+                      </ListItemStandard>
+                    )}
+                    {availableLangs.map(lang => (
+                      <ListItemStandard
+                        key={lang.code}
+                        onClick={() => {
+                          addContentLanguage({ code: lang.code, label: lang.label, isDefault: false })
+                          setAddLangOpen(false)
+                          setAddLangSearch('')
+                          setIsDirty(true)
+                        }}
+                      >
+                        {lang.label}
+                      </ListItemStandard>
+                    ))}
+                  </List>
+                </Popover>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title="Explorer View"
+            subtitle="Select the diagram attributes to be shown as columns in the table view of the explorer."
+          >
+            <List
+              onMoveOver={e => e.preventDefault()}
+              onMove={e => {
+                const sourceId = (e.detail.source.element as HTMLElement).dataset.id ?? ''
+                const destId = (e.detail.destination.element as HTMLElement).dataset.id ?? ''
+                const placement = e.detail.destination.placement as 'Before' | 'After' | 'On'
+                if (!sourceId || !destId || placement === 'On') return
+                setExplorerColumns(prev => {
+                  const from = prev.findIndex(c => c.id === sourceId)
+                  const to = prev.findIndex(c => c.id === destId)
+                  if (from === -1 || to === -1) return prev
+                  const next = [...prev]
+                  const [item] = next.splice(from, 1)
+                  const insertAt = placement === 'Before' ? (to > from ? to - 1 : to) : (to < from ? to + 1 : to)
+                  next.splice(insertAt, 0, item)
+                  return next
+                })
+                setIsDirty(true)
+              }}
+            >
+              {explorerColumns.map((col, idx) => (
+                <ListItemCustom
+                  key={col.id}
+                  movable
+                  data-id={col.id}
+                  type="Inactive"
+                  style={{ padding: 0 }}
+                >
+                  <div style={{
+                    display: 'flex', alignItems: 'center', width: '100%',
+                    height: '3rem', paddingLeft: '0.5rem', paddingRight: '0.5rem',
+                    gap: '0.5rem', boxSizing: 'border-box', pointerEvents: 'none',
+                  }}>
+                    <Icon
+                      name="horizontal-grip"
+                      style={{ color: 'var(--sapContent_NonInteractiveIconColor)', cursor: 'grab', flexShrink: 0 }}
+                    />
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {col.attribute}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', pointerEvents: 'auto', flexShrink: 0 }}>
+                      <Input
+                        type="Number"
+                        value={String(col.width)}
+                        style={{ width: '4rem' }}
+                        onInput={e => {
+                          const v = parseInt((e.target as unknown as HTMLInputElement).value, 10)
+                          if (!isNaN(v) && v > 0) {
+                            setExplorerColumns(prev => prev.map(c => c.id === col.id ? { ...c, width: v } : c))
+                            setIsDirty(true)
+                          }
+                        }}
+                      />
+                      <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)', flexShrink: 0 }}>px</Text>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', pointerEvents: 'auto', flexShrink: 0 }}>
+                      <Button
+                        icon="delete"
+                        design="Transparent"
+                        accessibleName="Remove column"
+                        tooltip="Remove"
+                        disabled={col.fixed}
+                        onClick={e => {
+                          e.stopPropagation()
+                          setExplorerColumns(prev => prev.filter(c => c.id !== col.id))
+                          setIsDirty(true)
+                        }}
+                      />
+                      <Button
+                        id={`col-overflow-${col.id}`}
+                        icon="overflow"
+                        design="Transparent"
+                        accessibleName="More options"
+                        tooltip="More options"
+                        onClick={e => { e.stopPropagation(); setColOpenMenu(colOpenMenu === col.id ? null : col.id) }}
+                      />
+                    </div>
+                  </div>
+                  <Menu
+                    opener={`col-overflow-${col.id}`}
+                    open={colOpenMenu === col.id}
+                    onClose={() => setColOpenMenu(null)}
+                    onItemClick={e => {
+                      const text = (e.detail.item as HTMLElement).getAttribute('text') ?? ''
+                      if (text === 'Move Up') {
+                        setExplorerColumns(prev => {
+                          const i = prev.findIndex(c => c.id === col.id)
+                          const target = i - 1
+                          if (target < 0) return prev
+                          const next = [...prev]; [next[i], next[target]] = [next[target], next[i]]; return next
+                        })
+                        setIsDirty(true)
+                      } else if (text === 'Move Down') {
+                        setExplorerColumns(prev => {
+                          const i = prev.findIndex(c => c.id === col.id)
+                          const target = i + 1
+                          if (target >= prev.length) return prev
+                          const next = [...prev]; [next[i], next[target]] = [next[target], next[i]]; return next
+                        })
+                        setIsDirty(true)
+                      }
+                      setColOpenMenu(null)
+                    }}
+                  >
+                    <MenuItem text="Move Up" icon="slim-arrow-up" disabled={idx === 0} />
+                    <MenuItem text="Move Down" icon="slim-arrow-down" disabled={idx === explorerColumns.length - 1} />
+                  </Menu>
+                </ListItemCustom>
+              ))}
+            </List>
+            <div style={{ padding: '0.5rem 1rem' }}>
+              <Button
+                id={addColBtnId}
+                icon="add"
+                design="Transparent"
+                onClick={() => { setAddColSearch(''); setAddColOpen(true) }}
+              >
+                Add attribute
+              </Button>
+              <Popover
+                opener={addColBtnId}
+                open={addColOpen}
+                onClose={() => setAddColOpen(false)}
+                placement="Bottom"
+                horizontalAlign="Start"
+                className="no-padding-popover"
+                style={{ width: '22rem' } as React.CSSProperties}
+              >
+                <div style={{ padding: '0.5rem 0.75rem 0.25rem' }}>
+                  <Input
+                    placeholder="Search attributes…"
+                    accessibleName="Search attributes"
+                    value={addColSearch}
+                    onInput={e => setAddColSearch((e.target as unknown as HTMLInputElement).value)}
+                    className={s.fieldFull}
+                  />
+                </div>
+                <List style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                  {availableAttrs.length === 0 && (
+                    <ListItemStandard>
+                      {colQuery ? 'No attributes match your search.' : 'All attributes are already added.'}
+                    </ListItemStandard>
+                  )}
+                  {availableAttrs.map(attr => (
+                    <ListItemStandard
+                      key={attr}
+                      onClick={() => {
+                        setExplorerColumns(prev => [...prev, { id: `col-${Date.now()}`, attribute: attr, width: 100 }])
+                        setAddColOpen(false)
+                        setAddColSearch('')
+                        setIsDirty(true)
+                      }}
+                    >
+                      {attr}
+                    </ListItemStandard>
+                  ))}
+                </List>
+              </Popover>
             </div>
           </SettingsSection>
 
@@ -427,7 +640,14 @@ export default function WorkspaceDetails() {
               <CheckBox
                 checked={privateFolder}
                 text="Enable private folder 'My documents' for every user"
-                onChange={() => { setPrivateFolder(!privateFolder); setIsDirty(true) }}
+                onChange={() => {
+                  if (privateFolder) {
+                    setDisablePrivateFolderOpen(true)
+                  } else {
+                    setPrivateFolder(true)
+                    setIsDirty(true)
+                  }
+                }}
                 style={{ marginLeft: '-8px' }}
               />
               <Text className={s.fieldDesc}>
@@ -483,6 +703,72 @@ export default function WorkspaceDetails() {
         onClose={() => setTransferOpen(false)}
         onTransfer={newId => { setOwnerId(newId); setTransferOpen(false); setIsDirty(true) }}
       />
+      <Dialog
+        open={disablePrivateFolderOpen}
+        headerText="Disable private folder 'My documents' for every user"
+        className="dialog-padding-s"
+        state="Critical"
+        footer={
+          <Bar design="Footer">
+            <Button slot="endContent" design="Negative" onClick={() => {
+              setPrivateFolder(false)
+              setIsDirty(true)
+              setDisablePrivateFolderOpen(false)
+            }}>Disable</Button>
+            <Button slot="endContent" onClick={() => setDisablePrivateFolderOpen(false)}>Cancel</Button>
+          </Bar>
+        }
+      >
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <Text>If you disable the private folder &apos;My Documents&apos;, its content will no longer be available.</Text>
+          <Text>Do you want to proceed?</Text>
+        </div>
+      </Dialog>
+      <Dialog
+        open={defaultLangDialogOpen}
+        headerText="Change default language"
+        className="dialog-padding-s"
+        state="Critical"
+        footer={
+          <Bar design="Footer">
+            <Button slot="endContent" design="Emphasized" disabled={!defaultLangExecCode.trim()} onClick={() => {
+              if (pendingDefaultLang) {
+                setDefaultLanguage(pendingDefaultLang)
+                setIsDirty(true)
+              }
+              setDefaultLangDialogOpen(false)
+              setPendingDefaultLang(null)
+              setDefaultLangExecCode('')
+            }}>Continue</Button>
+            <Button slot="endContent" onClick={() => {
+              setDefaultLangDialogOpen(false)
+              setPendingDefaultLang(null)
+              setDefaultLangExecCode('')
+            }}>Cancel</Button>
+          </Bar>
+        }
+      >
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <Text>
+            Changing the default language has a significant impact on your workspace:
+            all diagrams must be reopened and saved to update their previews, and
+            all items will be re-indexed for search, which may take several hours.
+          </Text>
+          <Text>
+            To get an execution code, contact SAP Signavio Support via the{' '}
+            <a href="https://support.sap.com/en/index.html" target="_blank" rel="noreferrer">SAP ONE Support Launchpad</a>.
+          </Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <Label for="exec-code" showColon>Execution code</Label>
+            <Input
+              id="exec-code"
+              value={defaultLangExecCode}
+              style={{ width: '10rem' }}
+              onInput={e => setDefaultLangExecCode((e.target as unknown as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      </Dialog>
     </PageHeader>
   )
 }

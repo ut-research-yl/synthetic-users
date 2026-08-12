@@ -4,7 +4,7 @@ import {
   SplitterLayout, SplitterElement, CheckBox, RadioButton,
   Menu, MenuItem, MenuSeparator,
   Popover, List, ListItemStandard, ListItemCustom,
-  AnalyticalTable, Toast, MessageBox, Dialog, Bar, BusyIndicator,
+  AnalyticalTable, Toast, MessageBox, Dialog, Bar, BusyIndicator, IllustratedMessage, MessageStrip,
   VariantManagement, VariantItem,
   Breadcrumbs, BreadcrumbsItem,
   SegmentedButton, SegmentedButtonItem,
@@ -41,6 +41,7 @@ import { ShareDialog, ManageAccessDialog } from './dialogs/ShareDialogs'
 import EditFolderDialog from './dialogs/EditFolderDialog'
 import UploadFileDialog from './dialogs/UploadFileDialog'
 import MergeDictionaryEntriesDialog from './dialogs/MergeDictionaryEntriesDialog'
+import ImportExcelDialog from './dialogs/ImportExcelDialog'
 import { useRepositoryDialogs } from './useRepositoryDialogs'
 import AssetInfoPanel from './AssetInfoPanel'
 
@@ -125,6 +126,7 @@ export default function Repository() {
   const [moveToast, setMoveToast] = useState<string | null>(null)
   const [copyLinkToast, setCopyLinkToast] = useState(false)
   const [dictEntryCreatedToast, setDictEntryCreatedToast] = useState(false)
+  const [dictEntryEditedToast, setDictEntryEditedToast] = useState(false)
   const [dictEntryDeletedToast, setDictEntryDeletedToast] = useState(false)
   const [inviteToast, setInviteToast] = useState<string | null>(null)
   const [renameToast, setRenameToast] = useState(false)
@@ -155,6 +157,7 @@ export default function Repository() {
   const [deleteDictEntryId, setDeleteDictEntryId] = useState<string | null>(null)
   const [hoveredDictEntryId, setHoveredDictEntryId] = useState<string | null>(null)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
+  const [importExcelOpen, setImportExcelOpen] = useState(false)
   const [filterBarOpen, setFilterBarOpen] = useState(false)
   const [selReportingOpen, setSelReportingOpen] = useState(false)
   const [selVariantMenuOpen, setSelVariantMenuOpen] = useState(false)
@@ -190,8 +193,6 @@ export default function Repository() {
   const [dictExcelScope, setDictExcelScope] = useState<'category' | 'selected' | 'all'>('category')
   const [dictExcelIncludeModels, setDictExcelIncludeModels] = useState(false)
   const dictExportProgressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [dictSelectedLang, setDictSelectedLang] = useState<string>('')
-  const [dictLangPopoverOpen, setDictLangPopoverOpen] = useState(false)
   const [editFolderOpen, setEditFolderOpen] = useState(false)
   const [uploadFileOpen, setUploadFileOpen] = useState(false)
   const [dictMergeOpen, setDictMergeOpen] = useState(false)
@@ -271,7 +272,6 @@ export default function Repository() {
   const toggleSelect = (id: string, mode: 'row' | 'checkbox') => {
     setSelectedIds(prev => {
       if (mode === 'row') return new Set([id])
-      if (prev.size === 0) return new Set([id])
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
       return next
@@ -932,7 +932,8 @@ export default function Repository() {
 
   // Sub-categories at current level
   const dictSubCategories = dictCategories.filter(c =>
-    currentDictCatId ? c.parentId === currentDictCatId : !c.parentId
+    (currentDictCatId ? c.parentId === currentDictCatId : !c.parentId) &&
+    (!fileSearch || c.name.toLowerCase().includes(fileSearch.toLowerCase()))
   ).slice().sort((a, b) => (dictSortDir === 'asc' ? 1 : -1) * a.name.localeCompare(b.name))
 
   // Entries directly owned by the current category (or none at root)
@@ -943,7 +944,8 @@ export default function Repository() {
   const dictFilteredEntries = (contentFilter === 'published'
     ? dictCurrentEntries.filter(e => e.status === 'Published')
     : dictCurrentEntries
-  ).slice().sort((a, b) => (dictSortDir === 'asc' ? 1 : -1) * a.name.localeCompare(b.name))
+  ).filter(e => !fileSearch || e.name.toLowerCase().includes(fileSearch.toLowerCase()) || (e.description ?? '').toLowerCase().includes(fileSearch.toLowerCase()))
+   .slice().sort((a, b) => (dictSortDir === 'asc' ? 1 : -1) * a.name.localeCompare(b.name))
 
   // Total items count at current level (sub-cats + direct entries)
   const dictTotalAtLevel = dictSubCategories.length + dictFilteredEntries.length
@@ -975,14 +977,13 @@ export default function Repository() {
     setSelectedDictEntry(null); setInfoPanelOpen(false)
     setSelectedDictCategory(null)
     setSelectedDictIds(new Set())
+    setFileSearch('')
   }
 
   const toggleDictEntrySelect = (id: string, mode: 'row' | 'checkbox' = 'checkbox') => {
     setSelectedDictIds(prev => {
       let next: Set<string>
       if (mode === 'row') {
-        next = new Set([id])
-      } else if (prev.size === 0) {
         next = new Set([id])
       } else {
         next = new Set(prev)
@@ -1043,8 +1044,9 @@ export default function Repository() {
                           style={{ fontSize: 'var(--sapFontLargeSize)', fontWeight: '600', color: 'var(--sapList_TextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', pointerEvents: 'auto' }}
                           onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigateIntoDictCategory({ id: cat.id, name: cat.name }) }}
                         >
-                          {cat.name} ({count})
+                          <span title={!currentDictCatId ? "Count includes entries from all subcategories" : undefined}>{cat.name} ({count})</span>
                         </Text>
+                        {cat.hasVariants && <Icon name="SAP-icons-v4/variant" style={{ width: '16px', height: '16px', flexShrink: 0, color: 'var(--sapContent_NonInteractiveIconColor)' }} />}
                         {(hoveredDictCatId === cat.id || favoriteIds.has(`file:${cat.id}`)) && (
                           <div style={{ pointerEvents: 'auto', flexShrink: 0 }}>
                             <Button
@@ -1055,7 +1057,6 @@ export default function Repository() {
                             />
                           </div>
                         )}
-                        {cat.hasVariants && <Icon name="SAP-icons-v4/variant" style={{ width: '16px', height: '16px', flexShrink: 0, color: 'var(--sapContent_NonInteractiveIconColor)' }} />}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0', pointerEvents: 'auto' }}>
                         <Button id={`dict-cat-overflow-${cat.id}`} icon="overflow" design="Transparent" style={{ flexShrink: 0 }} onClick={e => { e.stopPropagation(); setDictCatOverflowId(cat.id) }} />
@@ -1065,7 +1066,7 @@ export default function Repository() {
                       {cat.description ?? cat.type}
                     </Text>
                     <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      Created {cat.createdAt} · Changed {cat.changedAt}
+                      {currentDictCatId ? `${dictCategories.find(c => c.id === currentDictCatId)?.name ?? ''} · ` : ''}Created {cat.createdAt} · Changed {cat.changedAt}
                     </Text>
                   </div>
                 </div>
@@ -1111,7 +1112,10 @@ export default function Repository() {
                 selected={isSelected}
                 data-entry-id={entry.id}
                 accessibleName={entry.name}
-                onClick={(e: any) => { e.stopPropagation?.(); handleEntryRowClick() }}
+                onClick={(e: any) => {
+                  if ((e.target as HTMLElement)?.closest?.('ui5-checkbox, [ui5-checkbox]')) return
+                  e.stopPropagation?.(); handleEntryRowClick()
+                }}
                 onMouseEnter={() => setHoveredDictEntryId(entry.id) as any}
                 onMouseLeave={() => setHoveredDictEntryId(null) as any}
               >
@@ -1167,6 +1171,14 @@ export default function Repository() {
         </List>
         </>
       )}
+      {(currentDictCatId || fileSearch) && dictSubCategories.length === 0 && dictFilteredEntries.length === 0 && (
+        <div style={{ background: 'white', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px', width: '100%' }}>
+          {fileSearch
+            ? <IllustratedMessage name="NoFilterResults" titleText="No matching results" subtitleText="Try adjusting the search criteria" />
+            : <IllustratedMessage name="NoData" titleText="No Dictionary entries yet" subtitleText=" " />
+          }
+        </div>
+      )}
     </>
   )
 
@@ -1214,15 +1226,15 @@ export default function Repository() {
           const r = row.original as DictRow
           if (r._kind === 'cat') {
             return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', cursor: 'pointer', overflow: 'hidden' }}>
                 <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: catBg(r.type as DictCategoryType), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative' }}>
                   <Icon name={CAT_TYPE_ICON[r.type as DictCategoryType] ?? 'SAP-icons-v4/process-manager'} style={{ width: '12px', height: '12px', color: catIconColor(r.type as DictCategoryType) }} />
                 </div>
                 <Text
                   className="dict-cat-name"
-                  style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', minWidth: 0 }}
                   onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigateIntoDictCategory({ id: r.id, name: r.name }) }}
-                >{r.name} ({r.count})</Text>
+                ><span title={!currentDictCatId ? "Count includes entries from all subcategories" : undefined}>{r.name} ({r.count})</span></Text>
                 {dictCategories.find(c => c.id === r.id)?.hasVariants && <Icon name="SAP-icons-v4/variant" style={{ width: '16px', height: '16px', flexShrink: 0, color: 'var(--sapContent_NonInteractiveIconColor)' }} />}
                 {(hoveredDictCatId === r.id || favoriteIds.has(`file:${r.id}`)) && (
                   <Button icon={favoriteIds.has(`file:${r.id}`) ? 'favorite' : 'unfavorite'} design="Transparent" style={{ height: '24px', minWidth: '24px' }}
@@ -1233,11 +1245,11 @@ export default function Repository() {
           }
           const cat = dictCategories.find(c => c.id === r.categoryId)
           return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', overflow: 'hidden' }}>
               <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: cat ? entryBg(cat.type) : 'var(--sapAvatar_6_Background)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Icon name={cat ? (CAT_TYPE_ICON[cat.type] ?? 'document') : 'document'} style={{ width: '12px', height: '12px', color: cat ? entryIconColor(cat.type) : 'var(--sapAvatar_6_TextColor)' }} />
               </div>
-              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</Text>
+              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', minWidth: 0 }}>{r.name}</Text>
               {(hoveredDictEntryId === r.id || favoriteIds.has(`file:${r.id}`)) && (
                 <Button icon={favoriteIds.has(`file:${r.id}`) ? 'favorite' : 'unfavorite'} design="Transparent" style={{ height: '24px', minWidth: '24px' }}
                   onClick={(e: any) => { e.stopPropagation?.(); toggleFileFavorite(r.id) }} />
@@ -1251,7 +1263,9 @@ export default function Repository() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Cell: ({ row }: any) => {
           const r = row.original as DictRow
-          const typeLabel = r._kind === 'cat' ? '' : (dictCategories.find(c => c.id === r.categoryId)?.name ?? r.categoryId)
+          const typeLabel = r._kind === 'cat'
+            ? (dictCategories.find(c => c.id === currentDictCatId)?.name ?? '')
+            : (dictCategories.find(c => c.id === r.categoryId)?.name ?? r.categoryId)
           return <Text style={{ fontSize: 'var(--sapFontSize)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{typeLabel}</Text>
         },
       },
@@ -1308,6 +1322,16 @@ export default function Repository() {
         },
       },
     ]
+    if (rows.length === 0 && (currentDictCatId || fileSearch)) {
+      return (
+        <div style={{ background: 'white', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px', width: '100%' }}>
+          {fileSearch
+            ? <IllustratedMessage name="NoFilterResults" titleText="No matching results" subtitleText="Try adjusting the search criteria" />
+            : <IllustratedMessage name="NoData" titleText="No Dictionary entries yet" subtitleText=" " />
+          }
+        </div>
+      )
+    }
     return (
       <AnalyticalTable
         data={rows}
@@ -1415,7 +1439,7 @@ export default function Repository() {
               cursor: 'pointer', overflow: 'hidden', lineHeight: 'normal', wordBreak: 'break-word',
             } as React.CSSProperties}
           >
-            {cat.name} ({dictDescendantCount(cat.id)})
+            <span title={!currentDictCatId ? "Count includes entries from all subcategories" : undefined}>{cat.name} ({dictDescendantCount(cat.id)})</span>
           </div>
 
           {/* type label */}
@@ -1957,43 +1981,7 @@ export default function Repository() {
                       </Popover>
                     </ToolbarItem>
                     )}
-                    {isDictView && <ToolbarSeparator />}
-                    {isDictView && (() => {
-                      const currentLang = contentLanguages.find(lang => dictSelectedLang ? lang.label === dictSelectedLang : lang.isDefault)
-                      return (
-                        <ToolbarItem>
-                          <Button
-                            id="dict-lang-btn"
-                            design="Transparent"
-                            endIcon="slim-arrow-down"
-                            onClick={() => setDictLangPopoverOpen(true)}
-                          >
-                            {currentLang?.label ?? 'Language'}
-                          </Button>
-                          <Popover
-                            opener="dict-lang-btn"
-                            open={dictLangPopoverOpen}
-                            placement="Bottom"
-                            horizontalAlign="End"
-                            hideArrow
-                            className="no-padding-popover"
-                            onClose={() => setDictLangPopoverOpen(false)}
-                          >
-                            <List selectionMode="Single" separators="None">
-                              {contentLanguages.map(lang => (
-                                <ListItemStandard
-                                  key={lang.code}
-                                  type="Active"
-                                  selected={dictSelectedLang ? dictSelectedLang === lang.label : lang.isDefault}
-                                  onClick={() => { setDictSelectedLang(lang.label); setDictLangPopoverOpen(false) }}
-                                >{lang.label}</ListItemStandard>
-                              ))}
-                            </List>
-                          </Popover>
-                        </ToolbarItem>
-                      )
-                    })()}
-                    <ToolbarSeparator />
+                    {!(isDictView && !currentDictCatId) && <ToolbarSeparator />}
                     <ToggleButton
                       icon="SAP-icons-v4/panel-right"
                       design="Transparent"
@@ -2012,6 +2000,13 @@ export default function Repository() {
               }>
 
                 {/* File table/list/grid */}
+                {isDictView && (
+                  <div style={{ margin: '1.25rem 1.5rem 0' }}>
+                    <MessageStrip design="Information" hideCloseButton>
+                      Switch to Workspace View <strong>Preview</strong> to edit dictionary entries
+                    </MessageStrip>
+                  </div>
+                )}
                 <div style={{ margin: '1.25rem 1.5rem 1.5rem' }}>
                   {showProcessAtoms ? (
                     <ProcessAtoms
@@ -2461,6 +2456,7 @@ export default function Repository() {
                       setCreateMenuOpen(false)
                       const text = (e.detail as any)?.text as string | undefined
                       if (text === 'Upload File') { setUploadFileOpen(true); return }
+                      if (text === 'Import Excel') { setImportExcelOpen(true); return }
                       if (selectedRoot === 'dictionary') {
                         const catId = (e.detail.item as HTMLElement).dataset.catId
                         if (catId) {
@@ -2481,7 +2477,7 @@ export default function Repository() {
                           return currentCat ? (
                             <>
                               <MenuSeparator />
-                              <MenuItem text={currentCat.name} icon="document" data-cat-id={currentCat.id} />
+                              <MenuItem text={currentCat.name} icon={CAT_TYPE_ICON[currentCat.type as DictCategoryType] ?? 'document'} data-cat-id={currentCat.id} />
                             </>
                           ) : null
                         })()}
@@ -2490,24 +2486,24 @@ export default function Repository() {
                           const children = dictCategories.filter(c => c.parentId === root.id)
                           if (children.length > 0) {
                             return (
-                              <MenuItem key={root.id} text={root.name} icon="curriculum">
+                              <MenuItem key={root.id} text={root.name} icon={CAT_TYPE_ICON[root.type as DictCategoryType] ?? 'document'}>
                                 {children.map(child => {
                                   const grandchildren = dictCategories.filter(c => c.parentId === child.id)
                                   if (grandchildren.length > 0) {
                                     return (
-                                      <MenuItem key={child.id} text={child.name} icon="curriculum">
+                                      <MenuItem key={child.id} text={child.name} icon={CAT_TYPE_ICON[child.type as DictCategoryType] ?? 'document'}>
                                         {grandchildren.map(gc => (
-                                          <MenuItem key={gc.id} text={gc.name} icon="document" data-cat-id={gc.id} />
+                                          <MenuItem key={gc.id} text={gc.name} icon={CAT_TYPE_ICON[gc.type as DictCategoryType] ?? 'document'} data-cat-id={gc.id} />
                                         ))}
                                       </MenuItem>
                                     )
                                   }
-                                  return <MenuItem key={child.id} text={child.name} icon="document" data-cat-id={child.id} />
+                                  return <MenuItem key={child.id} text={child.name} icon={CAT_TYPE_ICON[child.type as DictCategoryType] ?? 'document'} data-cat-id={child.id} />
                                 })}
                               </MenuItem>
                             )
                           }
-                          return <MenuItem key={root.id} text={root.name} icon="document" data-cat-id={root.id} />
+                          return <MenuItem key={root.id} text={root.name} icon={CAT_TYPE_ICON[root.type as DictCategoryType] ?? 'document'} data-cat-id={root.id} />
                         })}
                       </>
                     ) : (
@@ -2712,6 +2708,7 @@ export default function Repository() {
               onEmbed={() => { const f = selectedAsset ?? displayFiles.find(f => selectedIds.has(f.id)) ?? null; if (f) setEmbedFile(f) }}
               createDictCategoryId={createDictCategoryId}
               onDiscardCreate={() => { setCreateDictCategoryId(null); setCreateProcessAtom(false); setInfoPanelOpen(false) }}
+              onCreateCategoryChange={(categoryId) => setCreateDictCategoryId(categoryId)}
               createProcessAtom={createProcessAtom}
               hideRevisionInfo={selectedRoot === 'my-modeling'}
               isFavorite={!!(selectedAsset && favoriteIds.has(`file:${selectedAsset.id}`))}
@@ -2738,8 +2735,36 @@ export default function Repository() {
               onDictEntrySaved={(entry) => {
                 setDictEntries(prev => [entry, ...prev])
                 setCreateDictCategoryId(null)
-                setInfoPanelOpen(false)
                 setDictEntryCreatedToast(true)
+                const newCat = dictCategories.find(c => c.id === entry.categoryId)
+                if (newCat) {
+                  const parentPath: { id: string; name: string }[] = []
+                  let cur: typeof newCat | undefined = newCat
+                  while (cur?.parentId) {
+                    const parent = dictCategories.find(c => c.id === cur!.parentId)
+                    if (parent) parentPath.unshift({ id: parent.id, name: parent.name })
+                    cur = parent
+                  }
+                  setSelectedDictCategoryPath([...parentPath, { id: newCat.id, name: newCat.name }])
+                }
+                setSelectedDictEntry(null)
+                setInfoPanelOpen(false)
+              }}
+              onDictEntryEdited={() => setDictEntryEditedToast(true)}
+              onDictEntryMoved={(entryId, newCategoryId) => {
+                setDictEntries(prev => prev.map(e => e.id === entryId ? { ...e, categoryId: newCategoryId } : e))
+                setSelectedDictEntry(prev => prev?.id === entryId ? { ...prev, categoryId: newCategoryId } : prev)
+                const newCat = dictCategories.find(c => c.id === newCategoryId)
+                if (newCat) {
+                  const parentPath: { id: string; name: string }[] = []
+                  let cur: typeof newCat | undefined = newCat
+                  while (cur?.parentId) {
+                    const parent = dictCategories.find(c => c.id === cur!.parentId)
+                    if (parent) parentPath.unshift({ id: parent.id, name: parent.name })
+                    cur = parent
+                  }
+                  setSelectedDictCategoryPath([...parentPath, { id: newCat.id, name: newCat.name }])
+                }
               }}
             />
           </SplitterElement>
@@ -2749,6 +2774,8 @@ export default function Repository() {
 
       {/* Dialogs */}
       {embedFile && <EmbedDialog file={embedFile} onClose={() => setEmbedFile(null)} />}
+
+      <ImportExcelDialog open={importExcelOpen} onClose={() => setImportExcelOpen(false)} />
 
       <ExportSGXDialog open={exportDialogOpen} onClose={() => setExportDialogOpen(false)} smartFolders={smartFolders} />
       <ExportTranslationsDialog open={exportTranslationsOpen} onClose={() => setExportTranslationsOpen(false)} smartFolders={smartFolders} />
@@ -2821,6 +2848,9 @@ export default function Repository() {
       <Toast open={dictEntryCreatedToast} placement="BottomCenter" onClose={() => setDictEntryCreatedToast(false)}>
         Dictionary entry created
       </Toast>
+      <Toast open={dictEntryEditedToast} placement="BottomCenter" onClose={() => setDictEntryEditedToast(false)}>
+        Dictionary entry edited
+      </Toast>
       <Toast open={dictEntryDeletedToast} placement="BottomCenter" onClose={() => setDictEntryDeletedToast(false)}>
         Dictionary entry deleted
       </Toast>
@@ -2867,7 +2897,9 @@ export default function Repository() {
         }}
       >
         <MenuItem text="Excel" icon="excel-attachment" />
-        <MenuItem text="Job Profile Report" icon="SAP-icons-v4/report" />
+        {dictCategories.find(c => c.id === currentDictCatId)?.type === 'Organization' && (
+          <MenuItem text="Job Profile Report" icon="SAP-icons-v4/report" />
+        )}
       </Menu>
 
       {/* Excel Export dialog */}

@@ -148,6 +148,8 @@ export function AssetListItem({
       draggable={draggable}
       onClick={(e: any) => {
         if (titleClickedRef.current) return
+        const target = e.target as HTMLElement
+        if (target.closest('ui5-checkbox, [ui5-checkbox]')) return
         onClick?.(e as unknown as React.MouseEvent)
       }}
       onDragStart={onDragStart as any}      onDragEnd={onDragEnd as any}

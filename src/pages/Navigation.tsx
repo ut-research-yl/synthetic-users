@@ -72,18 +72,69 @@ const VIEW_SWITCH_ITEM = {
   checked: true,
 }
 
-const NAV_PANEL_ITEMS = [
-  { id: 'modeling_files', label: 'Modeling Files', desc: 'Removing access also hides breadcrumb navigation and the quick link to Modeling Files on the home page. Users can then navigate only via linked diagrams and the process hierarchy.', checked: true },
-  { id: 'newsfeed', label: 'Newsfeed', desc: '', checked: true },
-  { id: 'value_accelerator', label: 'Value Accelerator Library', desc: '', checked: true },
-  { id: 'insights', label: 'Insights', desc: '', checked: true },
-  { id: 'variant_mgmt', label: 'Variant Management', desc: '', checked: true },
-  { id: 'reports', label: 'Reports', desc: '', checked: true },
-  { id: 'lab_space', label: 'Lab Space', desc: '', checked: true },
-  { id: 'improvement_opportunities', label: 'Improvement Opportunities', desc: '', checked: true },
-  { id: 'recommendations', label: 'Recommendations', desc: '', checked: true },
-  { id: 'cloud_transformation', label: 'Cloud Transformation', desc: '', checked: true },
+type NavPanelGroup = {
+  group: string
+  items: { id: string; label: string; desc?: string; checked: boolean; alwaysOn?: boolean }[]
+}
+
+const NAV_PANEL_GROUPS: NavPanelGroup[] = [
+  {
+    group: '',
+    items: [
+      { id: 'home', label: 'Home', checked: true, alwaysOn: true },
+      { id: 'newsfeed', label: 'Newsfeed', checked: true },
+      { id: 'favorites', label: 'Favorites', checked: true },
+      { id: 'recent', label: 'Recent', checked: true },
+      { id: 'tasks', label: 'Tasks', checked: true },
+    ],
+  },
+  {
+    group: 'Browse and Manage',
+    items: [
+      { id: 'repository', label: 'Repository', desc: 'Removing access also hides breadcrumb navigation and the quick link to Modeling Files on the home page. Users can then navigate only via linked diagrams and the process hierarchy.', checked: true },
+      { id: 'process_landscape', label: 'Process Landscape', checked: true },
+      { id: 'company_memory', label: 'Company Memory', checked: true },
+      { id: 'value_accelerator', label: 'Value Accelerator Library', checked: true },
+    ],
+  },
+  {
+    group: 'Transform and Realize Value',
+    items: [
+      { id: 'objectives', label: 'Objectives', checked: true },
+      { id: 'initiatives', label: 'Initiatives', checked: true },
+      { id: 'benchmarking_analytics', label: 'Benchmarking Analytics', checked: true },
+      { id: 'insights', label: 'Insights', checked: true },
+      { id: 'value_analysis', label: 'Value Analysis', checked: true },
+    ],
+  },
+  {
+    group: 'Mine and Analyze',
+    items: [
+      { id: 'data_management', label: 'Data Management', checked: true },
+      { id: 'analysis_configuration', label: 'Analysis Configuration', checked: true },
+      { id: 'process_analysis', label: 'Process Analysis', checked: true },
+      { id: 'analysis_workflows', label: 'Analysis Workflows', checked: true },
+    ],
+  },
+  {
+    group: 'Model and Govern',
+    items: [
+      { id: 'process_manager', label: 'Process Manager', checked: true },
+      { id: 'modeler', label: 'Modeler', checked: true },
+      { id: 'journey_models', label: 'Journey Models', checked: true },
+      { id: 'governance_workflows', label: 'Governance Workflows', checked: true },
+    ],
+  },
+  {
+    group: 'Footer',
+    items: [
+      { id: 'lab_space', label: 'Lab Space', checked: true },
+      { id: 'reporting', label: 'Reporting', checked: true },
+    ],
+  },
 ]
+
+const NAV_PANEL_ALL_ITEMS = NAV_PANEL_GROUPS.flatMap(g => g.items)
 
 const NAV_STATE_OPTIONS: { value: NavDefaultState; label: string; info?: string }[] = [
   { value: 'expanded', label: 'Expanded' },
@@ -94,7 +145,7 @@ const NAV_STATE_OPTIONS: { value: NavDefaultState; label: string; info?: string 
 export default function Navigation() {
   const [audience, setAudience] = useState('General audience')
 
-  const initialItems = [VIEW_SWITCH_ITEM, ...NAV_PANEL_ITEMS].reduce<Record<string, boolean>>(
+  const initialItems = [VIEW_SWITCH_ITEM, ...NAV_PANEL_ALL_ITEMS].reduce<Record<string, boolean>>(
     (acc, item) => ({ ...acc, [item.id]: item.checked }), {}
   )
   const [items, setItems] = useState(initialItems)
@@ -144,29 +195,7 @@ export default function Navigation() {
           </div>
         </SettingsSection>
 
-        <SettingsSection title="Navigation panel" subtitle="Control which items are visible in the navigation panel for this audience.">
-          <div className={s.rowWide}>
-            <div className={s.checkboxRow}>
-              {NAV_PANEL_ITEMS.map(item => (
-                <div key={item.id}>
-                  <CheckBox
-                    checked={items[item.id]}
-                    text={item.label}
-                    onChange={() => toggle(item.id)}
-                    style={{ marginLeft: '-0.5rem' }}
-                  />
-                  {item.desc && (
-                    <div className={s.checkboxIndent}>
-                      <Text className={s.fieldDescSmall}>{item.desc}</Text>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </SettingsSection>
-
-        <SettingsSection title="Default navigation state" subtitle="Set the default state of the navigation panel">
+        <SettingsSection title="Default Navigation State" subtitle="Set the default state of the navigation panel">
           <div className={s.rowWide}>
             <div style={{ display: 'flex', gap: '1rem' }}>
               {NAV_STATE_OPTIONS.map(opt => (
@@ -204,6 +233,38 @@ export default function Navigation() {
                     )}
                   </div>
                   <NavPreview type={opt.value} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </SettingsSection>
+
+        <SettingsSection title="Navigation Panel" subtitle="Control which items are visible in the navigation panel for this audience.">
+          <div className={s.rowWide}>
+            <div className={s.checkboxRow}>
+              {NAV_PANEL_GROUPS.map((group, gi) => (
+                <div key={gi}>
+                  {group.group && (
+                    <Text style={{ display: 'block', fontWeight: '600', fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', marginTop: gi === 0 ? 0 : '0.75rem', marginBottom: '0.25rem' }}>
+                      {group.group}
+                    </Text>
+                  )}
+                  {group.items.map(item => (
+                    <div key={item.id}>
+                      <CheckBox
+                        checked={items[item.id]}
+                        text={item.label}
+                        onChange={() => !item.alwaysOn && toggle(item.id)}
+                        disabled={item.alwaysOn}
+                        style={{ marginLeft: '-0.5rem' }}
+                      />
+                      {item.desc && (
+                        <div className={s.checkboxIndent}>
+                          <Text className={s.fieldDescSmall}>{item.desc}</Text>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

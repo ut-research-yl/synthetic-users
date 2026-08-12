@@ -57,7 +57,7 @@ const DICT_ROLES_LIST: { value: Role; icon: string; description: string }[] = [
   { value: 'Publisher', icon: 'world',   description: 'Can also publish content' },
 ]
 
-const PRIVATE_ROLES_LIST: { value: Role; icon: string; description: string }[] = [
+const TEMPLATES_ROLES_LIST: { value: Role; icon: string; description: string }[] = [
   { value: 'Viewer',  icon: 'show',                   description: 'Can view content' },
   { value: 'Editor',  icon: 'edit',                   description: 'Can also create and edit content' },
   { value: 'Manager', icon: 'SAP-icons-v4/file-move', description: 'Can also move and delete content' },
@@ -216,15 +216,7 @@ const TREE_DATA: ResourceNode[] = [
   },
 ]
 
-const PRIVATE_ENTRIES: AccessEntry[] = [
-  { id: 'g1', isGroup: true,  name: 'Administrators',   initials: 'AD', colorScheme: 'Accent1', role: 'Manager' },
-  { id: 'g2', isGroup: true,  name: 'Content Managers', initials: 'CM', colorScheme: 'Accent7', role: 'Manager' },
-  { id: 'u1', isGroup: false, name: 'Claire Westfield', email: 's.kaim+1@sap.com',                initials: 'CW', colorScheme: 'Accent2', role: 'Editor' },
-  { id: 'u2', isGroup: false, name: 'Hannah Schwan',    email: 'hannah.schwan@sap.com',           initials: 'HS', colorScheme: 'Accent3', role: 'Viewer' },
-  { id: 'u3', isGroup: false, name: 'Sebastian Kaim',   email: 's.kaim+2@sap.com',                initials: 'SK', colorScheme: 'Accent4', role: 'Viewer' },
-  { id: 'u4', isGroup: false, name: 'Davi Batista',     email: 'davi.batista@signavio.com',        initials: 'DB', colorScheme: 'Accent5', role: 'Manager' },
-  { id: 'u5', isGroup: false, name: 'Charne Pearson',   email: 'charne.elizabeth.pearson@sap.com', initials: 'CP', colorScheme: 'Accent6', role: 'Manager' },
-]
+
 
 const SHARED_ENTRIES: AccessEntry[] = [
   { id: 'g1', isGroup: true,  name: 'Administrators',    initials: 'AD', colorScheme: 'Accent1', role: 'Publisher' },
@@ -233,6 +225,16 @@ const SHARED_ENTRIES: AccessEntry[] = [
   { id: 'u2', isGroup: false, name: 'Hannah Schwan',     email: 'hannah.schwan@sap.com',                  initials: 'HS', colorScheme: 'Accent3', role: 'Viewer' },
   { id: 'u3', isGroup: false, name: 'Sebastian Kaim',    email: 's.kaim+2@sap.com',                       initials: 'SK', colorScheme: 'Accent4', role: 'Viewer' },
   { id: 'u4', isGroup: false, name: 'Davi Batista',      email: 'davi.batista@signavio.com',               initials: 'DB', colorScheme: 'Accent5', role: 'Publisher' },
+  { id: 'u5', isGroup: false, name: 'Charne Pearson',    email: 'charne.elizabeth.pearson@sap.com',        initials: 'CP', colorScheme: 'Accent6', role: 'Manager' },
+]
+
+const TEMPLATES_ENTRIES: AccessEntry[] = [
+  { id: 'g1', isGroup: true,  name: 'Administrators',    initials: 'AD', colorScheme: 'Accent1', role: 'Manager' },
+  { id: 'g2', isGroup: true,  name: 'Content Managers',  initials: 'CM', colorScheme: 'Accent7', role: 'Manager' },
+  { id: 'u1', isGroup: false, name: 'Claire Westfield',  email: 's.kaim+1@sap.com',                      initials: 'CW', colorScheme: 'Accent2', role: 'Editor' },
+  { id: 'u2', isGroup: false, name: 'Hannah Schwan',     email: 'hannah.schwan@sap.com',                  initials: 'HS', colorScheme: 'Accent3', role: 'Viewer' },
+  { id: 'u3', isGroup: false, name: 'Sebastian Kaim',    email: 's.kaim+2@sap.com',                       initials: 'SK', colorScheme: 'Accent4', role: 'Viewer' },
+  { id: 'u4', isGroup: false, name: 'Davi Batista',      email: 'davi.batista@signavio.com',               initials: 'DB', colorScheme: 'Accent5', role: 'Manager' },
   { id: 'u5', isGroup: false, name: 'Charne Pearson',    email: 'charne.elizabeth.pearson@sap.com',        initials: 'CP', colorScheme: 'Accent6', role: 'Manager' },
 ]
 
@@ -245,8 +247,12 @@ const REPO_ENTRIES: AccessEntry[] = [
 
 const OBJ_ENTRIES: AccessEntry[] = [
   { id: 'g1', isGroup: true,  name: 'Administrators',    initials: 'AD', colorScheme: 'Accent1', role: 'Manager' },
-  { id: 'u1', isGroup: false, name: 'Claire Westfield',  email: 's.kaim+1@sap.com',          initials: 'CW', colorScheme: 'Accent2', role: 'Manager' },
-  { id: 'u8', isGroup: false, name: 'Joerg Goeppert',    email: 'joerg.goeppert@sap.com',     initials: 'JG', colorScheme: 'Accent6', role: 'Editor' },
+  { id: 'g3', isGroup: true,  name: 'Process Owners',    initials: 'PO', colorScheme: 'Accent3', role: 'Editor' },
+  { id: 'u1', isGroup: false, name: 'Claire Westfield',  email: 's.kaim+1@sap.com',                      initials: 'CW', colorScheme: 'Accent2', role: 'Manager' },
+  { id: 'u2', isGroup: false, name: 'Hannah Schwan',     email: 'hannah.schwan@sap.com',                  initials: 'HS', colorScheme: 'Accent3', role: 'Editor' },
+  { id: 'u3', isGroup: false, name: 'Sebastian Kaim',    email: 's.kaim+2@sap.com',                       initials: 'SK', colorScheme: 'Accent4', role: 'Viewer' },
+  { id: 'u5', isGroup: false, name: 'Charne Pearson',    email: 'charne.elizabeth.pearson@sap.com',        initials: 'CP', colorScheme: 'Accent6', role: 'Editor' },
+  { id: 'u8', isGroup: false, name: 'Joerg Goeppert',    email: 'joerg.goeppert@sap.com',                 initials: 'JG', colorScheme: 'Accent7', role: 'Editor' },
 ]
 
 const DICT_ENTRIES: AccessEntry[] = [
@@ -262,7 +268,10 @@ const DEFAULT_ENTRIES: Record<string, AccessEntry[]> = {
   repo: REPO_ENTRIES,
   shared: SHARED_ENTRIES,
   objectives: OBJ_ENTRIES,
-  // Data Management children (level 2)
+  'obj-reduce-cost': OBJ_ENTRIES, 'obj-increase-rev': OBJ_ENTRIES, 'obj-customer-sat': OBJ_ENTRIES,
+  'obj-compliance': OBJ_ENTRIES, 'obj-digital-transform': OBJ_ENTRIES, 'obj-sustainability': OBJ_ENTRIES,
+  'obj-talent': OBJ_ENTRIES, 'obj-supply-chain': OBJ_ENTRIES, 'obj-ttm': OBJ_ENTRIES,
+  // Modeling Files children (level 2)
   connections: REPO_ENTRIES, extractors: REPO_ENTRIES, pipelines: REPO_ENTRIES, sourcedata: REPO_ENTRIES,
   'repo-invoice': REPO_ENTRIES, 'repo-proc2pay': REPO_ENTRIES, 'repo-operate-mfg': REPO_ENTRIES,
   'repo-plan-fulfill': REPO_ENTRIES, 'repo-ext-billing': REPO_ENTRIES, 'repo-test': REPO_ENTRIES, 'repo-untitled': REPO_ENTRIES,
@@ -276,46 +285,28 @@ const DEFAULT_ENTRIES: Record<string, AccessEntry[]> = {
   'shared-proc2pay': SHARED_ENTRIES, 'shared-order2cash': SHARED_ENTRIES, 'shared-lead2cash': SHARED_ENTRIES,
   'shared-hire2retire': SHARED_ENTRIES, 'shared-source2pay': SHARED_ENTRIES, 'shared-custjourney': SHARED_ENTRIES,
   'shared-accounts-recv': SHARED_ENTRIES, 'shared-cash-coll': SHARED_ENTRIES,
-  // Private Modeling Files
-  'private-modeling': PRIVATE_ENTRIES,
-  'pm-processes': PRIVATE_ENTRIES, 'pm-sandbox': PRIVATE_ENTRIES, 'pm-draft-order': PRIVATE_ENTRIES,
-  'pm-onboarding': PRIVATE_ENTRIES, 'pm-approvals': PRIVATE_ENTRIES, 'pm-experiments': PRIVATE_ENTRIES,
-  // Modeling Files children (level 3)
-  'sp-sub-finance': SHARED_ENTRIES, 'sp-sub-hr': SHARED_ENTRIES, 'sp-sub-procurement': SHARED_ENTRIES,
-  'sp-accts-payable': SHARED_ENTRIES, 'sp-credit-mgmt': SHARED_ENTRIES, 'sp-hiring': SHARED_ENTRIES,
-  'vc-order-mgmt': SHARED_ENTRIES, 'vc-supply': SHARED_ENTRIES,
-  'jm-employee': SHARED_ENTRIES, 'jm-supplier': SHARED_ENTRIES,
-  // Objectives children
-  'obj-reduce-cost': OBJ_ENTRIES, 'obj-increase-rev': OBJ_ENTRIES, 'obj-customer-sat': OBJ_ENTRIES,
-  'obj-compliance': OBJ_ENTRIES, 'obj-digital-transform': OBJ_ENTRIES, 'obj-sustainability': OBJ_ENTRIES,
-  'obj-talent': OBJ_ENTRIES, 'obj-supply-chain': OBJ_ENTRIES, 'obj-ttm': OBJ_ENTRIES,
   // Process Documentation Templates
-  'proc-doc-templates': PRIVATE_ENTRIES,
-  'pdt-standard-bpmn': PRIVATE_ENTRIES, 'pdt-approval-flow': PRIVATE_ENTRIES, 'pdt-incident-mgmt': PRIVATE_ENTRIES,
-  'pdt-onboarding': PRIVATE_ENTRIES, 'pdt-value-chain': PRIVATE_ENTRIES,
+  'proc-doc-templates': TEMPLATES_ENTRIES,
+  'pdt-standard-bpmn': TEMPLATES_ENTRIES, 'pdt-approval-flow': TEMPLATES_ENTRIES, 'pdt-incident-mgmt': TEMPLATES_ENTRIES,
+  'pdt-onboarding': TEMPLATES_ENTRIES, 'pdt-value-chain': TEMPLATES_ENTRIES,
   // Process Semantic Views
   'proc-semantic-views': OBJ_ENTRIES,
   'psv-order-cash': OBJ_ENTRIES, 'psv-hire-retire': OBJ_ENTRIES, 'psv-source-pay': OBJ_ENTRIES, 'psv-record-report': OBJ_ENTRIES,
 }
 
 // ─── Role Dropdown (same style as ShareDialog) ────────────────────────────────
-function RoleDropdown({ entryId, role, isLimited, onChangeRole, onRemove, onLimitAccess, objectivesMode, dataManagementMode, dictionaryMode, privateMode }: {
-  entryId: string; role: Role; isLimited?: boolean; objectivesMode?: boolean; dataManagementMode?: boolean; dictionaryMode?: boolean; privateMode?: boolean
+function RoleDropdown({ entryId, role, onChangeRole, onRemove, onLimitAccess, objectivesMode, dataManagementMode, dictionaryMode, templatesMode }: {
+  entryId: string; role: Role; objectivesMode?: boolean; dataManagementMode?: boolean; dictionaryMode?: boolean; templatesMode?: boolean
   onChangeRole: (id: string, role: Role) => void
   onRemove: (id: string) => void
   onLimitAccess?: (id: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const btnId = `role-btn-${entryId}`
-  const visibleRoles = dictionaryMode ? DICT_ROLES_LIST : dataManagementMode ? DATA_MGMT_ROLES_LIST : privateMode ? PRIVATE_ROLES_LIST : objectivesMode ? OBJECTIVES_ROLES_LIST : ROLES_LIST
+  const visibleRoles = dictionaryMode ? DICT_ROLES_LIST : dataManagementMode ? DATA_MGMT_ROLES_LIST : templatesMode ? TEMPLATES_ROLES_LIST : objectivesMode ? OBJECTIVES_ROLES_LIST : ROLES_LIST
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        {isLimited && (
-          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapInformativeTextColor)', background: 'var(--sapInformativeBackground)', borderRadius: '4px', padding: '2px 6px', whiteSpace: 'nowrap' }}>
-            Limited
-          </Text>
-        )}
         <Button id={btnId} design="Transparent" endIcon="slim-arrow-down" onClick={() => setOpen(v => !v)}>
           {role}
         </Button>
@@ -374,7 +365,6 @@ function LimitAccessDialog({ open, folderName, items, preSelected, onLimit, onCl
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set(preSelected))
   const [search, setSearch] = useState('')
-
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   // Reset when opened
@@ -400,15 +390,23 @@ function LimitAccessDialog({ open, folderName, items, preSelected, onLimit, onCl
         const item = row.original as LimitItem
         const dictCat = item._dictCat
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             {dictCat ? (
               <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: catBg(dictCat.type), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Icon name={DICT_TYPE_ICON_MAP[dictCat.type] ?? 'SAP-icons-v4/process-manager'} style={{ width: '12px', height: '12px', color: catIconColor(dictCat.type), fontSize: '12px' }} />
               </div>
+            ) : (item.id === 'proc-doc-templates' || item.id.startsWith('pdt-')) ? (
+              <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'var(--sapAvatar_6_Background)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="document-text" style={{ width: '14px', height: '14px', color: 'var(--sapAvatar_6_TextColor)', fontSize: '14px' }} />
+              </div>
+            ) : (item.id === 'proc-semantic-views' || item.id.startsWith('psv-')) ? (
+              <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'var(--sapAvatar_6_Background)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon name="SAP-icons-v4/process-data-view" style={{ width: '14px', height: '14px', color: 'var(--sapAvatar_6_TextColor)', fontSize: '14px' }} />
+              </div>
             ) : (
               <SigDomainObject object={item.objectType as never} size="XXS" />
             )}
-            <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '600' }}>{item.name}</Text>
+            <div style={{ fontSize: 'var(--sapFontSize)', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>{item.name}</div>
           </div>
         )
       },
@@ -436,7 +434,7 @@ function LimitAccessDialog({ open, folderName, items, preSelected, onLimit, onCl
 
   return (
     <Dialog open={open} onClose={onClose} style={{ width: '800px' }} headerText={`Limit Access Rights for ${isFolder ? 'Folder ' : ''}${folderName}`}>
-      <div style={{ padding: '16px 16px 0' }}>
+      <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <MessageStrip design="Information" hideCloseButton>
           Limiting allows you to remove the access right from {isFolder ? <>the folder <strong>{folderName}</strong></> : <strong>{folderName}</strong>} and limit access to the items selected below for the {entryIsGroup ? 'user group' : 'user'} <strong>{entryName}</strong>.
         </MessageStrip>
@@ -590,6 +588,7 @@ export default function ContentAccess() {
   const [limitState, setLimitState] = useState<Record<string, Record<string, Set<string>>>>({})
   const [limitDialogEntry, setLimitDialogEntry] = useState<{ entryId: string; nodeId: string } | null>(null)
   const [actionToast, setActionToast] = useState<string | null>(null)
+  const [limitError, setLimitError] = useState(false)
 
   const layout = selectedId ? 'TwoColumnsMidExpanded' : 'OneColumn'
 
@@ -637,6 +636,9 @@ export default function ContentAccess() {
 
   const applyLimit = (selected: Set<string>) => {
     if (!limitDialogEntry) return
+    // Simulate backend error ~20% of the time
+    if (Math.random() < 0.2) { setLimitError(true); return }
+    setLimitError(false)
     const { nodeId, entryId } = limitDialogEntry
     // Store the limit state
     setLimitState(prev => ({
@@ -687,13 +689,14 @@ export default function ContentAccess() {
     ? (selectedId === 'dictionary' || selectedId.startsWith('dict-'))
     : false
 
-  const isPrivateModelingNode = selectedId
-    ? (selectedId === 'private-modeling' || selectedId === 'proc-doc-templates' ||
-       (findNode(fullTreeData.find(n => n.id === 'private-modeling')?.subRows ?? [], selectedId) !== undefined) ||
+  const isPrivateModelingNode = false
+
+  const isTemplatesNode = selectedId
+    ? (selectedId === 'proc-doc-templates' ||
        (findNode(fullTreeData.find(n => n.id === 'proc-doc-templates')?.subRows ?? [], selectedId) !== undefined))
     : false
 
-  const currentRolesList = isDictionaryNode ? DICT_ROLES_LIST : isDataManagementNode ? DATA_MGMT_ROLES_LIST : isPrivateModelingNode ? PRIVATE_ROLES_LIST : isObjectivesNode ? OBJECTIVES_ROLES_LIST : ROLES_LIST
+  const currentRolesList = isDictionaryNode ? DICT_ROLES_LIST : isDataManagementNode ? DATA_MGMT_ROLES_LIST : isTemplatesNode ? TEMPLATES_ROLES_LIST : isObjectivesNode ? OBJECTIVES_ROLES_LIST : ROLES_LIST
 
   const filteredGroups = entries.filter(e => e.isGroup).filter(e =>
     !search || e.name.toLowerCase().includes(search.toLowerCase())
@@ -753,19 +756,18 @@ export default function ContentAccess() {
         const r2 = r as any
         if (r2._allUsers) return <Text style={{ fontSize: 'var(--sapFontSize)' }}>{r2.role}</Text>
         const e = r as AccessEntry
-        const limited = getLimitedItems(e.id)
         const isRootNode = fullTreeData.some(n => n.id === selectedId)
         const hasChildren = (selectedNode?.subRows?.length ?? 0) > 0
-        const canLimit = (selectedNode?.typeName === 'Folder' || selectedId === 'dictionary' || selectedId === 'proc-doc-templates') && hasChildren && isRootNode && !isDataManagementNode && !isPrivateModelingNode
+        const isInherited = !isRootNode && getLimitedItems(e.id) === undefined
+        const canLimit = (selectedNode?.typeName === 'Folder' || selectedId === 'proc-doc-templates') && hasChildren && !isInherited && !isDataManagementNode && !isPrivateModelingNode
         return <RoleDropdown
           entryId={e.id} role={e.role}
-          isLimited={limited !== undefined && limited.size > 0}
           onChangeRole={changeRole} onRemove={removeEntry}
           onLimitAccess={canLimit ? openLimitDialog : undefined}
           objectivesMode={isObjectivesNode}
           dataManagementMode={isDataManagementNode}
           dictionaryMode={isDictionaryNode}
-          privateMode={isPrivateModelingNode}
+          templatesMode={isTemplatesNode}
         />
       },
     },
@@ -774,14 +776,8 @@ export default function ContentAccess() {
       Cell: ({ row }: any) => {
         const r = row.original as AccessRow
         if (r._header) return null
-        const e = r as AccessEntry
-        const limited = getLimitedItems(e.id)
         const isRootNode = fullTreeData.some(n => n.id === selectedId)
         if (isRootNode) return null
-        if (limited !== undefined) {
-          if (limited.size === 0) return <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' }}>—</Text>
-          return <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>Limited to {limited.size} item{limited.size !== 1 ? 's' : ''}</Text>
-        }
         return <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapLinkColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>Inherited from {parentNode?.name ?? selectedNode?.name ?? '—'}</Text>
       },
     }]),
@@ -805,7 +801,7 @@ export default function ContentAccess() {
         if (!node) return null
         const dictCat = node._dictCat
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: `${(row.depth ?? 0) * 16}px` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
             {dictCat ? (
               <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: catBg(dictCat.type), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Icon name={DICT_TYPE_ICON_MAP[dictCat.type] ?? 'SAP-icons-v4/process-manager'} style={{ width: '12px', height: '12px', color: catIconColor(dictCat.type), fontSize: '12px' }} />
@@ -823,7 +819,7 @@ export default function ContentAccess() {
             ) : (
               <SigDomainObject object={node.objectType} size="XXS" />
             )}
-            <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '600' }}>{node.name}</Text>
+            <div style={{ fontSize: 'var(--sapFontSize)', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>{node.name}</div>
           </div>
         )
       },
@@ -832,8 +828,9 @@ export default function ContentAccess() {
       Header: 'Type', accessor: 'typeName', width: 120, minWidth: 80,
       Cell: ({ row, value }: any) => {
         if (!row.original) return null
-        if ((row.original as any)._dictCat || row.original?.id === 'dictionary') return null
-        return <Text style={{ fontSize: 'var(--sapFontSize)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{value}</Text>
+        if (row.original?.id === 'dictionary') return null
+        const displayValue = (row.original as any)._dictCat ? 'Dictionary Category' : value
+        return <Text style={{ fontSize: 'var(--sapFontSize)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{displayValue}</Text>
       },
     },
   ]
@@ -914,6 +911,14 @@ export default function ContentAccess() {
                   </div>
                 </div>
               ) : (
+              <>
+              {limitError && (
+                <div style={{ padding: '16px 0 32px' }}>
+                  <MessageStrip design="Negative" onClose={() => setLimitError(false)} style={{ width: '100%' }}>
+                    Access limitation failed
+                  </MessageStrip>
+                </div>
+              )}
               <SigTableWrapper
                 titleSlot={
                   <ToolbarItem>
@@ -940,6 +945,7 @@ export default function ContentAccess() {
                 selectionMode="None"
               />
               </SigTableWrapper>
+              </>
               )}
             </DynamicPage>
           ) : <div />

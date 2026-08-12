@@ -48,7 +48,7 @@ export default function AssetTypes() {
   })).filter(g => g.items.length > 0)
 
   return (
-    <PageHeader title="Asset Types" subtitle="Configure attributes and settings for each asset type">
+    <PageHeader title="Asset Types" subtitle="Configure attributes and settings for each asset type.">
       <div className={s.narrowContent}>
       <SigTableWrapper
         searchSlot={

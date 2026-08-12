@@ -1,8 +1,6 @@
 import { useState, useRef } from 'react'
 import { Dialog, Button, Icon, Title, Bar, List, ListItemCustom } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
-import { FavoritesWidget, buildFavoritesPreviewItems } from '../widgets/FavoritesWidget'
-import { RecentlyViewedWidget, buildRecentlyViewedPreviewItems } from '../widgets/RecentlyViewedWidget'
 import { MyTasksWidget, buildMyTasksPreviewGroups } from '../widgets/MyTasksWidget'
 import { QuickLinksWidget, buildQuickLinksPreviewItems } from '../widgets/QuickLinksWidget'
 import type { WidgetType } from '../pages/HomeDashboard'
@@ -26,26 +24,13 @@ export const WIDGET_LABELS: Record<WidgetType, string> = {
 
 const CATALOG_ITEMS: CatalogItem[] = [
   {
-    id: 'favorites',
-    label: 'Favorites',
-    icon: 'unfavorite',
-    description: 'Shows your six most recent favorites with a link to view all.',
-    singleton: true,
-  },
-  {
-    id: 'recentlyViewed',
-    label: 'Recently Viewed',
-    icon: 'history',
-    description: 'Shows your six most recent viewed items with a link to view all.',
-    singleton: true,
-  },
-  {
     id: 'quickLinks',
     label: 'Quick Links',
     icon: 'SAP-icons-v4/link',
     description: 'Shows useful links to third-party systems, with descriptions.',
     singleton: false,
   },
+  // Favorites and Recently Viewed are pinned on the homepage and not addable via catalog
   // Task widget was postponed 2026-04-21 — kept in code but removed from catalog
   // {
   //   id: 'tasks',
@@ -66,7 +51,7 @@ interface WidgetCatalogDialogProps {
 }
 
 export function WidgetCatalogDialog({ open, activeWidgetTypes, onAdd, onConfigure, onClose }: WidgetCatalogDialogProps) {
-  const [selectedId, setSelectedId] = useState<WidgetType>(CATALOG_ITEMS[0].id)
+  const [selectedId, setSelectedId] = useState<WidgetType>('quickLinks')
   const listRef = useRef<any>(null)
 
   const selectedItem = CATALOG_ITEMS.find(i => i.id === selectedId)!
@@ -149,16 +134,6 @@ export function WidgetCatalogDialog({ open, activeWidgetTypes, onAdd, onConfigur
         {/* Right: preview — inert keeps it out of the tab order entirely */}
         <div className="wcd-preview" inert>
           <Title level="H4" size="H4">Example</Title>
-          {selectedId === 'favorites' && (
-            <div className="wcd-preview__card-wrap">
-              <FavoritesWidget items={buildFavoritesPreviewItems()} />
-            </div>
-          )}
-          {selectedId === 'recentlyViewed' && (
-            <div className="wcd-preview__card-wrap">
-              <RecentlyViewedWidget items={buildRecentlyViewedPreviewItems()} />
-            </div>
-          )}
           {selectedId === 'tasks' && (
             <div className="wcd-preview__card-wrap">
               <MyTasksWidget taskGroups={buildMyTasksPreviewGroups()} />

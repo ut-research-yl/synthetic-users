@@ -12,6 +12,7 @@ import { SUB_ELEMENTS } from './AssetTypeDetail'
 import AttributeEditorPanel, { makeDictCategoryGroups, type AttrGroup } from '../components/AttributeEditorPanel'
 import { CAT_TYPE_ICON } from './Repository/dictionaryData'
 import type { DictCategoryType } from '../contexts/WorkspaceContext'
+import AudienceSectionBar from '../components/AudienceSectionBar'
 
 const ACCENT_TEXT_TO_BG: Record<string, string> = {
   '#a45d00': '#fff3b8', '#aa0808': '#ffd0e7', '#ba066c': '#ffdbe7',
@@ -41,6 +42,7 @@ export default function DictionaryCategoryDetail() {
   const [createSubOpen, setCreateSubOpen] = useState(false)
   const [overflowOpen, setOverflowOpen] = useState(false)
   const [pendingEnabled, setPendingEnabled] = useState<boolean | null>(null)
+  const [dictAudience, setDictAudience] = useState<string>('General audience')
 
   const isEnabled = pendingEnabled !== null ? pendingEnabled : (category?.enabled ?? true)
 
@@ -113,6 +115,11 @@ export default function DictionaryCategoryDetail() {
         </DynamicPageTitle>
       }>
 
+        <AudienceSectionBar
+          value={dictAudience}
+          onChange={setDictAudience}
+          subtitle="Visibility settings apply to the selected audience only. All other settings apply to all audiences."
+        />
         <AttributeEditorPanel
           attrGroups={attrGroups}
           setAttrGroups={setAttrGroups}
@@ -128,6 +135,8 @@ export default function DictionaryCategoryDetail() {
             ...dictCategories.map(c => ({ id: c.id, name: c.name })),
           ]}
           modelingSubElements={Object.values(SUB_ELEMENTS).flat().filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i)}
+          singleAudienceMode
+          viewingAudience={dictAudience}
         />
       </DynamicPage>
 

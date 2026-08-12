@@ -189,7 +189,7 @@ export default function DictionaryCategories() {
   return (
     <PageHeader
       title="Dictionary Categories"
-      subtitle="Configure attributes and settings for each dictionary category"
+      subtitle="Configure attributes and settings for each dictionary category."
       isDirty={dirty}
       onSave={handleSave}
       onReset={handleReset}

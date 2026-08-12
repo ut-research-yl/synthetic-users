@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react'
 import {
   Text, Icon, Button, CheckBox, Select, Option,
-  Menu, MenuItem, MenuSeparator,
-  Table, TableHeaderRow, TableHeaderCell, TableRow, TableCell,
+  Menu, MenuItem, MenuSeparator, Popover,
+  Table, TableHeaderRow, TableHeaderCell, TableRow, TableCell, TableSelectionMulti,
   FlexBox, ToolbarItem, Input, ToggleButton, MessageBox, Toast, Title,
+  Dialog, Bar, List, ListItemStandard,
 } from '@ui5/webcomponents-react'
 import type { TableMoveEventDetail } from '@ui5/webcomponents/dist/Table.js'
 import type { Ui5CustomEvent } from '@ui5/webcomponents-react-base'
@@ -59,12 +60,12 @@ export function makeModelingGroups(): AttrGroup[] {
   const grpEnabled = Object.fromEntries(AUDIENCES.map(a => [a, true]))
   return [
     {
-      id: 'main', name: 'Main Attributes', enabled: { ...grpEnabled }, expanded: true,
+      id: 'main', name: 'Standard Attributes', enabled: { ...grpEnabled }, expanded: true,
       attrs: [
         { id: 'name',   name: 'Name',        type: 'Single-Line Text', description: 'The display name of the asset.',       attrClass: 'Standard', required: true,  enabled: true, visibility: { ...vis }, lastEditedBy: 'Maria Chen', lastEditedAt: 'May 28, 2025, 10:14' },
         { id: 'desc',   name: 'Description', type: 'Multi-Line Text',  description: 'A free-text description of the asset.', attrClass: 'Standard', required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Maria Chen', lastEditedAt: 'May 28, 2025, 10:14' },
-        { id: 'status', name: 'Status',      type: 'Selection',        description: 'Current lifecycle status of the asset.', attrClass: 'Custom',  required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Tom Becker', lastEditedAt: 'Jun 1, 2025, 09:02' },
-        { id: 'owner',  name: 'Owner',       type: 'Single-Line Text', description: 'Responsible person or team.',            attrClass: 'Custom',  required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Tom Becker', lastEditedAt: 'Jun 1, 2025, 09:02' },
+        { id: 'status', name: 'Status',      type: 'Selection',        description: 'Current lifecycle status of the asset.', attrClass: 'Standard',  required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Tom Becker', lastEditedAt: 'Jun 1, 2025, 09:02' },
+        { id: 'owner',  name: 'Owner',       type: 'Single-Line Text', description: 'Responsible person or team.',            attrClass: 'Standard',  required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Tom Becker', lastEditedAt: 'Jun 1, 2025, 09:02' },
       ],
     },
     {
@@ -82,7 +83,7 @@ export function makeDictCategoryGroups(): AttrGroup[] {
   const grpEnabled = Object.fromEntries(AUDIENCES.map(a => [a, true]))
   return [
     {
-      id: 'main', name: 'Main Attributes', enabled: { ...grpEnabled }, expanded: true,
+      id: 'main', name: 'Standard Attributes', enabled: { ...grpEnabled }, expanded: true,
       attrs: [
         { id: 'name',     name: 'Name',              type: 'Single-Line Text', description: 'The display name of the category.',    attrClass: 'Standard', required: true,  enabled: true, visibility: { ...vis }, lastEditedBy: 'Maria Chen', lastEditedAt: 'May 28, 2025, 10:14' },
         { id: 'desc',     name: 'Description',       type: 'Multi-Line Text',  description: 'A free-text description.',              attrClass: 'Standard', required: false, enabled: true, visibility: { ...vis }, lastEditedBy: 'Maria Chen', lastEditedAt: 'May 28, 2025, 10:14' },
@@ -120,10 +121,18 @@ type Props = {
   dictMode?: boolean
   dictCategories?: { id: string; name: string; parentId?: string }[]
   modelingMode?: boolean
+  modelLevelMode?: boolean
+  hideGrouping?: boolean
+  hideVisibilityColumns?: boolean
+  viewingMode?: boolean
+  modelOrigins?: Set<string>
+  elementOrigins?: Set<string>
+  viewingAudience?: string
+  singleAudienceMode?: boolean
   inlinePadding?: string
 }
 
-export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDirty, hideAudience = false, hideRequiredColumn = false, hideCreateGroup = false, dictCategoryMode = false, title: panelTitle, titleNode, hideAssignSection, defaultAssignedTo, assignableAssetTypes, modelingSubElements, dictMode, dictCategories, modelingMode, inlinePadding }: Props) {
+export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDirty, hideAudience = false, hideRequiredColumn = false, hideCreateGroup = false, dictCategoryMode = false, title: panelTitle, titleNode, hideAssignSection, defaultAssignedTo, assignableAssetTypes, modelingSubElements, dictMode, dictCategories, modelingMode, modelLevelMode = false, hideGrouping = false, hideVisibilityColumns = false, viewingMode = false, modelOrigins, elementOrigins, viewingAudience = '', singleAudienceMode = false, inlinePadding }: Props) {
   const [groupSearch, setGroupSearch] = useState<Record<string, string>>({})
   const [groupSortBy, setGroupSortBy] = useState<Record<string, string>>({})
   const [groupSortDir, setGroupSortDir] = useState<Record<string, 'asc' | 'desc'>>({})
@@ -132,12 +141,21 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
   const [createAttrDialogGroupId, setCreateAttrDialogGroupId] = useState<string | null>(null)
   const [deleteAttrPending, setDeleteAttrPending] = useState<{ groupId: string; attrId: string; attrName: string } | null>(null)
+  const [deleteGroupPending, setDeleteGroupPending] = useState<{ groupId: string; groupName: string } | null>(null)
   const [editAttrPending, setEditAttrPending] = useState<{ groupId: string; attrId: string } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const showToast = (msg: string) => setToast(msg)
   const [editAttrDialogOpen, setEditAttrDialogOpen] = useState(false)
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
   const [visibilityGroupId, setVisibilityGroupId] = useState<string | null>(null)
+  const [ungroupedInfoOpen, setUngroupedInfoOpen] = useState(false)
+  const [visibilityInfoOpen, setVisibilityInfoOpen] = useState(false)
+  const [viewingSelectedRows, setViewingSelectedRows] = useState<Record<string, Set<string>>>({})
+  const selectionFeatureRefs = useRef<Record<string, any>>({})
+  const moveToMenuRefs = useRef<Record<string, any>>({})
+  const [assignDialogGroupId, setAssignDialogGroupId] = useState<string | null>(null)
+  const [assignSearch, setAssignSearch] = useState('')
+  const [assignPendingIds, setAssignPendingIds] = useState<Set<string>>(new Set())
   const groupDragRef = useRef<number | null>(null)
   const [groupDragOverIdx, setGroupDragOverIdx] = useState<number | null>(null)
   const hideRequiredEnabled = !!(modelingMode || dictMode || hideRequiredColumn)
@@ -162,7 +180,18 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
     } else {
       const newId = `group-${Date.now()}`
       const grpEnabled = Object.fromEntries(AUDIENCES.map(a => [a, true]))
-      setAttrGroups(prev => [...prev, { id: newId, name, enabled: grpEnabled, expanded: true, attrs: [] }])
+      const newGroup = { id: newId, name, enabled: grpEnabled, expanded: true, attrs: [] }
+      setAttrGroups(prev => {
+        if (viewingMode) {
+          const mainIdx = prev.findIndex(g => g.id === 'main')
+          if (mainIdx !== -1) {
+            const next = [...prev]
+            next.splice(mainIdx, 0, newGroup)
+            return next
+          }
+        }
+        return [...prev, newGroup]
+      })
       showToast('Attribute group added')
     }
     setGroupDialogOpen(false)
@@ -179,6 +208,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
       if (idx === -1) return prev
       const target = idx + dir
       if (target < 0 || target >= prev.length) return prev
+      if (viewingMode && (prev[target]?.id === 'main' || groupId === 'main')) return prev
       const groups = [...prev];
       [groups[idx], groups[target]] = [groups[target], groups[idx]]
       return groups
@@ -305,7 +335,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
               ? <Title level="H3" style={{ fontSize: 'var(--sapFontHeader4Size)' }}>{panelTitle}</Title>
               : <span />
           }
-          {!hideCreateGroup && <Button design="Emphasized" onClick={openAddGroupDialog}>Create Attribute Group</Button>}
+          {!hideCreateGroup && !hideGrouping && <Button design="Emphasized" onClick={openAddGroupDialog}>Create Attribute Group</Button>}
         </div>
       )}
       {attrGroups.map((group, groupIdx) => {
@@ -350,15 +380,57 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
               borderRadius: '4px',
               transition: 'outline 0.1s',
             }}
-            onDragOver={e => { if (!dictCategoryMode && groupDragRef.current !== null && groupDragRef.current !== groupIdx) { e.preventDefault(); setGroupDragOverIdx(groupIdx) } }}
+            onDragOver={e => { if (!dictCategoryMode && groupDragRef.current !== null && groupDragRef.current !== groupIdx && !(viewingMode && group.id === 'main') && !(viewingMode && attrGroups[groupDragRef.current ?? -1]?.id !== 'main' && groupIdx === attrGroups.length - 1)) { e.preventDefault(); setGroupDragOverIdx(groupIdx) } }}
             onDrop={e => { e.preventDefault(); handleGroupDrop(groupIdx) }}
             onDragLeave={() => setGroupDragOverIdx(null)}
           >
+          {(() => {
+            const hasGroupSelection = viewingMode && (viewingSelectedRows[group.id]?.size ?? 0) > 0
+            const selectedIds = viewingSelectedRows[group.id] ?? new Set<string>()
+            const moveSelectedUp = () => {
+              setAttrGroups(prev => prev.map(g => {
+                if (g.id !== group.id) return g
+                const attrs = [...g.attrs]
+                const indices = attrs.map((a, i) => selectedIds.has(a.id) ? i : -1).filter(i => i >= 0).sort((a, b) => a - b)
+                if (indices[0] === 0) return g
+                indices.forEach(i => { const tmp = attrs[i - 1]; attrs[i - 1] = attrs[i]; attrs[i] = tmp })
+                return { ...g, attrs }
+              })); markDirty()
+            }
+            const moveSelectedDown = () => {
+              setAttrGroups(prev => prev.map(g => {
+                if (g.id !== group.id) return g
+                const attrs = [...g.attrs]
+                const indices = attrs.map((a, i) => selectedIds.has(a.id) ? i : -1).filter(i => i >= 0).sort((a, b) => b - a)
+                if (indices[0] === attrs.length - 1) return g
+                indices.forEach(i => { const tmp = attrs[i + 1]; attrs[i + 1] = attrs[i]; attrs[i] = tmp })
+                return { ...g, attrs }
+              })); markDirty()
+            }
+            const moveSelectedToGroup = (targetGroupId: string) => {
+              selectedIds.forEach(id => moveAttrToGroup(group.id, id, targetGroupId))
+              setViewingSelectedRows(prev => ({ ...prev, [group.id]: new Set() }))
+            }
+            const otherGroupsForMove = attrGroups.filter(g => g.id !== group.id)
+            return (
             <SigTableWrapper
               titleSlot={
                 <ToolbarItem>
+                  {viewingMode && (viewingSelectedRows[group.id]?.size ?? 0) > 0 ? (
+                    <FlexBox alignItems="Center" style={{ gap: '0.5rem' }}>
+                      <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>
+                        Selected ({viewingSelectedRows[group.id].size} of {group.attrs.length})
+                      </Text>
+                      <Button design="Transparent" onClick={() => {
+                        setViewingSelectedRows(prev => ({ ...prev, [group.id]: new Set() }))
+                        const selFeature = selectionFeatureRefs.current[group.id]
+                        if (selFeature?.clearSelection) selFeature.clearSelection()
+                        else if (selFeature?.selected !== undefined) selFeature.selected = ''
+                      }}>Clear Selection</Button>
+                    </FlexBox>
+                  ) : (
                   <FlexBox alignItems="Center" style={{ gap: '0.5rem' }}>
-                    {!dictCategoryMode && (
+                    {!dictCategoryMode && !hideGrouping && !(viewingMode && group.id === 'main') && (
                     <div
                       draggable
                       onDragStart={() => { groupDragRef.current = groupIdx }}
@@ -374,19 +446,45 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                       aria-expanded={group.expanded}
                       aria-label={`${group.expanded ? 'Collapse' : 'Expand'} ${group.name}`}
                       onClick={() => toggleGroup(group.id)}
-                    />
-                    <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>
-                      {group.name} ({group.attrs.length})
+                    />                    <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>
+                      {hideGrouping && group.id !== 'main' ? 'Custom Attributes' : group.name} ({group.attrs.length})
                     </Text>
+                    {viewingMode && group.id === 'main' && (
+                      <>
+                        <Button
+                          id={`ungrouped-info-btn-${group.id}`}
+                          icon="message-information"
+                          design="Transparent"
+                          onClick={() => setUngroupedInfoOpen(v => !v)}
+                        />
+                        <Popover
+                          opener={`ungrouped-info-btn-${group.id}`}
+                          open={ungroupedInfoOpen}
+                          placement="Bottom"
+                          onClose={() => setUngroupedInfoOpen(false)}
+                          style={{ maxWidth: '320px' }}
+                        >
+                          <div style={{ padding: '0' }}>
+                            <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
+                              Once you create your own groups, the attributes listed in "Ungrouped attributes" are no longer shown in SAP Signavio Process Collaboration Hub
+                            </Text>
+                          </div>
+                        </Popover>
+                      </>
+                    )}
+                    {viewingMode && group.enabled[viewingAudience] === false && (
+                      <Icon name="hide" style={{ color: 'var(--sapContent_NonInteractiveIconColor)', width: '16px', height: '16px' }} />
+                    )}
                   </FlexBox>
+                  )}
                 </ToolbarItem>
               }
               searchSlot={
-                dictCategoryMode && group.id === 'main' ? undefined :
+                (dictCategoryMode && group.id === 'main') || hasGroupSelection ? undefined :
                 <ToolbarItem>
                   <FlexBox alignItems="Center" style={{ gap: '0.5rem' }}>
                     <Input
-                      placeholder="Search for attributes"
+                      placeholder="Search attributes"
                       type={'Search' as any}
                       value={groupSearch[group.id] ?? ''}
                       onInput={(e: any) => setGroupSearch(prev => ({ ...prev, [group.id]: e.target?.value ?? '' }))}
@@ -396,7 +494,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                 </ToolbarItem>
               }
               sortSlot={
-                dictCategoryMode && group.id === 'main' ? undefined :
+                (hideGrouping || viewingMode || dictCategoryMode) && group.id === 'main' ? undefined : (hideGrouping || viewingMode || dictCategoryMode) ? undefined :
                 <ToolbarItem>
                   <SortPopover
                     anchorId={`sort-chip-${group.id}`}
@@ -415,7 +513,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                 </ToolbarItem>
               }
               filterBarToggleButton={
-                dictCategoryMode && group.id === 'main' ? undefined :
+                (hideGrouping || viewingMode || dictCategoryMode) && group.id === 'main' ? undefined : (hideGrouping || viewingMode || dictCategoryMode) ? undefined :
                 <ToolbarItem>
                   <ToggleButton icon="filter" design="Transparent">
                     {(() => {
@@ -426,7 +524,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                 </ToolbarItem>
               }
               filterBarSlot={
-                dictCategoryMode && group.id === 'main' ? undefined : (
+                (hideGrouping || viewingMode || dictCategoryMode) && group.id === 'main' ? undefined : (hideGrouping || viewingMode || dictCategoryMode) ? undefined : (
                 <SigFilterBar
                   filters={groupFilters[group.id] ?? {}}
                   onFiltersChange={f => setGroupFilters(prev => ({ ...prev, [group.id]: f }))}
@@ -473,7 +571,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                         .map(v => ({ value: v, label: v }))
                     } />
                   </SigFilter>
-                  {(dictCategoryMode || modelingMode) && !hideAudience && (
+                  {(dictCategoryMode || modelingMode) && !(hideAudience || hideVisibilityColumns) && (
                   <SigFilter filterKey="visibility" label="Visibility">
                     <MultiSelect options={[
                       { value: 'Visible', label: 'Visible' },
@@ -486,7 +584,50 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                 )
               }
               businessActionsSlot={
-                dictCategoryMode && group.id === 'main' ? undefined : (
+                hasGroupSelection ? (
+                  <>
+                    {group.id !== 'main' && (
+                      <>
+                        <ToolbarItem>
+                          <Button design="Transparent" onClick={moveSelectedUp}>Move Up</Button>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                          <Button design="Transparent" onClick={moveSelectedDown}>Move Down</Button>
+                        </ToolbarItem>
+                      </>
+                    )}
+                    {(otherGroupsForMove.length > 0 || viewingMode) && (
+                      <ToolbarItem>
+                        <Button
+                          id={`move-to-btn-${group.id}`}
+                          design="Transparent"
+                          endIcon="slim-arrow-down"
+                          disabled={otherGroupsForMove.length === 0}
+                          onClick={() => { if (otherGroupsForMove.length === 0) return; const m = moveToMenuRefs.current[group.id]; if (m) { m.opener = `move-to-btn-${group.id}`; m.open = true } }}
+                        >Move to</Button>
+                        <Menu ref={(el: any) => { if (el) moveToMenuRefs.current[group.id] = el }} onItemClick={(e: any) => {
+                          const name = e.detail?.item?.text ?? e.detail?.item?.textContent
+                          const target = otherGroupsForMove.find(g => g.name === name)
+                          if (target) moveSelectedToGroup(target.id)
+                        }}>
+                          {otherGroupsForMove.map(g => <MenuItem key={g.id} text={g.name} />)}
+                        </Menu>
+                      </ToolbarItem>
+                    )}
+                  </>
+                ) :
+                viewingMode && group.id !== 'main' ? (
+                <ToolbarItem>
+                  <Button
+                    design="Emphasized"
+                    onClick={() => { setAssignSearch(''); setAssignDialogGroupId(group.id) }}
+                  >
+                    Assign Attribute
+                  </Button>
+                </ToolbarItem>
+                ) :
+                viewingMode ? undefined :
+                (dictCategoryMode || (hideGrouping && group.id === 'main')) && group.id === 'main' ? undefined : (
                 <ToolbarItem>
                   <Button
                     design="Emphasized"
@@ -498,24 +639,41 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                 )
               }
               exportActionsSlot={
-                dictCategoryMode ? undefined : (
+                (dictCategoryMode || hideGrouping || (viewingMode && group.id === 'main') || hasGroupSelection) ? undefined : (
                 <>
                   <ToolbarItem overflowPriority="AlwaysOverflow">
                     <Button icon="edit" design="Transparent" onClick={() => openEditGroupDialog(group.id)}>Edit Group</Button>
                   </ToolbarItem>
-                  {modelingMode && (
+                  {modelingMode && !viewingMode && (
                   <ToolbarItem overflowPriority="AlwaysOverflow">
                     <Button icon="show" design="Transparent" onClick={() => setVisibilityGroupId(group.id)}>Set Visibility</Button>
+                  </ToolbarItem>
+                  )}
+                  {viewingMode && (
+                  <ToolbarItem overflowPriority="AlwaysOverflow">
+                    <Button
+                      icon={group.enabled[viewingAudience] === false ? 'show' : 'hide'}
+                      design="Transparent"
+                      onClick={() => {
+                        const isDisabled = group.enabled[viewingAudience] === false
+                        setAttrGroups(prev => prev.map(g =>
+                          g.id === group.id
+                            ? { ...g, enabled: { ...g.enabled, [viewingAudience]: isDisabled } }
+                            : g
+                        ))
+                        markDirty()
+                      }}
+                    >{group.enabled[viewingAudience] === false ? 'Enable' : 'Disable'}</Button>
                   </ToolbarItem>
                   )}
                   <ToolbarItem overflowPriority="AlwaysOverflow">
                     <Button icon="navigation-up-arrow" design="Transparent" disabled={groupIdx === 0} onClick={() => moveGroup(group.id, -1)}>Move Up</Button>
                   </ToolbarItem>
                   <ToolbarItem overflowPriority="AlwaysOverflow">
-                    <Button icon="navigation-down-arrow" design="Transparent" disabled={groupIdx === attrGroups.length - 1} onClick={() => moveGroup(group.id, 1)}>Move Down</Button>
+                    <Button icon="navigation-down-arrow" design="Transparent" disabled={viewingMode ? groupIdx >= attrGroups.length - 2 : groupIdx === attrGroups.length - 1} onClick={() => moveGroup(group.id, 1)}>Move Down</Button>
                   </ToolbarItem>
                   <ToolbarItem overflowPriority="AlwaysOverflow">
-                    <Button icon="delete" design="Transparent" disabled={group.id === 'main' || group.attrs.length > 0} onClick={() => deleteGroup(group.id)}>Delete</Button>
+                    <Button icon="delete" design="Transparent" disabled={group.id === 'main' || group.attrs.length > 0} onClick={() => setDeleteGroupPending({ groupId: group.id, groupName: group.name })}>Delete</Button>
                   </ToolbarItem>
                 </>
                 )
@@ -526,26 +684,58 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                     className="attr-table"
                     style={{}}
                     onMoveOver={handleAttrMoveOver as any}
-                    onMove={(e: any) => handleAttrMove(group.id, e)}
+                    onMove={(e: any) => { if (viewingMode && group.id === 'main') return; handleAttrMove(group.id, e) }}
                     headerRow={
                       <TableHeaderRow>
                         <TableHeaderCell width="minmax(380px, 1fr)">
-                          <span style={{ paddingInlineStart: 'calc(1rem + 0.75rem)' }}>Attribute Name</span>
+                          <span style={{ paddingInlineStart: group.attrs.length === 0 ? 'calc(1rem + 0.75rem + 16px + 0.75rem)' : 'calc(1rem + 0.75rem)' }}>Attribute Name</span>
                         </TableHeaderCell>
                         <TableHeaderCell width="96px">Class</TableHeaderCell>
                         <TableHeaderCell width="160px">Technical ID</TableHeaderCell>
                         {!dictCategoryMode && !modelingMode && !((hideRequiredColumn || hideRequiredEnabled) && group.id === 'main') && <TableHeaderCell width="96px" style={{ textAlign: 'center' } as any}>Required</TableHeaderCell>}
                         {!dictCategoryMode && !modelingMode && (hideRequiredColumn || hideRequiredEnabled) && group.id === 'main' && <TableHeaderCell width="96px" />}
                         {!dictCategoryMode && !modelingMode && <TableHeaderCell width="96px" style={{ textAlign: 'center' } as any}>Enabled</TableHeaderCell>}
-                        {!hideAudience && !(dictCategoryMode && group.id === 'main') && AUDIENCES.map(audience => (
-                          <TableHeaderCell key={audience} width="120px">
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                              <Text style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--sapContent_LabelColor)', whiteSpace: 'nowrap' }}>Visibility</Text>
-                              <Text style={{ fontSize: 'var(--sapFontSize)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '104px', display: 'block' }}>{audience}</Text>
-                            </div>
+                        {singleAudienceMode && !(dictCategoryMode && group.id === 'main') && (
+                          <TableHeaderCell width="140px">
+                            <FlexBox alignItems="Center" style={{ gap: '4px' }}>
+                              <span>Visibility</span>
+                              <Button
+                                id="visibility-info-btn"
+                                icon="message-information"
+                                design="Transparent"
+                                onClick={() => setVisibilityInfoOpen(v => !v)}
+                              />
+                              <Popover
+                                opener="visibility-info-btn"
+                                open={visibilityInfoOpen}
+                                placement="Bottom"
+                                hideArrow={false}
+                                className="no-padding-popover"
+                                onClose={() => setVisibilityInfoOpen(false)}
+                                style={{ maxWidth: '280px' }}
+                              >
+                                <div style={{ padding: '12px' }}>
+                                  <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
+                                    Visibility settings only apply to users with SAP Signavio Process Collaboration Hub license only
+                                  </Text>
+                                </div>
+                              </Popover>
+                            </FlexBox>
                           </TableHeaderCell>
+                        )}
+                        {singleAudienceMode && dictCategoryMode && group.id === 'main' && (
+                          <TableHeaderCell width="140px" />
+                        )}
+                        {!singleAudienceMode && viewingMode && modelOrigins && elementOrigins && (
+                          <>
+                            <TableHeaderCell width="160px">Visibility (Model)</TableHeaderCell>
+                            <TableHeaderCell width="160px">Visibility (Element)</TableHeaderCell>
+                          </>
+                        )}
+                        {!singleAudienceMode && !viewingMode && !(hideAudience || hideVisibilityColumns) && !(dictCategoryMode && group.id === 'main') && AUDIENCES.map(audience => (
+                          <TableHeaderCell key={audience} width="120px">Visibility ({audience})</TableHeaderCell>
                         ))}
-                        {!hideAudience && dictCategoryMode && group.id === 'main' && AUDIENCES.map(audience => (
+                        {!singleAudienceMode && !viewingMode && !(hideAudience || hideVisibilityColumns) && dictCategoryMode && group.id === 'main' && AUDIENCES.map(audience => (
                           <TableHeaderCell key={audience} width="120px" />
                         ))}
                         <TableHeaderCell width="44px" />
@@ -553,16 +743,16 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                     }
                   >
                     {group.attrs.length === 0 && (
-                      <TableRow>
+                      <TableRow className="empty-row">
                         <TableCell {...{ colSpan:
                           3
                           + (!dictCategoryMode && !modelingMode && !((hideRequiredColumn || hideRequiredEnabled) && group.id === 'main') ? 1 : 0)
                           + (!dictCategoryMode && !modelingMode ? 1 : 0)
-                          + (!hideAudience ? AUDIENCES.length : 0)
+                          + (singleAudienceMode ? 1 : viewingMode && modelOrigins && elementOrigins ? 2 : !(hideAudience || hideVisibilityColumns) ? AUDIENCES.length : 0)
                           + 1
                         } as any}>
-                          <div style={{ padding: '1.25rem', textAlign: 'center' }}>
-                            <Text style={{ color: 'var(--sapContent_LabelColor)' }}>No attributes. Choose Add to create one.</Text>
+                          <div style={{ padding: '1.25rem 1.25rem 1.25rem calc(1rem + 0.75rem + 16px + 0.75rem)', textAlign: 'left' }}>
+                            <Text style={{ color: 'var(--sapContent_LabelColor)' }}>{group.id !== 'main' ? 'No attributes yet.' : 'No attributes. Choose Add to create one.'}</Text>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -571,7 +761,13 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                       const realIdx = group.attrs.findIndex(a => a.id === attr.id)
                       const otherGroups = attrGroups.filter(g => g.id !== group.id)
                       const isAttrDisabled = !modelingMode && !hideRequiredColumn && !attr.enabled
-                      const isDisabled = isAttrDisabled
+                      const isUngroupedDisabled = viewingMode && group.id === 'main' && attrGroups.length > 1
+                      const isInvisible = (viewingMode && modelOrigins && elementOrigins && (
+                        (modelOrigins.has(attr.id) ? attr.visibility[`Model_${viewingAudience}`] === 'Invisible' : true) &&
+                        (elementOrigins.has(attr.id) ? attr.visibility[`Element_${viewingAudience}`] === 'Invisible' : true) &&
+                        (modelOrigins.has(attr.id) || elementOrigins.has(attr.id))
+                      )) || (singleAudienceMode && attr.visibility[viewingAudience] === 'Invisible')
+                      const isDisabled = isAttrDisabled || isUngroupedDisabled || isInvisible
 
                       return (
                         <TableRow
@@ -581,11 +777,11 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                           data-attr-id={attr.id}
                         >
                           <TableCell>
-                            <FlexBox alignItems="Start" style={{ gap: '0.75rem' }}>
-                              {!(dictCategoryMode && group.id === 'main' && attr.attrClass === 'Standard') && (
-                                <Icon name="horizontal-grip" style={{ color: 'var(--sapContent_NonInteractiveIconColor)', flexShrink: 0, paddingTop: '2px' }} />
+                            <FlexBox alignItems="Center" style={{ gap: '0.75rem' }}>
+                              {!(dictCategoryMode && group.id === 'main' && attr.attrClass === 'Standard') && !(hideGrouping && group.id === 'main') && !(viewingMode && group.id === 'main') && (
+                                <Icon name="horizontal-grip" style={{ color: 'var(--sapContent_NonInteractiveIconColor)', flexShrink: 0 }} />
                               )}
-                              {(dictCategoryMode && group.id === 'main' && attr.attrClass === 'Standard') && (
+                              {((dictCategoryMode && group.id === 'main' && attr.attrClass === 'Standard') || (hideGrouping && group.id === 'main') || (viewingMode && group.id === 'main')) && (
                                 <div style={{ width: '1rem', flexShrink: 0 }} />
                               )}
                               <FlexBox direction="Column" style={{ gap: '0.125rem', opacity: isDisabled ? 0.45 : 1 }}>
@@ -636,7 +832,57 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                             </FlexBox>
                           </TableCell>
                           )}
-                          {!hideAudience && !(dictCategoryMode && group.id === 'main') && AUDIENCES.map(audience => (
+                          {singleAudienceMode && !(dictCategoryMode && group.id === 'main') && (
+                          <TableCell>
+                            <Select
+                              accessibleName={`Visibility for ${attr.name}`}
+                              style={{ width: '100%' }}
+                              disabled={group.enabled[viewingAudience] === false}
+                              onChange={(e: any) => updateAttr(group.id, attr.id, { visibility: { ...attr.visibility, [viewingAudience]: e.detail.selectedOption?.textContent as AttrVis } })}
+                            >
+                              {group.enabled[viewingAudience] === false
+                                ? <Option selected>Invisible</Option>
+                                : (['Visible', 'Visible if set', 'Invisible'] as AttrVis[]).map(v => (
+                                  <Option key={v} selected={(attr.visibility[viewingAudience] ?? 'Visible') === v}>{v}</Option>
+                                ))
+                              }
+                            </Select>
+                          </TableCell>
+                          )}
+                          {singleAudienceMode && dictCategoryMode && group.id === 'main' && <TableCell />}
+                          {!singleAudienceMode && viewingMode && modelOrigins && elementOrigins && (
+                          <>
+                            <TableCell>
+                              {modelOrigins.has(attr.id) ? (
+                                <Select
+                                  accessibleName={`Model visibility for ${attr.name}`}
+                                  style={{ width: '100%' }}
+                                  disabled={group.enabled[viewingAudience] === false || (viewingMode && group.id === 'main' && attrGroups.length > 1)}
+                                  onChange={(e: any) => updateAttr(group.id, attr.id, { visibility: { ...attr.visibility, [`Model_${viewingAudience}`]: e.detail.selectedOption?.textContent as AttrVis } })}
+                                >
+                                  {(['Visible', 'Visible if set', 'Invisible'] as AttrVis[]).map(v => (
+                                    <Option key={v} selected={(attr.visibility[`Model_${viewingAudience}`] ?? 'Visible') === v}>{v}</Option>
+                                  ))}
+                                </Select>
+                              ) : null}
+                            </TableCell>
+                            <TableCell>
+                              {elementOrigins.has(attr.id) ? (
+                                <Select
+                                  accessibleName={`Element visibility for ${attr.name}`}
+                                  style={{ width: '100%' }}
+                                  disabled={group.enabled[viewingAudience] === false || (viewingMode && group.id === 'main' && attrGroups.length > 1)}
+                                  onChange={(e: any) => updateAttr(group.id, attr.id, { visibility: { ...attr.visibility, [`Element_${viewingAudience}`]: e.detail.selectedOption?.textContent as AttrVis } })}
+                                >
+                                  {(['Visible', 'Visible if set', 'Invisible'] as AttrVis[]).map(v => (
+                                    <Option key={v} selected={(attr.visibility[`Element_${viewingAudience}`] ?? 'Visible') === v}>{v}</Option>
+                                  ))}
+                                </Select>
+                              ) : null}
+                            </TableCell>
+                          </>
+                          )}
+                          {!singleAudienceMode && !viewingMode && !(hideAudience || hideVisibilityColumns) && !(dictCategoryMode && group.id === 'main') && AUDIENCES.map(audience => (
                           <TableCell key={audience}>
                             <Select
                               accessibleName={`Visibility for ${attr.name} — ${audience}`}
@@ -653,11 +899,11 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                             </Select>
                           </TableCell>
                           ))}
-                          {!hideAudience && dictCategoryMode && group.id === 'main' && AUDIENCES.map(audience => (
+                          {!singleAudienceMode && !viewingMode && !(hideAudience || hideVisibilityColumns) && dictCategoryMode && group.id === 'main' && AUDIENCES.map(audience => (
                           <TableCell key={audience} />
                           ))}
-                          <TableCell style={{ position: 'sticky', right: 0, background: 'var(--sapList_Background)' } as any}>
-                            {!(dictCategoryMode && group.id === 'main' && attr.attrClass === 'Standard') && (
+                          <TableCell className="attr-overflow-cell" style={{ position: 'sticky', right: 0 } as any}>
+                            {!(dictCategoryMode && group.id === 'main' && attr.attrClass === 'Standard') && !(hideGrouping && group.id === 'main') && (
                             <FlexBox justifyContent="End">
                               <Button
                                 id={`overflow-btn-${attr.id}`}
@@ -672,30 +918,61 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                                 onClose={() => setOpenMenuId(null)}
                                 onItemClick={(e: any) => {
                                   const text = e.detail?.item?.text ?? e.detail?.item?.textContent
+                                  const selectedIds = viewingMode ? (viewingSelectedRows[group.id] ?? new Set()) : new Set<string>()
+                                  const isMultiOp = viewingMode && selectedIds.size > 1 && selectedIds.has(attr.id)
                                   if (text === 'Edit') { setEditAttrPending({ groupId: group.id, attrId: attr.id }); setEditAttrDialogOpen(true) }
-                                  else if (text === 'Move Up') moveAttr(group.id, realIdx, -1)
-                                  else if (text === 'Move Down') moveAttr(group.id, realIdx, 1)
+                                  else if (text === 'Move Up') {
+                                    if (isMultiOp) {
+                                      setAttrGroups(prev => prev.map(g => {
+                                        if (g.id !== group.id) return g
+                                        const attrs = [...g.attrs]
+                                        const indices = attrs.map((a, i) => selectedIds.has(a.id) ? i : -1).filter(i => i >= 0).sort((a, b) => a - b)
+                                        if (indices[0] === 0) return g
+                                        indices.forEach(i => { const tmp = attrs[i - 1]; attrs[i - 1] = attrs[i]; attrs[i] = tmp })
+                                        return { ...g, attrs }
+                                      })); markDirty()
+                                    } else moveAttr(group.id, realIdx, -1)
+                                  }
+                                  else if (text === 'Move Down') {
+                                    if (isMultiOp) {
+                                      setAttrGroups(prev => prev.map(g => {
+                                        if (g.id !== group.id) return g
+                                        const attrs = [...g.attrs]
+                                        const indices = attrs.map((a, i) => selectedIds.has(a.id) ? i : -1).filter(i => i >= 0).sort((a, b) => b - a)
+                                        if (indices[0] === attrs.length - 1) return g
+                                        indices.forEach(i => { const tmp = attrs[i + 1]; attrs[i + 1] = attrs[i]; attrs[i] = tmp })
+                                        return { ...g, attrs }
+                                      })); markDirty()
+                                    } else moveAttr(group.id, realIdx, 1)
+                                  }
                                   else if (text === 'Remove') setDeleteAttrPending({ groupId: group.id, attrId: attr.id, attrName: attr.name })
                                   else {
                                     const targetGroup = otherGroups.find(g => g.name === text)
-                                    if (targetGroup) moveAttrToGroup(group.id, attr.id, targetGroup.id)
+                                    if (targetGroup) {
+                                      if (isMultiOp) {
+                                        selectedIds.forEach(id => moveAttrToGroup(group.id, id, targetGroup.id))
+                                        setViewingSelectedRows(prev => ({ ...prev, [group.id]: new Set() }))
+                                      } else {
+                                        moveAttrToGroup(group.id, attr.id, targetGroup.id)
+                                      }
+                                    }
                                   }
                                   setOpenMenuId(null)
                                 }}
                               >
-                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && <MenuItem text="Edit" icon="edit" />}
-                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && <MenuSeparator />}
-                                <MenuItem text="Move Up" icon="navigation-up-arrow" {...{ disabled: realIdx === 0 } as any} />
-                                <MenuItem text="Move Down" icon="navigation-down-arrow" {...{ disabled: realIdx === group.attrs.length - 1 } as any} />
-                                {!(dictCategoryMode && group.id === 'main') && otherGroups.length > 0 && (
-                                  <MenuItem text="Move to" icon="move">
+                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && !viewingMode && <MenuItem text="Edit" icon="edit" />}
+                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && !viewingMode && <MenuSeparator />}
+                                {!(viewingMode && group.id === 'main') && <MenuItem text="Move Up" icon="navigation-up-arrow" {...{ disabled: realIdx === 0 } as any} />}
+                                {!(viewingMode && group.id === 'main') && <MenuItem text="Move Down" icon="navigation-down-arrow" {...{ disabled: realIdx === group.attrs.length - 1 } as any} />}
+                                {!(dictCategoryMode && group.id === 'main') && !hideGrouping && !dictCategoryMode && (
+                                  <MenuItem text="Move to" icon="move" {...{ disabled: otherGroups.length === 0 } as any}>
                                     {otherGroups.map(targetGroup => (
                                       <MenuItem key={targetGroup.id} text={targetGroup.name} />
                                     ))}
                                   </MenuItem>
                                 )}
-                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && <MenuSeparator />}
-                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && <MenuItem text="Remove" icon="delete" />}
+                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && !viewingMode && <MenuSeparator />}
+                                {!(dictCategoryMode && group.id === 'main') && attr.attrClass !== 'Standard' && !viewingMode && <MenuItem text="Remove" icon="delete" />}
                               </Menu>
                             </FlexBox>
                             )}
@@ -703,9 +980,27 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                         </TableRow>
                       )
                     })}
+                    {viewingMode && group.attrs.length > 0 && <TableSelectionMulti slot="features" ref={(el: any) => { if (el) selectionFeatureRefs.current[group.id] = el }} onChange={(e: any) => {
+                      const selFeature = e.target as any
+                      const selected = selFeature?.getSelectedRows?.() as HTMLElement[] | undefined
+                      const newSet = new Set((selected ?? []).map(r => r.getAttribute('row-key') ?? '').filter(Boolean))
+                      // Clear other groups' selections when this group gets a selection
+                      if (newSet.size > 0) {
+                        Object.entries(selectionFeatureRefs.current).forEach(([gId, el]) => {
+                          if (gId !== group.id && el?.selected !== undefined) el.selected = ''
+                        })
+                      }
+                      setViewingSelectedRows(() => {
+                        const next: Record<string, Set<string>> = {}
+                        if (newSet.size > 0) next[group.id] = newSet
+                        else next[group.id] = new Set()
+                        return next
+                      })
+                    }} />}
                   </Table>
               )}
             </SigTableWrapper>
+          )})()}
           </div>
         )
       })}
@@ -730,6 +1025,49 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
           }}
         />
       )}
+      {assignDialogGroupId && (() => {
+        const targetGroup = attrGroups.find(g => g.id === assignDialogGroupId)
+        const targetIds = new Set(targetGroup?.attrs.map(a => a.id) ?? [])
+        const availableAttrs = attrGroups.flatMap(g => g.id !== assignDialogGroupId ? g.attrs : []).filter(a => !targetIds.has(a.id))
+        const filteredAttrs = assignSearch ? availableAttrs.filter(a => a.name.toLowerCase().includes(assignSearch.toLowerCase())) : availableAttrs
+        return (
+          <Dialog
+            open
+            onClose={() => { setAssignDialogGroupId(null); setAssignPendingIds(new Set()) }}
+            headerText={`Assign attributes to ${targetGroup?.name ?? ''}`}
+            style={{ width: '560px' }}
+          >
+            <div style={{ padding: '12px', borderBottom: '1px solid var(--sapList_BorderColor)' }}>
+              <Input
+                placeholder="Search attributes"
+                value={assignSearch}
+                showClearIcon
+                style={{ width: '100%' }}
+                onInput={(e: any) => setAssignSearch(e.target?.value ?? '')}
+                icon={<Icon slot="icon" name="search" />}
+              />
+            </div>
+            <List selectionMode="Multiple" separators="Inner" style={{ maxHeight: '360px', overflowY: 'auto' }}>
+              {filteredAttrs.map(attr => (
+                <ListItemStandard
+                  key={attr.id}
+                  type="Active"
+                  selected={assignPendingIds.has(attr.id)}
+                  onClick={() => setAssignPendingIds(prev => { const next = new Set(prev); next.has(attr.id) ? next.delete(attr.id) : next.add(attr.id); return next })}
+                >{attr.name}</ListItemStandard>
+              ))}
+            </List>
+            <Bar slot="footer" design="Footer">
+              <Button slot="endContent" design="Emphasized" disabled={assignPendingIds.size === 0} onClick={() => {
+                assignPendingIds.forEach(id => moveAttrToGroup(attrGroups.find(g => g.attrs.some(a => a.id === id))!.id, id, assignDialogGroupId!))
+                setAssignDialogGroupId(null)
+                setAssignPendingIds(new Set())
+              }}>Assign</Button>
+              <Button slot="endContent" design="Transparent" onClick={() => { setAssignDialogGroupId(null); setAssignPendingIds(new Set()) }}>Cancel</Button>
+            </Bar>
+          </Dialog>
+        )
+      })()}
       <CreateAttributeDialog
         open={createAttrDialogGroupId !== null}
         dialogTitle="Add Attribute"
@@ -799,24 +1137,43 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
       <MessageBox
         open={deleteAttrPending !== null}
         type="Warning"
-        titleText="Remove Attribute"
+        titleText={`Remove Attribute ${deleteAttrPending?.attrName ?? ''}`}
         actions={(dictCategoryMode || modelingMode) ? ['Remove', 'Delete Completely', 'Cancel'] : ['Remove', 'Cancel']}
         emphasizedAction="Remove"
         style={{ width: '500px' }}
         onClose={(action) => {
           if ((action === 'Remove' || action === 'Delete Completely') && deleteAttrPending) {
             removeAttr(deleteAttrPending.groupId, deleteAttrPending.attrId)
-            showToast('Attribute deleted')
+            showToast(action === 'Remove' ? 'Attribute removed' : 'Attribute deleted')
           }
           setDeleteAttrPending(null)
         }}
       >
         <div style={{ padding: '16px' }}>
-          {(dictCategoryMode || modelingMode)
-            ? `Do you want to remove this attribute only for ${panelTitle ?? 'this item'} or delete it completely?`
+          {dictCategoryMode
+            ? 'Do you want to remove the attribute from this dictionary category only or delete it completely?'
+            : modelingMode
+            ? modelLevelMode
+              ? 'Do you want to remove the attribute from the model level only or delete it completely?'
+              : 'Do you want to remove the attribute from the selected element only or delete it completely?'
             : 'Removing this attribute will also delete all associated data from the asset. This action cannot be undone.'
           }
         </div>
+      </MessageBox>
+      <MessageBox
+        open={deleteGroupPending !== null}
+        type="Warning"
+        titleText={`Delete Attribute Group ${deleteGroupPending?.groupName ?? ''}`}
+        actions={['Delete', 'Cancel']}
+        emphasizedAction="Delete"
+        onClose={(action) => {
+          if (action === 'Delete' && deleteGroupPending) {
+            deleteGroup(deleteGroupPending.groupId)
+          }
+          setDeleteGroupPending(null)
+        }}
+      >
+        <div style={{ padding: '16px' }}>Delete attribute group?</div>
       </MessageBox>
       <Toast open={!!toast} placement="BottomCenter" onClose={() => setToast(null)}>
         {toast}

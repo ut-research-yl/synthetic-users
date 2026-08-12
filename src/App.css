@@ -1,3 +1,26 @@
+.signed-out-illustration::part(title),
+.signed-out-illustration::part(subtitle) {
+  display: none;
+}
+
+[class*="sig-right-side-panel-module_navigationSlot"] {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.hotspot-dismiss-btn::part(icon) {
+  color: #ffffff;
+}
+
+@keyframes hotspot-pulse-outer {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.2; }
+  50%       { transform: translate(-50%, -50%) scale(1.6); opacity: 0.05; }
+}
+@keyframes hotspot-pulse-mid {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 0.15; }
+}
+
 /* Scope scrollbar below the title header on the repository DynamicPage.
    DynamicPage's internal scroll container wraps both header and content,
    so the scrollbar track extends across the full height including the title.
@@ -15,27 +38,26 @@
   min-height: 0;
 }
 
-.no-padding-dynamic-page .ui5-dynamic-page-scroll-container {
+/* Scope scroll to the content body (grey area) so position:sticky children
+   stick to the top of the body, not behind the page title header. */
+.body-scroll-dynamic-page .ui5-dynamic-page-scroll-container {
   overflow: hidden !important;
   display: flex;
   flex-direction: column;
 }
 
-.no-padding-dynamic-page::part(content) {
-  overflow: hidden;
+.body-scroll-dynamic-page::part(content) {
+  overflow-y: auto;
   flex: 1;
   min-height: 0;
+}
+
+.no-padding-dynamic-page::part(content) {
   padding: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 .no-padding-dynamic-page::part(fit-content) {
   padding: 0;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 
@@ -48,6 +70,7 @@
   --card-min-height: 100px;
   --card-min-width: 320px;
 }
+
 
 body {
   font-family: var(--sapFontFamily);
@@ -143,30 +166,22 @@ ui5-card {
   padding: 0;
 }
 
-.no-padding-popover::part(arrow) {
-  display: none;
-}
-
 ui5-dialog::part(content) {
   padding: 0;
-  overflow: hidden;
-}
-
-.connect-widget-dialog ui5-bar::part(endcontent) {
-  padding: 0;
-}
-
-.connect-widget-dialog ui5-li-custom::part(native-li) {
-  padding-inline-start: 0 !important;
-  padding-inline-end: 0 !important;
-  padding-block: 0 !important;
-  overflow: visible;
 }
 
 .appearance-dialog-label {
   display: block;
   margin-bottom: 0 !important;
   line-height: 1.4;
+}
+
+/* ── HeroBanner on HomeDashboard — background photo ── */
+.home-hero-banner {
+  background-image: var(--home-hero-bg-image);
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
 }
 
 
@@ -184,10 +199,6 @@ ui5-dialog[class*="_dialog_"]::part(footer) {
 }
 
 ui5-message-box::part(content) {
-  padding: 1rem;
-}
-
-ui5-message-box ui5-dialog::part(content) {
   padding: 1rem;
 }
 
@@ -217,13 +228,6 @@ ui5-list[selection-mode="Delete"] ui5-li-custom:hover {
   cursor: pointer;
 }
 
-/* Prevent the SigTableWrapper title from being squished when the panel is open.
-   The title ToolbarItem is always the first child of the toolbar; giving it
-   flex-shrink: 0 and min-width: max-content ensures its text never clips. */
-[data-component="sig-table-wrapper"] ui5-toolbar > ui5-toolbar-item:first-child {
-  flex-shrink: 0;
-  min-width: max-content;
-}
 
 /* Allow overflow menu popup to escape the last cell in AnalyticalTable */
 [data-component-name="AnalyticalTableContainer"] [role="gridcell"]:last-child {
@@ -248,6 +252,31 @@ ui5-list[selection-mode="Delete"] ui5-li-custom:hover {
   background-color: var(--sapList_Hover_SelectionBackground);
 }
 
+/* Sticky overflow cell — inherits row background including selection state */
+.attr-overflow-cell::part(cell) {
+  background: inherit !important;
+}
+
+/* Hide checkbox in empty-state row */
+.attr-table ui5-table-row.empty-row [data-ui5-table-selection-cell] {
+  visibility: hidden;
+}
+
+
+/* Members table in Groups detail panel: hidden header, no horizontal scroll */
+.members-table [data-component-name="AnalyticalTableHeaderRow"] {
+  display: none !important;
+}
+.members-table [data-component-name="AnalyticalTableContainer"] {
+  --_ui5wcr-AnalyticalTable-HeaderBorderWidth: 0px;
+  overflow-x: hidden !important;
+}
+.members-table [data-component-name="AnalyticalTableBody"] {
+  overflow-x: hidden !important;
+}
+.members-table [role="gridcell"] {
+  border-inline-end: none !important;
+}
 
 ui5-li-custom::part(checkbox) {
   align-self: flex-start;
@@ -425,243 +454,14 @@ section[id^="ObjectPageSection-"] > [class*="outlineSpacerDiv"] {
   background: var(--sapList_Hover_Background) !important;
 }
 
-
-/* SplitterLayout: override layer-internal overflow:hidden so grip icon is visible */
-._splitterLayout_6n3m3_1 {
-  overflow: visible !important;
+/* Asset type detail two-column layout — mirrors DynamicPage container-query padding (S/M/L: 1rem inline, XL: 2rem) */
+.asset-detail-layout {
+  padding: 1rem 1rem 0;
+  gap: 1rem;
 }
 
-._splitterElement_5jt3n_1 {
-  overflow: visible !important;
-}
-
-[data-splitter-vertical="horizontal"] {
-  cursor: col-resize;
-}
-
-/* FlexibleColumnLayout in modeler: columns must fill height, not scroll */
-.modeler-fcl .ui5-fcl-column {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Cap the mid (right) panel width */
-.modeler-fcl .ui5-fcl-column:nth-child(2) {
-  max-width: 380px !important;
-  min-width: 280px !important;
-  width: 380px !important;
-  flex: 0 0 380px !important;
-}
-
-/* First column takes remaining space */
-.modeler-fcl .ui5-fcl-column:nth-child(1) {
-  flex: 1 1 auto !important;
-  max-width: none !important;
-}
-
-/* Right-rail: move selected indicator to right side */
-.modeler-rail ui5-side-navigation-item {
-  --_ui5_side_navigation_collapsed_selected_item_background: linear-gradient(0deg, #0064d9, #0064d9) no-repeat 100% 0 / .188rem 100%, #ebf8ff;
-  --_ui5_side_navigation_collapsed_selected_item_background_hover: linear-gradient(0deg, #0064d9, #0064d9) no-repeat 100% 0 / .188rem 100%, var(--sapList_Hover_Background);
-}
-
-/* Element detail panel: remove TabContainer gray content area */
-.element-detail-panel ui5-tabcontainer::part(content) {
-  display: none;
-}
-.element-detail-panel ui5-tabcontainer {
-  --_ui5_tc_header_box_shadow: none;
-}
-
-/* Hide Wizard content area — used as step indicator only */
-ui5-wizard::part(content) {
-  display: none;
-}
-ui5-wizard {
-  --_ui5_wizard_progress_nav_border_bottom: none;
-  min-height: unset !important;
-  width: 100% !important;
-  height: 62px !important;
-  overflow: hidden !important;
-}
-ui5-wizard-step {
-  display: none !important;
-  height: 0 !important;
-}
-.ui5-wiz-nav {
-  width: 100% !important;
-  padding-inline-end: 0 !important;
-  padding-right: 0 !important;
-  border-bottom: none !important;
-}
-.ui5-wiz-step-root {
-  padding-inline-end: 0 !important;
-  padding-right: 0 !important;
-}
-.ui5-wiz-content {
-  display: none !important;
-  height: 0 !important;
-}
-.ui5-wiz-root {
-  min-height: unset !important;
-}
-ui5-illustrated-message {
-  --_ui5_illustrated_message_padding: 1rem 1rem 0 1rem;
-}
-
-/* Remove diagram-attributes panel sub-header divider line */
-[class*="subHeaderSlot"] {
-  display: none;
-}
-
-/* AI preview mode — shape elements turn blue, labels/chips stay neutral */
-svg.ai-preview text:not([fill="#556b82"]):not([fill="#758ca4"]),
-svg.ai-preview tspan:not([fill="#556b82"]):not([fill="#758ca4"]) {
-  fill: var(--sapHighlightColor) !important;
-}
-/* shape strokes */
-svg.ai-preview line,
-svg.ai-preview polyline,
-svg.ai-preview polygon {
-  stroke: var(--sapHighlightColor) !important;
-}
-svg.ai-preview > g path {
-  stroke: var(--sapHighlightColor) !important;
-}
-svg.ai-preview > g path[fill]:not([fill="none"]):not([fill="white"]):not([fill="#fff"]) {
-  fill: var(--sapHighlightColor) !important;
-}
-svg.ai-preview > defs ~ g path {
-  stroke: var(--sapHighlightColor) !important;
-}
-svg.ai-preview > defs ~ g path[fill]:not([fill="none"]):not([fill="white"]):not([fill="#fff"]) {
-  fill: var(--sapHighlightColor) !important;
-}
-svg.ai-preview g rect:not([fill="#fff"]):not([fill="white"]):not([rx="7"]):not([rx="8"]) {
-  stroke: var(--sapHighlightColor) !important;
-}
-svg.ai-preview circle:not([fill="#d9d9d9"]):not([fill="white"]):not([fill="#fff"]) {
-  fill: #e8f3ff !important;
-  stroke: var(--sapHighlightColor) !important;
-}
-/* shape background fill — very light blue */
-svg.ai-preview g rect[fill="white"],
-svg.ai-preview g rect[fill="#fff"] {
-  fill: #e8f3ff !important;
-  stroke: var(--sapHighlightColor) !important;
-}
-/* green/red status fills → light blue */
-svg.ai-preview circle[fill="#5C8A00"],
-svg.ai-preview circle[fill="#BB0000"],
-svg.ai-preview circle[fill="#E9730C"],
-svg.ai-preview circle[fill="#949494"],
-svg.ai-preview circle[fill="white"],
-svg.ai-preview circle[fill="#fff"] {
-  fill: #e8f3ff !important;
-  stroke: var(--sapHighlightColor) !important;
-}
-/* gateway — fill with light blue */
-svg.ai-preview polygon[fill="white"],
-svg.ai-preview polygon[fill="#fff"] {
-  fill: #e8f3ff !important;
-  stroke: var(--sapHighlightColor) !important;
-}
-/* IT system outer circle bg → light blue */
-svg.ai-preview circle[fill*="Avatar"],
-svg.ai-preview circle[r="28.5"],
-svg.ai-preview circle[r="30"] {
-  fill: #e8f3ff !important;
-  stroke: var(--sapHighlightColor) !important;
-}
-/* label border → remove, text only */
-svg.ai-preview g rect[rx="7"][fill="#f5f6f7"],
-svg.ai-preview g rect[rx="8"][fill="#f5f6f7"] {
-  fill: #e8f3ff !important;
-  stroke: none !important;
-}
-
-/* NewDiagramOverlay close button hover fix */
-.new-diagram-close-btn::part(button) {
-  background: transparent !important;
-}
-.new-diagram-close-btn:hover::part(button) {
-  background: rgba(255,255,255,0.15) !important;
-}
-
-.new-diagram-close-btn ui5-icon,
-.new-diagram-close-btn [ui5-icon] {
-  color: rgba(255,255,255,0.8) !important;
-  fill: rgba(255,255,255,0.8) !important;
-}
-
-/* DictionaryLinkedPanel SegmentedButton compact */
-.dict-linked-toggle ui5-segmented-button-item::part(button) {
-  padding: 0 0.5rem;
-  min-width: unset;
-}
-
-/* ElementDetailPanel SegmentedButton item — remove horizontal padding */
-.element-dict-toggle li.ui5-segmented-button-item-root {
-  padding-inline: 0 !important;
-}
-
-/* DictionaryDetailPanel: white TabContainer content background */
-.dict-detail-panel ui5-tabcontainer::part(content) {
-  background: var(--sapBaseColor, #fff);
-  padding: 0;
-}
-
-/* DictionaryDetailPanel: tab header shadow matching SigRightSidePanel */
-.dict-detail-panel ui5-tabcontainer {
-  --_ui5_tc_header_box_shadow: 0px 2px 1px rgba(34, 53, 72, 0.05), inset 0px -1px 0px #d9d9d9;
-}
-.dict-detail-panel ui5-tabcontainer::part(tabstrip) {
-  box-shadow: 0px 2px 1px rgba(34, 53, 72, 0.05), inset 0px -1px 0px #d9d9d9;
-}
-.dict-detail-panel ui5-tabcontainer::part(tabStrip) {
-  box-shadow: 0px 2px 1px rgba(34, 53, 72, 0.05), inset 0px -1px 0px #d9d9d9;
-}
-/* ConnectWidgetDialog tree: remove top padding */
-.connect-widget-tree ui5-tree::part(content),
-.connect-widget-tree ui5-list {
-  padding-top: 0 !important;
-}
-
-/* ConnectWidgetDialog table: remove radio cell padding */
-.connect-widget-table ui5-radio-button {
-  --_ui5_radio_button_outer_ring_padding: 0 !important;
-  --_ui5_radio_button_outer_ring_padding_with_label: 0 !important;
-}
-
-/* ConnectWidgetDialog: remove breadcrumbs bottom margin */
-.connect-widget-dialog ui5-breadcrumbs {
-  margin-bottom: 0 !important;
-}
-
-/* ConnectWidgetDialog widget list: remove ListItemCustom inner padding */
-.connect-widget-dialog .widget-list ui5-li-custom::part(native-li) {
-  padding-inline-start: 0 !important;
-  padding-inline-end: 0 !important;
-  padding-block: 0 !important;
-}
-
-/* ConnectWidgetDialog widget list: remove Active ListItemCustom focus border */
-.connect-widget-dialog .widget-list ui5-li-custom::part(native-li) {
-  outline: none !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* CreateDictionaryItemPanel: reduce SigInlineEdit title size */
-.create-dict-panel sig-inline-edit,
-.create-dict-panel [data-component="sig-inline-edit"] {
-  font-size: var(--sapFontHeader5Size, 1rem) !important;
-  font-weight: 700 !important;
-}
-
-/* Modeler title: SigInlineEdit placeholder font weight */
-.modeler-title-inline sig-inline-edit [data-testid="title"],
-.modeler-title-inline sig-inline-edit span {
-  font-weight: 700 !important;
+@container (min-width: 1440px) {
+  .asset-detail-layout {
+    padding: 1rem 2rem 0;
+  }
 }

@@ -14,6 +14,19 @@
   animation: pca-strip-in 0.2s ease-out forwards;
 }
 
+/* ── Sidebar transparent variant (homepage — blends with page background) ── */
+/* Strips the purple-tinted card background so the sidebar feels flush        */
+
+.pca-sidebar-transparent .pca-scope,
+.pca-sidebar-transparent {
+  background-color: var(--sapBackgroundColor, #f5f6f7) !important;
+}
+
+.pca-sidebar-transparent .flex.flex-col.flex-1 {
+  background-color: transparent !important;
+  border-radius: 0 !important;
+}
+
 /* ── CSS variables (Tailwind theme tokens + SAP token overrides) ─────────── */
 
 .pca-scope {

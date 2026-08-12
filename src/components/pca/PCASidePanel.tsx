@@ -109,7 +109,7 @@ export function PCASidePanel() {
   return (
     <div
       className="flex flex-col h-full"
-      style={{ padding: '24px 32px' }}
+      style={{ padding: '16px 16px' }}
     >
       <div
         className="flex flex-col flex-1 min-h-0"

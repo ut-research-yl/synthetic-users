@@ -8,7 +8,7 @@ import { Icon as UI5Icon } from '@ui5/webcomponents-react/dist/webComponents/Ico
 // @ts-expect-error no type declarations
 import computerIcon from '@signavio/icons/dist/computer';
 // @ts-expect-error no type declarations
-import groupIcon from '@signavio/icons/dist/group';
+import groupIcon from '@signavio/icons/dist/group-frame';
 // @ts-expect-error no type declarations
 import riskIcon from '@signavio/icons/dist/risk';
 // @ts-expect-error no type declarations

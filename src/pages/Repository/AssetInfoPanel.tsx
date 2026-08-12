@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, type FunctionComponent } from 'react'
 import {
-  Text, Icon, Button, Bar, Menu, MenuItem, MenuSeparator, Label, Switch, Input, Avatar, MessageStrip,
-  Tab, IllustratedMessage, AnalyticalTable, Popover, List, ListItemStandard,
+  Text, Icon, Button, Bar, Menu, MenuItem, MenuSeparator, Label, Switch, Input, Avatar, MessageStrip, MessageBox,
+  Tab, IllustratedMessage, AnalyticalTable, Popover, List, ListItemStandard, ListItemCustom,
   type MenuDomRef,
 } from '@ui5/webcomponents-react'
 import { SigDomainObject, SigChipV2, SigRightSidePanel, SigRatingIndicator } from '@signavio/sap-signavio-uixtension'
@@ -97,11 +97,12 @@ function AttributeGroupsView({ groups }: { groups: InfoPanelAttrGroup[] }) {
 type CreateAttrDef = {
   id: string
   label: string
-  type: 'text' | 'multiline' | 'boolean' | 'selection' | 'multi-selection' | 'date' | 'number' | 'duration' | 'user' | 'asset' | 'rating'
+  type: 'text' | 'multiline' | 'boolean' | 'selection' | 'multi-selection' | 'date' | 'number' | 'duration' | 'user' | 'asset' | 'rating' | 'documents'
   required?: boolean
   value?: string
   values?: string[]
   boolValue?: boolean
+  documents?: { name: string; type: 'File' | 'URL' }[]
 }
 
 type CreateGroupDef = {
@@ -110,7 +111,7 @@ type CreateGroupDef = {
   attrs: CreateAttrDef[]
 }
 
-function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty }: { category: DictCategory; prefilled?: boolean; onDirty?: () => void }) {
+export function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty, readOnly = false, nameValue }: { category: DictCategory; prefilled?: boolean; onDirty?: () => void; readOnly?: boolean; nameValue?: string }) {
   const [search, setSearch] = useState('')
   const query = search.toLowerCase().trim()
 
@@ -118,14 +119,15 @@ function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty }: 
     id: 'main',
     name: 'Main Attributes',
     attrs: [
-      { id: 'description', label: 'Description:',  type: 'multiline',       required: true,  ...(prefilled ? { value: 'A key business object within the ' + category.name + ' domain. Used to define, classify and govern related processes and data structures across the organization.' } : {}) },
+      { id: 'description', label: 'Description:',  type: 'multiline',       required: false, ...(prefilled ? { value: 'A key business object within the ' + category.name + ' domain. Used to define, classify and govern related processes and data structures across the organization.' } : {}) },
+      { id: 'rel-docs',    label: 'Relevant Documents:', type: 'documents', required: false, ...(prefilled ? { documents: [{ name: '[File Name]', type: 'File' as const }, { name: '[File Name]', type: 'File' as const }, { name: '[URL Label/URL]', type: 'URL' as const }] } : {}) },
       { id: 'owner',       label: 'Owner:',         type: 'user',            required: false, ...(prefilled ? { values: ['Claire Westfield'] } : {}) },
-      { id: 'status',      label: 'Status:',        type: 'selection',       required: true,  ...(prefilled ? { values: ['Draft'] } : {}) },
+      { id: 'status',      label: 'Status:',        type: 'selection',       required: false,  values: ['Draft'], ...(prefilled ? {} : {}) },
       { id: 'approved',    label: 'Approved:',      type: 'boolean',         required: false, ...(prefilled ? { boolValue: true } : {}) },
       { id: 'valid-from',  label: 'Valid From:',    type: 'date',            required: false, ...(prefilled ? { values: ['Jan 1, 2025'] } : {}) },
-      { id: 'priority',    label: 'Priority:',      type: 'selection',       required: false, ...(prefilled ? { values: ['Medium'] } : {}) },
       { id: 'tags',        label: 'Tags:',           type: 'multi-selection', required: false, ...(prefilled ? { values: ['Finance', 'Procurement'] } : {}) },
-      { id: 'ref-doc',     label: 'Reference Document:', type: 'asset',      required: false },
+      { id: 'ref-doc',     label: 'Reference Document:', type: 'asset',      required: false, ...(prefilled ? { values: ['[File Name]', '[URL Label/URL]'] } : {}) },
+      { id: 'ref-dict',    label: 'Related Dictionary Entries:', type: 'asset', required: false, ...(prefilled ? { values: ['[Dictionary Entry Name]'] } : {}) },
     ],
   }
 
@@ -143,14 +145,15 @@ function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty }: 
               {truncated ? attr.value.slice(0, 160) + '...' : attr.value}
               {truncated && <span style={{ color: 'var(--sapLinkColor, #0064d9)', cursor: 'pointer', marginLeft: '4px' }}>More</span>}
             </Text>
-            <Button icon="edit" design="Default" style={{ alignSelf: 'flex-start', height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Edit" />
+            {!readOnly && <Button icon="edit" design="Default" style={{ alignSelf: 'flex-start', height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Edit" />}
           </div>
         )
       }
+      if (readOnly) return null
       return <Button icon="edit" design="Default" style={{ height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Edit" />
     }
     if (attr.type === 'boolean') {
-      return <Switch checked={attr.boolValue ?? false} />
+      return <Switch checked={attr.boolValue ?? false} disabled={readOnly} />
     }
     if (attr.type === 'text') {
       if (attr.value) {
@@ -160,13 +163,26 @@ function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty }: 
     }
     if (attr.type === 'selection' || attr.type === 'user' || attr.type === 'date') {
       if (attr.values?.length) {
+        const isOwner = attr.id === 'owner'
+        const isStatus = attr.id === 'status'
+        const isValidFrom = attr.id === 'valid-from'
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {attr.values.map((v, i) => <SigChipV2 key={i} value={v} />)}
-            <Button icon="add" design="Default" style={{ alignSelf: 'flex-start', height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />
+            {attr.values.map((v, i) => (
+              <SigChipV2
+                key={i}
+                value={v}
+                {...(!readOnly && isOwner ? { endActionIcon: 'decline', onClick: () => {}, onEndActionClick: () => {} } as any : {})}
+                {...(!readOnly && isStatus ? { trailingIcon: 'slim-arrow-down' } as any : {})}
+                {...(!readOnly && isValidFrom ? { leadingIcon: 'calendar', endActionIcon: 'decline', onClick: () => {}, onEndActionClick: () => {} } as any : {})}
+                {...(readOnly && isValidFrom ? { leadingIcon: 'calendar' } : {})}
+              />
+            ))}
+            {!readOnly && !isStatus && <Button icon="add" design="Default" style={{ alignSelf: 'flex-start', height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />}
           </div>
         )
       }
+      if (readOnly) return null
       return <Button icon="add" design="Default" style={{ height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />
     }
     if (attr.type === 'multi-selection') {
@@ -174,22 +190,83 @@ function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty }: 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {attr.values.map((v, i) => <SigChipV2 key={i} value={v} />)}
-            <Button icon="add" design="Default" style={{ alignSelf: 'flex-start', height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />
+            {!readOnly && <Button icon="add" design="Default" style={{ alignSelf: 'flex-start', height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />}
           </div>
         )
       }
+      if (readOnly) return null
       return <Button icon="add" design="Default" style={{ height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />
     }
-    if (attr.type === 'asset' && attr.values?.length) {
+    if (attr.type === 'asset') {
+      if (attr.values?.length) {
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <List selectionMode="None" separators="None">
+              {attr.values.map((v, i) => {
+                const isFile = v.toLowerCase().includes('file')
+                const isUrl = v.toLowerCase().includes('url')
+                return (
+                <ListItemCustom key={i} style={{ '--_ui5_list_item_content_padding': '0' } as React.CSSProperties}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', width: '100%' }}>
+                    {isFile || isUrl
+                      ? <SigDomainObject size="XS" object={(isFile ? 'File' : 'Link') as never} />
+                      : <Avatar icon="SAP-icons-v4/risk" colorScheme="Accent3" size="XS" shape="Square" />
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v}</Text>
+                      <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block' }}>
+                        {isFile ? 'File' : isUrl ? 'URL' : '[Dict. Category] / [Dict. Sub Category]'}
+                      </Text>
+                    </div>
+                    <div className="ui5-content-density-compact" style={{ display: 'flex' }}>
+                      <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open" />
+                      {!readOnly && <Button icon="decline" design="Transparent" tooltip="Remove" />}
+                    </div>
+                  </div>
+                </ListItemCustom>
+                )
+              })}
+            </List>
+            {!readOnly && <Button icon="add" design="Default" style={{ alignSelf: 'flex-start', marginTop: '4px' }} tooltip="Add" />}
+          </div>
+        )
+      }
+      if (readOnly) return null
+      return <Button icon="add" design="Default" style={{ height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />
+    }
+    if (attr.type === 'documents') {
+      const docs = attr.documents ?? []
+      const SHOW_LIMIT = 3
+      const [showAll, setShowAll] = useState(false)
+      const [localDocs, setLocalDocs] = useState(docs)
+      const visible = showAll ? localDocs : localDocs.slice(0, SHOW_LIMIT)
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {attr.values.map((v, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
-              <Icon name="document" style={{ width: '16px', height: '16px', color: 'var(--sapContent_LabelColor)' }} />
-              <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>{v}</Text>
-            </div>
-          ))}
-          <Button icon="add" design="Default" style={{ alignSelf: 'flex-start', height: '24px', minWidth: '24px', padding: '0 6px' }} tooltip="Add" />
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+          {localDocs.length > 0 && (
+            <List selectionMode="None" separators="None">
+              {visible.map((doc, i) => (
+                <ListItemCustom key={i} style={{ '--_ui5_list_item_content_padding': '0' } as React.CSSProperties}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', width: '100%' }}>
+                    <SigDomainObject size="XS" object={(doc.type === 'URL' ? 'Link' : 'File') as never} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</Text>
+                      <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block' }}>{doc.type}</Text>
+                    </div>
+                    <div className="ui5-content-density-compact" style={{ display: 'flex' }}>
+                      <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open" />
+                      {!readOnly && <Button icon="decline" design="Transparent" tooltip="Remove" onClick={() => setLocalDocs(prev => prev.filter((_, j) => j !== i))} />}
+                    </div>
+                  </div>
+                </ListItemCustom>
+              ))}
+            </List>
+          )}
+          {!readOnly && localDocs.length > SHOW_LIMIT && (
+            <Button design="Default" style={{ alignSelf: 'flex-start', marginTop: '4px' }} onClick={() => setShowAll(v => !v)}>
+              {showAll ? 'Show Less' : 'Show More'}
+            </Button>
+          )}
+          {!readOnly && <Button icon="add" design="Default" style={{ alignSelf: 'flex-start', marginTop: '4px' }} tooltip="Add document" />}
         </div>
       )
     }
@@ -200,16 +277,24 @@ function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty }: 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }} onChange={onDirty}>
-      <div style={{ paddingBottom: '16px' }}>
-        <Input
-          placeholder="Search for attributes"
-          type={'Search' as any}
-          value={search}
-          onInput={(e: any) => setSearch(e.target?.value ?? '')}
-          icon={<Icon slot="icon" name="search" />}
-          style={{ width: '100%' }}
-        />
-      </div>
+      {!readOnly && (
+        <div style={{ paddingBottom: '16px' }}>
+          <Input
+            placeholder="Search for attributes"
+            type={'Search' as any}
+            value={search}
+            onInput={(e: any) => setSearch(e.target?.value ?? '')}
+            icon={<Icon slot="icon" name="search" />}
+            style={{ width: '100%' }}
+          />
+        </div>
+      )}
+      {readOnly && nameValue && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '8px 0' }}>
+          <Label showColon>Name</Label>
+          <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapField_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>{nameValue}</Text>
+        </div>
+      )}
       {visibleMainAttrs.map(attr => (
         <div key={attr.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '8px 0' }}>
           <Label showColon required={attr.required}>{attr.label.replace(/:$/, '')}</Label>
@@ -219,6 +304,53 @@ function CreateDictEntryAttributesTab({ category, prefilled = false, onDirty }: 
         </div>
       ))}
     </div>
+  )
+}
+
+// ── Category Picker Popover ────────────────────────────────────────────────────
+function CatPickerPopover({ opener, open, onClose, dictCategories, selectedCategoryId, onSelect }: {
+  opener: string; open: boolean; onClose: () => void
+  dictCategories: DictCategory[]; selectedCategoryId?: string
+  onSelect: (categoryId: string) => void
+}) {
+  const [search, setSearch] = useState('')
+  return (
+    <Popover
+      opener={opener}
+      open={open}
+      placement="Bottom"
+      horizontalAlign="Start"
+      hideArrow
+      className="no-padding-popover"
+      onClose={onClose}
+      style={{ width: '280px' }}
+    >
+      <div style={{ padding: '8px 8px 4px' }}>
+        <Input
+          placeholder="Search"
+          value={search}
+          showClearIcon
+          style={{ width: '100%' }}
+          onInput={(e: any) => setSearch(e.target?.value ?? '')}
+          icon={<Icon slot="icon" name="search" />}
+        />
+      </div>
+      <List selectionMode="Single" separators="None" style={{ maxHeight: '280px', overflowY: 'auto' }}>
+        {dictCategories
+          .filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()))
+          .map(c => (
+            <ListItemStandard
+              key={c.id}
+              type="Active"
+              selected={c.id === selectedCategoryId}
+              icon={CAT_TYPE_ICON[c.type as DictCategoryType] ?? 'document'}
+              style={c.parentId ? { paddingInlineStart: '1.5rem' } as React.CSSProperties : undefined}
+              onClick={() => { onSelect(c.id); onClose() }}
+            >{c.name}</ListItemStandard>
+          ))
+        }
+      </List>
+    </Popover>
   )
 }
 
@@ -246,16 +378,18 @@ type Props = {
   onEmbed?: () => void
   hideHeaderActions?: boolean
   hideRevisionInfo?: boolean
-  hideThumbnailAndRevision?: boolean
   isFavorite?: boolean
   onToggleFavorite?: () => void
   isDictView?: boolean
   isModelingFolder?: boolean
   createDictCategoryId?: string | null
   onDiscardCreate?: () => void
+  onCreateCategoryChange?: (categoryId: string) => void
   createProcessAtom?: boolean
   onProcessAtomSaved?: (name: string, description: string) => void
   onDictEntrySaved?: (entry: DictEntry) => void
+  onDictEntryEdited?: () => void
+  onDictEntryMoved?: (entryId: string, newCategoryId: string) => void
 }
 
 function ModelAttributesTab({ description }: { description?: string }) {
@@ -271,7 +405,6 @@ function ModelAttributesTab({ description }: { description?: string }) {
 
   const labelStyle: React.CSSProperties = { fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)", display: 'block', marginBottom: '4px' }
   const attrRow: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px 0' }
-  const listItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', background: 'var(--sapList_Background)' }
   const boldText: React.CSSProperties = { fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }
   const subText: React.CSSProperties = { fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }
 
@@ -390,60 +523,66 @@ function ModelAttributesTab({ description }: { description?: string }) {
           {/* Responsible (user list) */}
           <div style={attrRow}>
             <Label style={labelStyle}>Responsible:</Label>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <List separators="None" style={{ width: '100%' }}>
               {(showMoreUsers ? users : users.slice(0, 3)).map(u => (
-                <div key={u.name} style={listItem}>
-                  <Avatar initials={u.initials} colorScheme={u.color} size="XS" shape="Circle" />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ ...boldText, display: 'block' }}>{u.name}</Text>
-                    <Text style={{ ...subText, display: 'block' }}>{u.sub}</Text>
+                <ListItemCustom key={u.name} type="Active" style={{ paddingBlock: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                    <Avatar initials={u.initials} colorScheme={u.color} size="XS" shape="Circle" />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ ...boldText, display: 'block' }}>{u.name}</Text>
+                      <Text style={{ ...subText, display: 'block' }}>{u.sub}</Text>
+                    </div>
+                    <Button icon="email" design="Transparent" />
                   </div>
-                  <Button icon="email" design="Transparent" style={{ height: '24px', minWidth: '24px', padding: 0 }} />
-                </div>
+                </ListItemCustom>
               ))}
-            </div>
+            </List>
             {!showMoreUsers && users.length > 3 && <Button design="Default" style={{ alignSelf: 'flex-start' }} onClick={() => setShowMoreUsers(true)}>Show More</Button>}
           </div>
 
           {/* Related Assets */}
           <div style={attrRow}>
             <Label style={labelStyle}>Related Assets:</Label>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <List separators="None" style={{ width: '100%' }}>
               {(showMoreAssets ? assets : assets.slice(0, 3)).map((a, i) => (
-                <div key={i} style={listItem}>
-                  {a.object === 'Risk' as never
-                    ? <Avatar icon="SAP-icons-v4/risk" colorScheme="Accent3" size="XS" shape="Square" />
-                    : <SigDomainObject size="XS" object={a.object} />
-                  }
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ ...boldText, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</Text>
-                    <Text style={{ ...subText, display: 'block' }}>{a.sub}</Text>
+                <ListItemCustom key={i} type="Active" style={{ paddingBlock: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                    {a.object === 'Risk' as never
+                      ? <Avatar icon="SAP-icons-v4/risk" colorScheme="Accent3" size="XS" shape="Square" />
+                      : <SigDomainObject size="XS" object={a.object} />
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ ...boldText, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</Text>
+                      <Text style={{ ...subText, display: 'block' }}>{a.sub}</Text>
+                    </div>
+                    <Button icon="SAP-icons-v4/link" design="Transparent" />
                   </div>
-                  <Button icon="SAP-icons-v4/link" design="Transparent" style={{ height: '24px', minWidth: '24px', padding: 0 }} />
-                </div>
+                </ListItemCustom>
               ))}
-            </div>
+            </List>
             {!showMoreAssets && assets.length > 3 && <Button design="Default" style={{ alignSelf: 'flex-start' }} onClick={() => setShowMoreAssets(true)}>Show More</Button>}
           </div>
 
           {/* Risk Management */}
           <div style={attrRow}>
             <Label style={labelStyle}>Risk Management:</Label>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <List separators="None" style={{ width: '100%' }}>
               {risks.map((r, i) => (
-                <div key={i} style={{ ...listItem, paddingLeft: r.indent ? '32px' : '16px' }}>
-                  {r.object === 'Risk' as never
-                    ? <Avatar icon="SAP-icons-v4/risk" colorScheme="Accent3" size="XS" shape="Square" />
-                    : <Avatar icon="SAP-icons-v4/overlay-risk-control" colorScheme="Accent8" size="XS" shape="Square" />
-                  }
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ ...boldText, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</Text>
-                    <Text style={{ ...subText, display: 'block' }}>{r.sub}</Text>
+                <ListItemCustom key={i} type="Active" style={{ paddingBlock: '8px', paddingInlineStart: r.indent ? '32px' : undefined }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                    {r.object === 'Risk' as never
+                      ? <Avatar icon="SAP-icons-v4/risk" colorScheme="Accent3" size="XS" shape="Square" />
+                      : <Avatar icon="SAP-icons-v4/overlay-risk-control" colorScheme="Accent8" size="XS" shape="Square" />
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ ...boldText, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</Text>
+                      <Text style={{ ...subText, display: 'block' }}>{r.sub}</Text>
+                    </div>
+                    <Button icon="SAP-icons-v4/link" design="Transparent" />
                   </div>
-                  <Button icon="SAP-icons-v4/link" design="Transparent" style={{ height: '24px', minWidth: '24px', padding: 0 }} />
-                </div>
+                </ListItemCustom>
               ))}
-            </div>
+            </List>
             <Button design="Default" style={{ alignSelf: 'flex-start' }} icon="full-screen">Show Details</Button>
           </div>
 
@@ -534,11 +673,13 @@ export default function AssetInfoPanel({
   onEmbed,
   createDictCategoryId,
   onDiscardCreate,
+  onCreateCategoryChange,
   createProcessAtom,
   onProcessAtomSaved,
   onDictEntrySaved,
+  onDictEntryEdited,
+  onDictEntryMoved,
   hideRevisionInfo,
-  hideThumbnailAndRevision,
   isFavorite,
   onToggleFavorite,
   isDictView,
@@ -546,7 +687,13 @@ export default function AssetInfoPanel({
 }: Props) {
   const { contentLanguages } = useWorkspace()
   const [createLangPopoverOpen, setCreateLangPopoverOpen] = useState(false)
+  const [catPickerOpen, setCatPickerOpen] = useState(false)
+  const [createCatPickerOpen, setCreateCatPickerOpen] = useState(false)
+  const [pendingCategoryId, setPendingCategoryId] = useState<string | null>(null)
+  const [attrResetKey, setAttrResetKey] = useState(0)
   const [createSelectedLang, setCreateSelectedLang] = useState('')
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false)
+  const [duplicateCategoryNames, setDuplicateCategoryNames] = useState<string[]>([])
   // const notifMenuRef = useRef<MenuDomRef>(null)
   const overflowMenuRef = useRef<MenuDomRef>(null)
   const [notifPref, setNotifPref] = useState<'Daily' | 'Weekly' | 'Monthly' | 'Off'>('Off')
@@ -600,8 +747,8 @@ export default function AssetInfoPanel({
     : null
 
   const dictEntryCategory = selectedDictEntry
-    ? dictCategories.find(c => c.id === selectedDictEntry.categoryId) ?? null
-    : null
+    ? dictCategories.find(c => c.id === (pendingCategoryId ?? selectedDictEntry.categoryId)) ?? null
+    : createCategory ?? null
   const objectType = selectedAsset?.type ?? externalSelectedAsset?.objectType ?? (dictEntryCategory?.name ?? 'Folder')
   const objectTypeLabel = selectedAsset?.type ?? externalSelectedAsset?.typeName ?? externalSelectedAsset?.objectType ?? (dictEntryCategory?.name ?? 'Folder')
 
@@ -660,7 +807,7 @@ export default function AssetInfoPanel({
   ) : externalSelectedAsset && externalSelectedAsset.objectType !== 'Process Atoms' && externalSelectedAsset.objectType !== 'Initiative' && externalSelectedAsset.objectType !== 'Business Goal' && externalSelectedAsset.objectType !== 'Dashboard' && externalSelectedAsset.objectType !== 'Dictionary Entry' ? (
     <>
       <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--sapPageHeader_BorderColor)', marginBottom: '0.75rem' }}>
-        {!hideThumbnailAndRevision && <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />}
+        <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />
       </div>
       {(() => {
         const isPublished = externalSelectedAsset.chips.some(c => c.value === 'Published')
@@ -669,14 +816,13 @@ export default function AssetInfoPanel({
           const icon = status === 'Published' ? 'SAP-icons-v4/published' : status === 'Draft' ? 'write-new-document' : status === 'On Track' ? 'trend-up' : status === 'At Risk' ? 'message-warning' : status === 'Modified' ? 'SAP-icons-v4/published-changed' : undefined
           return { value: status, design, icon }
         }
-        const allRows: { label: string; value: string; chips?: { value: string; design: string; icon?: string }[] }[] = [
+        const rows: { label: string; value: string; chips?: { value: string; design: string; icon?: string }[] }[] = [
           { label: 'Latest Revision:', value: externalSelectedAsset.version ?? '1.0', chips: externalSelectedAsset.chips.slice(0, 1).map(c => chipFor2(c.value)) },
           { label: 'Published Revision:', value: isPublished ? (externalSelectedAsset.version ?? '—') : '—', chips: isPublished ? [chipFor2('Published')] : [] },
           { label: 'Published:', value: externalSelectedAsset.lastPublished ? `${externalSelectedAsset.lastPublished} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
           { label: 'Changed:', value: externalSelectedAsset.lastUpdateDate ? `${externalSelectedAsset.lastUpdateDate} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
           { label: 'Created:', value: (externalSelectedAsset as any).createdDate ? `${(externalSelectedAsset as any).createdDate} by ${externalSelectedAsset.lastUpdateBy ?? '—'}` : '—' },
         ]
-        const rows = hideThumbnailAndRevision ? allRows.filter(r => r.label !== 'Latest Revision:' && r.label !== 'Published Revision:' && r.label !== 'Published:' && r.label !== 'Changed:' && r.label !== 'Created:') : allRows
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', paddingBottom: '0.5rem' }}>
             {rows.map(row => (
@@ -840,12 +986,12 @@ export default function AssetInfoPanel({
       })()}
     </Tab>,
     <Tab text="Relations" key="relations"><RelationsTab /></Tab>,
-
-    <Tab text="Activity" key="activity"><ActivityFeed assetType={selectedAsset.type} /></Tab>,
+    <Tab text="Comments" key="comments"><CommentsTab /></Tab>,
+    <Tab text="Activity" key="activity"><ActivityFeed assetType={selectedAsset.type} assetName={selectedAsset.name} /></Tab>,
   ] : selectedDictEntry ? [
     <Tab text="Attributes" key="attributes">
       {dictEntryCategory
-        ? <CreateDictEntryAttributesTab category={dictEntryCategory} prefilled onDirty={() => setDictEntryDirty(true)} />
+        ? <CreateDictEntryAttributesTab key={attrResetKey} category={dictEntryCategory} prefilled onDirty={() => setDictEntryDirty(true)} />
         : (() => {
             const groups: InfoPanelAttrGroup[] = ([
               { id: 'main', name: 'Main Attributes', attrs: ([
@@ -856,8 +1002,8 @@ export default function AssetInfoPanel({
           })()
       }
     </Tab>,
-    <Tab text="Relations" key="relations"><RelationsTab variant="dict-entry" /></Tab>,
-    <Tab text="Activity" key="activity"><ActivityFeed assetType="Dictionary Entry" /></Tab>,
+    <Tab text="Relations" key="relations"><RelationsTab variant="dict-entry" entryName={selectedDictEntry?.name} /></Tab>,
+    <Tab text="Activity" key="activity"><ActivityFeed assetType="Dictionary Entry" manualPublish={dictEntryCategory?.type === 'Activity'} entryName={selectedDictEntry?.name ?? dictEntryEditName} dictCategory={dictEntryCategory ?? undefined} /></Tab>,
   ] : externalSelectedAsset ? (() => {
     // Dictionary Entry from All Resources — use the same panel as dict entries in Dictionary page
     if (externalSelectedAsset.objectType === 'Dictionary Entry') {
@@ -877,8 +1023,8 @@ export default function AssetInfoPanel({
               })()
           }
         </Tab>,
-        <Tab text="Relations" key="relations"><RelationsTab variant="dict-entry" /></Tab>,
-        <Tab text="Activity" key="activity"><ActivityFeed assetType="Dictionary Entry" /></Tab>,
+        <Tab text="Relations" key="relations"><RelationsTab variant="dict-entry" entryName={externalSelectedAsset.name} /></Tab>,
+        <Tab text="Activity" key="activity"><ActivityFeed assetType="Dictionary Entry" manualPublish={dictEntryCategory?.type === 'Activity'} entryName={externalSelectedAsset.name} dictCategory={matchedCategory ?? undefined} /></Tab>,
       ]
     }
     if (externalSelectedAsset.objectType === 'Business Goal' || externalSelectedAsset.objectType === 'Initiative' || externalSelectedAsset.objectType === 'Dashboard') {
@@ -997,7 +1143,7 @@ export default function AssetInfoPanel({
           </div>
         </Tab>,
         <Tab text="Details" key="details"><div /></Tab>,
-    
+        <Tab text="Comments" key="comments"><CommentsTab /></Tab>,
       ]
     }
     return [
@@ -1010,9 +1156,8 @@ export default function AssetInfoPanel({
         return <ModelAttributesTab description={externalSelectedAsset.description} />
       })()}
     </Tab>,
-    <Tab text="Details" key="details"><div /></Tab>,
     <Tab text="Relations" key="relations"><RelationsTab /></Tab>,
-
+    <Tab text="Comments" key="comments"><CommentsTab /></Tab>,
     <Tab text="Activity" key="activity"><ActivityFeed assetType={externalSelectedAsset.objectType} /></Tab>,
   ]
   })() : []
@@ -1227,13 +1372,66 @@ export default function AssetInfoPanel({
   if (createCategory) {
     const createLangLabel = contentLanguages.find(l => createSelectedLang ? l.label === createSelectedLang : l.isDefault)?.label ?? 'Language'
     const createHeaderActions: FunctionComponent[] = [
-      () => (<>
+      () => (
         <Button
           id="create-dict-entry-lang-btn"
           design="Transparent"
           endIcon="slim-arrow-down"
           onClick={() => setCreateLangPopoverOpen(true)}
         >{createLangLabel}</Button>
+      ),
+    ]
+
+    const createTabs = [
+      <Tab text="Attributes" key="attributes">
+        <CreateDictEntryAttributesTab category={createCategory} />
+      </Tab>,
+      <Tab text="Relations" key="relations"><RelationsTab isEmpty /></Tab>,
+      <Tab text="Activity" key="activity"><ActivityFeed assetType={createCategory.name} isEmpty /></Tab>,
+    ]
+
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <SigRightSidePanel
+          headerTitle={newEntryName}
+          editable
+          editableTitlePlaceholder="New Dictionary Entry"
+          onEditableTitleChange={(value) => setNewEntryName(value)}
+          navigationSlot={[
+            () => (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, overflow: 'hidden' }}>
+                <div style={{
+                  width: '24px', height: '24px', borderRadius: '6px',
+                  background: entryBg(createCategory.type as DictCategoryType),
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <Icon name={CAT_TYPE_ICON[createCategory.type as DictCategoryType] ?? 'document'} style={{ width: '12px', height: '12px', color: entryIconColor(createCategory.type as DictCategoryType) }} />
+                </div>
+                <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{createCategory.name}</Text>
+                <Button
+                  id="create-cat-picker-btn"
+                  icon="navigation-down-arrow"
+                  design="Transparent"
+                  onClick={() => setCreateCatPickerOpen(v => !v)}
+                />
+              </div>
+            )
+          ]}
+          contentActionsSlot={createHeaderActions}
+          wrappingType="Wrap"
+          isOpen={true}
+          toggleRightSidePanel={onDiscardCreate ?? onClose}
+          style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)' }}
+          tabSlot={createTabs}
+        >{''}</SigRightSidePanel>
+        <CatPickerPopover
+          opener="create-cat-picker-btn"
+          open={createCatPickerOpen}
+          onClose={() => setCreateCatPickerOpen(false)}
+          dictCategories={dictCategories}
+          selectedCategoryId={createDictCategoryId ?? undefined}
+          onSelect={(id) => { if (onCreateCategoryChange) onCreateCategoryChange(id) }}
+        />
         <Popover
           opener="create-dict-entry-lang-btn"
           open={createLangPopoverOpen}
@@ -1254,49 +1452,17 @@ export default function AssetInfoPanel({
             ))}
           </List>
         </Popover>
-      </>),
-    ]
-
-    const createTabs = [
-      <Tab text="Attributes" key="attributes">
-        <CreateDictEntryAttributesTab category={createCategory} />
-      </Tab>,
-      <Tab text="Relations" key="relations"><RelationsTab isEmpty /></Tab>,
-      <Tab text="Activity" key="activity"><ActivityFeed assetType={createCategory.name} isEmpty /></Tab>,
-    ]
-
-    return (
-      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        <SigRightSidePanel
-          headerTitle={newEntryName}
-          editable
-          editableTitlePlaceholder="New Dictionary Entry"
-          onEditableTitleChange={(value) => setNewEntryName(value)}
-          navigationSlot={[
-            () => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '20px', height: '20px', borderRadius: '6px',
-                  background: entryBg(createCategory.type as DictCategoryType),
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}>
-                  <Icon name={CAT_TYPE_ICON[createCategory.type as DictCategoryType] ?? 'document'} style={{ width: '10px', height: '10px', color: entryIconColor(createCategory.type as DictCategoryType) }} />
-                </div>
-                <Text style={{ fontSize: 'var(--sapFontSmallSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap' }}>{createCategory.name}</Text>
-              </div>
-            )
-          ]}
-          contentActionsSlot={createHeaderActions}
-          wrappingType="Wrap"
-          isOpen={true}
-          toggleRightSidePanel={onDiscardCreate ?? onClose}
-          style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)' }}
-          tabSlot={createTabs}
-        >{''}</SigRightSidePanel>
         <div style={{ position: 'absolute', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }}>
           <Bar design="FloatingFooter">
             <Button slot="endContent" design="Emphasized" onClick={() => {
               if (createCategory && onDictEntrySaved) {
+                const duplicates = DICT_ENTRIES.filter(e => e.name.toLowerCase() === newEntryName.toLowerCase())
+                if (duplicates.length > 0) {
+                  const catNames = [...new Set(duplicates.map(e => dictCategories.find(c => c.id === e.categoryId)?.name ?? 'Unknown'))]
+                  setDuplicateCategoryNames(catNames)
+                  setDuplicateConfirmOpen(true)
+                  return
+                }
                 const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                 const newEntry: DictEntry = {
                   id: `de-new-${Date.now()}`,
@@ -1312,6 +1478,35 @@ export default function AssetInfoPanel({
             <Button slot="endContent" design="Default" onClick={onDiscardCreate ?? onClose}>Discard</Button>
           </Bar>
         </div>
+        <MessageBox
+          open={duplicateConfirmOpen}
+          type="Confirm"
+          titleText={`New Dictionary Entry ${newEntryName}`}
+          actions={['Yes', 'No']}
+          emphasizedAction="Yes"
+          onClose={(action: any) => {
+            setDuplicateConfirmOpen(false)
+            if (action === 'Yes' && createCategory && onDictEntrySaved) {
+              const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              onDictEntrySaved({
+                id: `de-new-${Date.now()}`,
+                name: newEntryName,
+                categoryId: createCategory.id,
+                status: 'Draft',
+                created: today,
+                changed: today,
+              })
+            }
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px' }}>
+            <Text>A dictionary entry with the title <strong>{newEntryName}</strong> already exists in the following categories:</Text>
+            <ul style={{ margin: '0', paddingLeft: '1.25rem' }}>
+              {duplicateCategoryNames.map(name => <li key={name}><Text>{name}</Text></li>)}
+            </ul>
+            <Text>Do you want to create the dictionary entry anyway?</Text>
+          </div>
+        </MessageBox>
       </div>
     )
   }
@@ -1326,7 +1521,7 @@ export default function AssetInfoPanel({
         style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)' }}
         tabSlot={[
           <Tab text="Activity" key="activity">
-            <ActivityFeed assetType="Dictionary Category" />
+            <ActivityFeed assetType="Dictionary Category" manualPublish={selectedDictCategory.type === 'Activity'} />
           </Tab>,
         ]}
       >{''}</SigRightSidePanel>
@@ -1372,7 +1567,7 @@ export default function AssetInfoPanel({
         toggleRightSidePanel={onClose}
         style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)' }}
         tabSlot={isDictView ? [
-          <Tab text="Activity" key="activity"><ActivityFeed assetType="Dictionary Category" /></Tab>,
+          <Tab text="Activity" key="activity"><ActivityFeed assetType="Dictionary Category" manualPublish={dictEntryCategory?.type === 'Activity'} /></Tab>,
         ] : []}
       >
         {!isDictView && (
@@ -1413,7 +1608,7 @@ export default function AssetInfoPanel({
             className="panel-noselection-illustration"
             name="NoData"
             design="Spot"
-            titleText="Select an item to see details."
+            titleText={isDictView ? "Navigate to a dictionary category to see details" : "Select an item to see details."}
             subtitleText=""
           />
         </div>
@@ -1431,16 +1626,26 @@ export default function AssetInfoPanel({
       onEditableTitleChange={atomCanEdit ? (v: string) => setAtomEditName(v) : selectedDictEntry ? (v: string) => { setDictEntryEditName(v); setDictEntryDirty(true) } : undefined}
       navigationSlot={hasAsset ? [
         () => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {dictEntryCategory ? (
-              <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: entryBg(dictEntryCategory.type as DictCategoryType), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon name={CAT_TYPE_ICON[dictEntryCategory.type as DictCategoryType] ?? 'document'} style={{ width: '12px', height: '12px', color: entryIconColor(dictEntryCategory.type as DictCategoryType) }} />
-              </div>
-            ) : (
-              <SigDomainObject size="XXS" object={objectType as never} />
-            )}
-            <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap' }}>{objectTypeLabel}</Text>
-          </div>
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, overflow: 'hidden' }}>
+              {dictEntryCategory ? (
+                <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: entryBg(dictEntryCategory.type as DictCategoryType), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name={CAT_TYPE_ICON[dictEntryCategory.type as DictCategoryType] ?? 'document'} style={{ width: '12px', height: '12px', color: entryIconColor(dictEntryCategory.type as DictCategoryType) }} />
+                </div>
+              ) : (
+                <SigDomainObject size="XXS" object={objectType as never} />
+              )}
+              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapPageHeader_TextColor)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{objectTypeLabel}</Text>
+              {selectedDictEntry && (
+                <Button
+                  id="cat-picker-btn"
+                  icon="navigation-down-arrow"
+                  design="Transparent"
+                  onClick={() => setCatPickerOpen(v => !v)}
+                />
+              )}
+            </div>
+          </>
         )
       ] : []}
       contentActionsSlot={headerActions}
@@ -1455,6 +1660,16 @@ export default function AssetInfoPanel({
         <></>
       )}
     </SigRightSidePanel>
+    {selectedDictEntry && (
+      <CatPickerPopover
+        opener="cat-picker-btn"
+        open={catPickerOpen}
+        onClose={() => setCatPickerOpen(false)}
+        dictCategories={dictCategories}
+        selectedCategoryId={pendingCategoryId ?? selectedDictEntry.categoryId}
+        onSelect={(id) => { setPendingCategoryId(id); setDictEntryDirty(true) }}
+      />
+    )}
     {selectedDictEntry && dictEntryDirty && (
       <div style={{ position: 'absolute', bottom: '0.5rem', left: '0.5rem', right: '0.5rem', zIndex: 10 }}>
         <Bar design="FloatingFooter">
@@ -1462,12 +1677,24 @@ export default function AssetInfoPanel({
             slot="endContent"
             design="Emphasized"
             disabled={!dictEntryDirty}
-            onClick={() => { setDictEntryDirty(false) }}
+            onClick={() => {
+              if (pendingCategoryId && onDictEntryMoved) {
+                onDictEntryMoved(selectedDictEntry.id, pendingCategoryId)
+                setPendingCategoryId(null)
+              }
+              setDictEntryDirty(false)
+              onDictEntryEdited?.()
+            }}
           >Save</Button>
           <Button
             slot="endContent"
             design="Default"
-            onClick={() => { setDictEntryDirty(false) }}
+            onClick={() => {
+              setDictEntryDirty(false)
+              setPendingCategoryId(null)
+              setAttrResetKey(k => k + 1)
+              if (selectedDictEntry) setDictEntryEditName(selectedDictEntry.name)
+            }}
           >Cancel</Button>
         </Bar>
       </div>

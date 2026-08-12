@@ -2,14 +2,16 @@ import { useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   DynamicPage, DynamicPageTitle,
+  ObjectPage, ObjectPageTitle, ObjectPageSection,
   Title, Breadcrumbs, BreadcrumbsItem,
-  Text, Button,
+  Text, Button, MessageStrip,
   List, ListItemStandard,
   Bar, Toast,
   VariantManagement, VariantItem,
 } from '@ui5/webcomponents-react'
 import { ASSET_TYPES } from './AssetTypes'
 import { useWorkspace } from '../contexts/WorkspaceContext'
+import AudienceSectionBar from '../components/AudienceSectionBar'
 
 const NOTATION_IDS = new Set(['bpmn', 'dmn', 'value-chain', 'nav-map'])
 const NOTATION_ASSET_TYPES = ASSET_TYPES.filter(t => NOTATION_IDS.has(t.id))
@@ -168,6 +170,8 @@ export default function AssetTypeDetail() {
 
   const [attrGroupsMap, setAttrGroupsMap] = useState<Record<string, AttrGroup[]>>({})
   const [selectedSubEl, setSelectedSubEl] = useState<string | null>(null)
+  const [viewingAttrGroupsState, setViewingAttrGroupsState] = useState<AttrGroup[] | null>(null)
+  const [viewingAudience, setViewingAudience] = useState<string>('General audience')
   const [dirty, setDirty] = useState(false)
   const [saveToast, setSaveToast] = useState(false)
   const [isNarrow, setIsNarrow] = useState(false)
@@ -212,68 +216,77 @@ export default function AssetTypeDetail() {
   const selectedSubElName = subElements.find(e => e.id === selectedSubEl)?.name
   const selectedItemName = selectedSubEl === null ? 'Model' : (selectedSubElName ?? assetType.name)
 
-  return (
-    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <DynamicPage className="body-scroll-dynamic-page" style={{ height: '100%' }} hidePinButton showFooter={dirty} titleArea={
-        <DynamicPageTitle>
-          <Breadcrumbs slot="breadcrumbs">
-            <BreadcrumbsItem onClick={() => navigate('/users')} style={{ cursor: 'pointer' }}>
-              Workspace Settings
-            </BreadcrumbsItem>
-            <BreadcrumbsItem onClick={() => navigate('/asset-types')} style={{ cursor: 'pointer' }}>
-              Asset Types
-            </BreadcrumbsItem>
-            <BreadcrumbsItem>{assetType.name}</BreadcrumbsItem>
-          </Breadcrumbs>
-          <Title slot="heading" level="H3">{assetType.name}</Title>
-        </DynamicPageTitle>
-      }
-        footerArea={
-          <Bar design="FloatingFooter">
-            <Button slot="endContent" design="Emphasized" onClick={handleSave}>Save</Button>
-            <Button slot="endContent" onClick={handleReset}>Cancel</Button>
-          </Bar>
-        }
-      >
+  // Track which attr IDs appear in model-level vs element-level groups
+  const modelOrigins = new Set<string>()
+  const elementOrigins = new Set<string>();
+  (() => {
+    const modelGroups = attrGroupsMap['model'] ?? makeItemGroups('model', !!assetType?.notation)
+    modelGroups.forEach(g => g.attrs.forEach(a => modelOrigins.add(a.id)))
+    subElements.forEach(el => {
+      const elGroups = attrGroupsMap[el.id] ?? makeItemGroups(el.id, !!assetType?.notation)
+      elGroups.forEach(g => g.attrs.forEach(a => elementOrigins.add(a.id)))
+    })
+  })()
 
-        <div ref={layoutRef} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-          {/* Left panel — sub-elements (notation types only, hidden on narrow viewports) */}
-          {assetType.notation && !isNarrow && (
-            <div style={{
-              width: '240px',
-              flexShrink: 0,
-              borderRadius: 'var(--sapElement_BorderCornerRadius)',
-              background: 'var(--sapList_Background)',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              position: 'sticky',
-              top: 0,
-              maxHeight: 'calc(100vh - 10rem)',
-            }}>
-              <div style={{ padding: '0.5rem 1rem 0.25rem', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', userSelect: 'none' as const, fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
-                Asset
-              </div>
-              <List onItemClick={e => {
-                const itemId = (e.detail.item as HTMLElement).id
-                if (itemId === 'model') setSelectedSubEl(null)
-              }}>
-                <ListItemStandard id="model" icon={ASSET_TYPE_ICON[id] ?? 'product'} selected={selectedSubEl === null}>
-                  Model
-                </ListItemStandard>
-              </List>
-              <div style={{ padding: '0.5rem 1rem 0.25rem', marginTop: '0.75rem', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', userSelect: 'none' as const, fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
-                Elements
-              </div>
-              <List onItemClick={e => {
-                const itemId = (e.detail.item as HTMLElement).id
-                if (itemId.startsWith('sub-')) setSelectedSubEl(itemId.replace('sub-', ''))
-              }}>
-                {subGroups.map(group => (
-                  [
-                    <div key={`${group}-header`} style={{ padding: '0.5rem 1rem 0.25rem', marginTop: '0.5rem', fontSize: 'var(--sapFontSmallSize)', fontWeight: 600, color: 'var(--sapContent_LabelColor)', userSelect: 'none' as const, letterSpacing: '0.04em', fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
-                      {group}
-                    </div>,
+  // Deduplicated attr groups for Viewing tab — all element types merged into one "Ungrouped Attributes" group
+  const viewingAttrGroups: AttrGroup[] = viewingAttrGroupsState ?? (() => {
+    const allKeys = ['model', ...subElements.map(e => e.id)]
+    const seen = new Set<string>()
+    const allAttrs: AttrGroup['attrs'] = []
+    allKeys.forEach(key => {
+      const groups = attrGroupsMap[key] ?? makeItemGroups(key, !!assetType?.notation)
+      groups.forEach(g => g.attrs.forEach(attr => {
+        if (!seen.has(attr.id)) {
+          seen.add(attr.id)
+          allAttrs.push(attr)
+        }
+      }))
+    })
+    const grpEnabled = Object.fromEntries(['Everyone', 'Modeler', 'Viewer', 'Process Owner'].map(a => [a, true]))
+    return [
+      { id: 'main', name: 'Ungrouped Attributes', enabled: { ...grpEnabled }, expanded: true, attrs: allAttrs },
+    ]
+  })()
+
+  const makePageContent = (hideVisibilityColumnsOverride?: boolean, hideGroupingOverride?: boolean, contentKey?: string, viewingModeOverride?: boolean) => (
+    <div ref={layoutRef} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+      {/* Left panel — sub-elements (notation types only, hidden on narrow viewports, hidden in viewing mode) */}
+      {assetType.notation && !isNarrow && !viewingModeOverride && (
+        <div style={{
+          width: '240px',
+          flexShrink: 0,
+          borderRadius: 'var(--sapElement_BorderCornerRadius)',
+          background: 'var(--sapList_Background)',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'sticky',
+          top: 0,
+          maxHeight: 'calc(100vh - 10rem)',
+        }}>
+          <div style={{ padding: '0.5rem 1rem 0.25rem', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', userSelect: 'none' as const, fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
+            Asset
+          </div>
+          <List onItemClick={e => {
+            const itemId = (e.detail.item as HTMLElement).id
+            if (itemId === 'model') setSelectedSubEl(null)
+          }}>
+            <ListItemStandard id="model" icon={ASSET_TYPE_ICON[id] ?? 'product'} selected={selectedSubEl === null}>
+              Model
+            </ListItemStandard>
+          </List>
+          <div style={{ padding: '0.5rem 1rem 0.25rem', marginTop: '0.75rem', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', userSelect: 'none' as const, fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
+            Elements
+          </div>
+          <List onItemClick={e => {
+            const itemId = (e.detail.item as HTMLElement).id
+            if (itemId.startsWith('sub-')) setSelectedSubEl(itemId.replace('sub-', ''))
+          }}>
+            {subGroups.map(group => (
+              [
+                <div key={`${group}-header`} style={{ padding: '0.5rem 1rem 0.25rem', marginTop: '0.5rem', fontSize: 'var(--sapFontSmallSize)', fontWeight: 600, color: 'var(--sapContent_LabelColor)', userSelect: 'none' as const, letterSpacing: '0.04em', fontFamily: "var(--sapFontFamily, '72', sans-serif)" }}>
+                  {group}
+                </div>,
                     ...subElements.filter(e => e.group === group).map(el => (
                       <ListItemStandard key={el.id} id={`sub-${el.id}`} icon={el.icon} selected={selectedSubEl === el.id}>
                         {el.name}
@@ -287,13 +300,32 @@ export default function AssetTypeDetail() {
 
           {/* Right panel */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            {viewingModeOverride && (
+              <AudienceSectionBar
+                value={viewingAudience}
+                onChange={setViewingAudience}
+                subtitle="Visibility settings apply to the selected audience only. Attribute grouping applies to all audiences."
+              />
+            )}
             <AttributeEditorPanel
-              attrGroups={currentAttrGroups}
-              setAttrGroups={setCurrentAttrGroups}
+              key={contentKey}
+              attrGroups={viewingModeOverride ? viewingAttrGroups : currentAttrGroups}
+              setAttrGroups={viewingModeOverride ? ((updater: React.SetStateAction<AttrGroup[]>) => {
+                setViewingAttrGroupsState(prev => {
+                  const base = prev ?? viewingAttrGroups
+                  return typeof updater === 'function' ? updater(base) : updater
+                })
+              }) : setCurrentAttrGroups}
               markDirty={markDirty}
               hideAudience={NO_AUDIENCE_IDS.has(id)}
-              title={assetType.notation && !isNarrow ? selectedItemName : undefined}
-              titleNode={assetType.notation && isNarrow ? (
+              hideVisibilityColumns={hideVisibilityColumnsOverride}
+              hideGrouping={hideGroupingOverride}
+              viewingMode={viewingModeOverride}
+              modelOrigins={viewingModeOverride ? modelOrigins : undefined}
+              elementOrigins={viewingModeOverride ? elementOrigins : undefined}
+              viewingAudience={viewingModeOverride ? viewingAudience : undefined}
+              title={assetType.notation && !isNarrow && !viewingModeOverride ? selectedItemName : undefined}
+              titleNode={assetType.notation && isNarrow && !viewingModeOverride ? (
                 <VariantManagement
                   closeOnItemSelect
                   hideSaveAs
@@ -322,12 +354,86 @@ export default function AssetTypeDetail() {
                 ...dictCategories.map(c => ({ id: c.id, name: c.name })),
               ] : NON_NOTATION_ASSET_TYPES}
               modelingMode={assetType.notation}
+              modelLevelMode={selectedSubEl === null}
               dictCategories={assetType.notation ? dictCategories : undefined}
               modelingSubElements={assetType.notation ? Object.values(SUB_ELEMENTS).flat().filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i) : undefined}
               inlinePadding={isNarrow ? '1rem' : undefined}
             />
           </div>
         </div>
+  )
+
+  const breadcrumbs = (
+    <Breadcrumbs slot="breadcrumbs">
+      <BreadcrumbsItem onClick={() => navigate('/users')} style={{ cursor: 'pointer' }}>
+        Workspace Settings
+      </BreadcrumbsItem>
+      <BreadcrumbsItem onClick={() => navigate('/asset-types')} style={{ cursor: 'pointer' }}>
+        Asset Types
+      </BreadcrumbsItem>
+      <BreadcrumbsItem>{assetType.name}</BreadcrumbsItem>
+    </Breadcrumbs>
+  )
+
+  const footer = (
+    <Bar design="FloatingFooter">
+      <Button slot="endContent" design="Emphasized" onClick={handleSave}>Save</Button>
+      <Button slot="endContent" onClick={handleReset}>Cancel</Button>
+    </Bar>
+  )
+
+  if (assetType.notation) {
+    return (
+      <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <ObjectPage
+          mode="IconTabBar"
+          hidePinButton
+          style={{ height: '100%' }}
+          titleArea={
+            <ObjectPageTitle
+              breadcrumbs={breadcrumbs}
+              header={<Title level="H3">{assetType.name}</Title>}
+              expandedContent={
+                <MessageStrip design="Information" hideCloseButton style={{ marginTop: '0.5rem' }}>
+                  In the <strong>Editing</strong> tab, configure attributes at the model and element level. In the <strong>Viewing</strong> tab, manage how attributes are grouped and control their visibility per audience — these settings only apply to the SAP Signavio Process Collaboration Hub.
+                </MessageStrip>
+              }
+              snappedContent={
+                <MessageStrip design="Information" hideCloseButton style={{ marginTop: '0.5rem' }}>
+                  In the <strong>Editing</strong> tab, configure attributes at the model and element level. In the <strong>Viewing</strong> tab, manage how attributes are grouped and control their visibility per audience — these settings only apply to the SAP Signavio Process Collaboration Hub.
+                </MessageStrip>
+              }
+            />
+          }
+        >
+          <ObjectPageSection id="editing" titleText="Editing">
+            {makePageContent(true, true, 'editing')}
+          </ObjectPageSection>
+          <ObjectPageSection id="viewing" titleText="Viewing">
+            {makePageContent(false, false, 'viewing', true)}
+          </ObjectPageSection>
+        </ObjectPage>
+        {dirty && (
+          <div style={{ position: 'absolute', bottom: '0.5rem', left: '0.5rem', right: '0.5rem', zIndex: 10 }}>
+            {footer}
+          </div>
+        )}
+        <Toast open={saveToast} placement="BottomCenter" onClose={() => setSaveToast(false)}>Changes saved.</Toast>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <DynamicPage className="body-scroll-dynamic-page" style={{ height: '100%' }} hidePinButton showFooter={dirty} titleArea={
+        <DynamicPageTitle>
+          {breadcrumbs}
+          <Title slot="heading" level="H3">{assetType.name}</Title>
+        </DynamicPageTitle>
+      }
+        footerArea={footer}
+      >
+        {makePageContent()}
       </DynamicPage>
       <Toast open={saveToast} placement="BottomCenter" onClose={() => setSaveToast(false)}>Changes saved.</Toast>
     </div>

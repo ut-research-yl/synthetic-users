@@ -4,10 +4,10 @@ export type ContentLanguage = { code: string; label: string; isDefault: boolean 
 
 export type AdminUser = { id: string; name: string; email: string; initials: string; colorScheme: string; ownerSince?: string; userId: string; license: 'Process Modeler' | 'Collaboration Hub' }
 export const ADMIN_USERS: AdminUser[] = [
-  { id: '1',  name: 'Anna Smidth',  email: 'anna.smidth@company.com',   initials: 'AS', colorScheme: 'Accent1', ownerSince: '2021-03-15', userId: 'S2019847231', license: 'Process Modeler' },
-  { id: '4',  name: 'James Park',   email: 'james.park@company.com',    initials: 'JP', colorScheme: 'Accent4', ownerSince: '2020-11-20', userId: 'S2021563847', license: 'Process Modeler' },
-  { id: '7',  name: 'Elena Müller', email: 'elena.mueller@company.com', initials: 'EM', colorScheme: 'Accent7', ownerSince: '2019-06-01', userId: 'S2023193209', license: 'Process Modeler' },
-  { id: '12', name: 'Carlos Vega',  email: 'carlos.vega@company.com',   initials: 'CV', colorScheme: 'Accent2', ownerSince: '2020-03-08', userId: 'S2020741582', license: 'Collaboration Hub' },
+  { id: '1',  name: 'Anna Smidth',  email: 'anna.smidth@acme.com',   initials: 'AS', colorScheme: 'Accent1', ownerSince: '2021-03-15', userId: 'S2019847231', license: 'Process Modeler' },
+  { id: '4',  name: 'James Park',   email: 'james.park@acme.com',    initials: 'JP', colorScheme: 'Accent4', ownerSince: '2020-11-20', userId: 'S2021563847', license: 'Process Modeler' },
+  { id: '7',  name: 'Elena Müller', email: 'elena.mueller@acme.com', initials: 'EM', colorScheme: 'Accent7', ownerSince: '2019-06-01', userId: 'S2023193209', license: 'Process Modeler' },
+  { id: '12', name: 'Carlos Vega',  email: 'carlos.vega@acme.com',   initials: 'CV', colorScheme: 'Accent2', ownerSince: '2020-03-08', userId: 'S2020741582', license: 'Collaboration Hub' },
 ]
 
 const DEFAULT_ADDITIONAL_INFO = `This workspace is managed by the Business Process Excellence team at Acme Inc.
@@ -18,6 +18,7 @@ Support hours: Mon–Fri, 8:00–17:00 CET`
 
 export type HelpLink = { id: string; label: string; url: string }
 export type SmartFolder = { id: string; name: string; description?: string; query: string }
+export type ExplorerColumn = { id: string; attribute: string; width: number; fixed?: boolean }
 export type Audience = { id: string; name: string; showGeneral: boolean }
 export type DictCategoryType = 'Organization' | 'Document' | 'Activity' | 'Event' | 'IT System' | 'Goal' | 'Requirement' | 'Risk' | 'Control' | 'Others' | 'Processes'
 export type DictCategory = { id: string; name: string; description?: string; color: string; parentId?: string; enabled: boolean; type: DictCategoryType; createdAt: string; changedAt: string; hasVariants?: boolean }
@@ -26,7 +27,7 @@ const INITIAL_DICT_CATEGORIES: DictCategory[] = [
   // Initiatives
   { id: 'c1',  name: 'Initiatives',                                                              description: 'Strategic initiatives tracked across the organization.',                                      color: '#256f3a', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
   // Transformation Steps
-  { id: 'c2',  name: 'Transformation Steps',                                                     description: 'Categories of transformation activities used in SAP-driven transformation programs.',        color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
+  { id: 'c2',  name: 'Transformation Steps',                                                     description: 'Categories of transformation activities used in SAP-driven transformation programs.',        color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025', hasVariants: true },
   { id: 'c3',  name: 'Transformation Step - S/4HANA',           parentId: 'c2',                 description: 'Transformation activities specific to S/4HANA migration and adoption.',                      color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
   { id: 'c4',  name: 'Transformation Step - Continuous BPT',    parentId: 'c2',                 description: 'Continuous business process transformation steps.',                                          color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
   { id: 'c5',  name: 'Transformation Step - OPEX',              parentId: 'c2',                 description: 'Operational excellence transformation activities.',                                          color: '#556b82', enabled: true,  type: 'Activity',     createdAt: 'Feb 12, 2024', changedAt: 'Mar 5, 2025' },
@@ -47,13 +48,13 @@ const INITIAL_DICT_CATEGORIES: DictCategory[] = [
   { id: 'c19', name: 'Staff Name List',                         parentId: 'c13',                description: 'Named individuals and staff assignments.',                                                  color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
   { id: 'c20', name: 'Externals',                               parentId: 'c13',                description: 'External parties, contractors, and third-party stakeholders.',                             color: '#aa0808', enabled: true,  type: 'Organization', createdAt: 'Feb 12, 2024', changedAt: 'Dec 3, 2024' },
   // Value Drivers
-  { id: 'c21', name: 'Value Drivers',                                                            description: 'Strategic value drivers that guide business priorities and investments.',                   color: '#a45d00', enabled: true,  type: 'Goal',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
+  { id: 'c21', name: 'Value Drivers',                                                            description: 'Strategic value drivers that guide business priorities and investments.',                   color: '#a45d00', enabled: true,  type: 'Goal',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025', hasVariants: true },
   // PPI
   { id: 'c22', name: 'PPI Process Performance Indicators',                                       description: 'Key performance indicators used to measure and track process performance.',                 color: '#a45d00', enabled: true,  type: 'Goal',         createdAt: 'Feb 12, 2024', changedAt: 'Jan 10, 2025' },
   // SAP Reference Business Architecture - Business Capability Model
   { id: 'c23', name: 'SAP - Reference Business Architecture - Business Capability Model',        description: 'SAP reference model mapping business capabilities to organizational functions.',            color: '#0057d2', enabled: true,  type: 'Others',       createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
   // Documents
-  { id: 'c24', name: 'Documents',                                                                description: 'Formal documents governing and guiding business operations.',                               color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
+  { id: 'c24', name: 'Documents',                                                                description: 'Formal documents governing and guiding business operations.',                               color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024', hasVariants: true },
   { id: 'c25', name: 'Data Objects',                            parentId: 'c24',                description: 'Structured data entities and master data objects used in processes.',                       color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
   { id: 'c26', name: 'Law',                                     parentId: 'c24',                description: 'Legal regulations and statutory requirements affecting business processes.',                color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
   { id: 'c27', name: 'Procedures',                              parentId: 'c24',                description: 'Step-by-step instructions for executing specific operational tasks.',                       color: '#a45d00', enabled: true,  type: 'Document',     createdAt: 'Feb 12, 2024', changedAt: 'Nov 14, 2024' },
@@ -115,6 +116,14 @@ const INITIAL_HELP_LINKS: HelpLink[] = [
   { id: '4', label: 'Our Process Optimization Initiative', url: 'www.intranet.globalcorp.com/signavio/process-optimization.htm' },
 ]
 
+const INITIAL_EXPLORER_COLUMNS: ExplorerColumn[] = [
+  { id: 'col-name',        attribute: 'Name',                 width: 200, fixed: true },
+  { id: 'col-desc',        attribute: 'Description',          width: 200 },
+  { id: 'col-revision',    attribute: 'Revision',             width: 60 },
+  { id: 'col-last-change', attribute: 'Last change',          width: 100 },
+  { id: 'col-support-doc', attribute: 'Supporting Documents', width: 100 },
+]
+
 type WorkspaceContextType = {
   workspaceName: string
   setWorkspaceName: (v: string) => void
@@ -150,6 +159,8 @@ type WorkspaceContextType = {
   reorderDictCategory: (draggedId: string, targetId: string | null, placement: 'Before' | 'After' | 'On') => void
   deleteDictCategory: (id: string) => void
   deleteDictCategoryMoveChildren: (id: string) => void
+  explorerColumns: ExplorerColumn[]
+  setExplorerColumns: Dispatch<SetStateAction<ExplorerColumn[]>>
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType>({
@@ -187,6 +198,8 @@ const WorkspaceContext = createContext<WorkspaceContextType>({
   reorderDictCategory: () => {},
   deleteDictCategory: () => {},
   deleteDictCategoryMoveChildren: () => {},
+  explorerColumns: INITIAL_EXPLORER_COLUMNS,
+  setExplorerColumns: () => {},
 })
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
@@ -205,14 +218,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [homeWelcomeMessage, setHomeWelcomeMessage] = useState('Your starting point for everything process')
   const [audiences, setAudiences] = useState<Audience[]>(INITIAL_AUDIENCES)
   const [dictCategories, setDictCategories] = useState<DictCategory[]>(INITIAL_DICT_CATEGORIES)
+  const [explorerColumns, setExplorerColumns] = useState<ExplorerColumn[]>(INITIAL_EXPLORER_COLUMNS)
 
   const addContentLanguage = (lang: ContentLanguage) =>
     setContentLanguages(prev => prev.some(l => l.code === lang.code) ? prev : [...prev, lang])
 
   const removeContentLanguage = (code: string) =>
     setContentLanguages(prev => {
+      const removed = prev.find(l => l.code === code)
       const remaining = prev.filter(l => l.code !== code)
-      if (remaining.length > 0 && !remaining.some(l => l.isDefault)) {
+      if (removed?.isDefault && remaining.length > 0) {
         remaining[0] = { ...remaining[0], isDefault: true }
       }
       return remaining
@@ -225,16 +240,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (swapIdx < 0 || swapIdx >= prev.length) return prev
       const next = [...prev]
       ;[next[idx], next[swapIdx]] = [next[swapIdx], next[idx]]
-      return next.map((l, i) => ({ ...l, isDefault: i === 0 }))
+      return next
     })
 
   const setDefaultLanguage = (code: string) =>
-    setContentLanguages(prev => {
-      const target = prev.find(l => l.code === code)
-      if (!target) return prev
-      const rest = prev.filter(l => l.code !== code)
-      return [{ ...target, isDefault: true }, ...rest.map(l => ({ ...l, isDefault: false }))]
-    })
+    setContentLanguages(prev => prev.map(l => ({ ...l, isDefault: l.code === code })))
 
   const reorderContentLanguage = (draggedCode: string, targetCode: string, placement: 'Before' | 'After') =>
     setContentLanguages(prev => {
@@ -246,8 +256,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const insertAt = placement === 'Before' ? targetIdx : targetIdx + 1
       const result = [...without]
       result.splice(insertAt, 0, dragged)
-      // First item is always default
-      return result.map((l, i) => ({ ...l, isDefault: i === 0 }))
+      return result
     })
 
   const addSmartFolder = (sf: Omit<SmartFolder, 'id'>) =>
@@ -337,6 +346,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       homeWelcomeMessage, setHomeWelcomeMessage,
       audiences, setAudiences,
       dictCategories, addDictCategory, updateDictCategory, moveDictCategory, reorderDictCategory, deleteDictCategory, deleteDictCategoryMoveChildren,
+      explorerColumns, setExplorerColumns,
     }}>
       {children}
     </WorkspaceContext.Provider>

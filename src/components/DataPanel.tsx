@@ -477,9 +477,8 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
       {createPortal(
         <Menu ref={sourceMenuRef} onItemClick={(e: any) => {
           const txt = e.detail?.text
-          setSelectedSource(txt === 'All' ? null : txt)
+          setSelectedSource(txt)
         }}>
-          <MenuItem text="All" />
           <MenuItem text="Analysis Configuration" />
           <MenuItem text="External Widget" />
         </Menu>,

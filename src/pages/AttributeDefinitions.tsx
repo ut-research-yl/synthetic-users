@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   AnalyticalTable,
   ToolbarItem, Input, Text, Title, Button, Menu, MenuItem, Toast, ToggleButton, FlexBox,
-  List, ListItemStandard, ListItemGroup,
+  List, ListItemStandard, ListItemGroup, MessageBox,
 } from '@ui5/webcomponents-react'
 import { SigTableWrapper, SigFilterBar, SigFilter, MultiSelect, useControl } from '@signavio/sap-signavio-uixtension'
 import { SortPopover } from '../components/SortPopover'
@@ -173,6 +173,7 @@ function AttributeTable({
   toastCb: (msg: string) => void
 }) {
   const { attrs, setAttrs, search, setSearch, openOverflowId, setOpenOverflowId, editingAttr, setEditingAttr, editAttrDialogAttr, setEditAttrDialogAttr, createDialogOpen, setCreateDialogOpen, sortBy, setSortBy, sortDir, setSortDir, filterBarOpen, setFilterBarOpen, filters, setFilters, filtered: filteredBase, expanded, setExpanded } = state
+  const [deleteAttrPending, setDeleteAttrPending] = useState<Attribute | null>(null)
 
   // Apply usedIn filter here where dictCategories is available
   const fUsedIn = filters.usedIn as string[] | undefined
@@ -269,7 +270,7 @@ function AttributeTable({
               onItemClick={(e: any) => {
                 const text = e.detail?.item?.text
                 if (text === 'Edit') setEditAttrDialogAttr(attr)
-                if (text === 'Delete') { setAttrs(prev => prev.filter(a => a !== attr)); toastCb('Attribute deleted') }
+                if (text === 'Delete') setDeleteAttrPending(attr)
                 setOpenOverflowId(null)
               }}
             >
@@ -433,6 +434,22 @@ function AttributeTable({
           toastCb('Attribute updated')
         }}
       />
+      <MessageBox
+        open={deleteAttrPending !== null}
+        type="Warning"
+        titleText={`Delete Attribute ${deleteAttrPending?.name ?? ''}`}
+        actions={['Delete', 'Cancel']}
+        emphasizedAction="Delete"
+        onClose={(action) => {
+          if (action === 'Delete' && deleteAttrPending) {
+            setAttrs(prev => prev.filter(a => a !== deleteAttrPending))
+            toastCb('Attribute deleted')
+          }
+          setDeleteAttrPending(null)
+        }}
+      >
+        <div style={{ padding: '16px' }}>Delete the attribute?</div>
+      </MessageBox>
     </>
   )
 }
@@ -448,7 +465,7 @@ export default function AttributeDefinitions() {
     <>
       <PageHeader
         title="Attribute Definitions"
-        subtitle="View and manage all attribute definitions across asset types"
+        subtitle="View and manage all attribute definitions across asset types."
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <AttributeTable

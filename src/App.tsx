@@ -1,9 +1,15 @@
 import './App.css'
+import { useState } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { WorkspaceProvider } from './contexts/WorkspaceContext'
 import { ReleaseProvider } from './contexts/ReleaseContext'
 import { DirtyStateProvider } from './contexts/DirtyStateContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { PCAProvider } from './contexts/PCAContext'
 import Shell from './components/Shell'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import WorkspaceSelectionPage from './pages/WorkspaceSelectionPage'
 import Audience from './pages/Audience'
 import Users from './pages/Users'
 import Groups from './pages/Groups'
@@ -42,16 +48,24 @@ import SearchResults from './pages/SearchResults'
 import Reporting from './pages/Reporting'
 import HomeDashboard from './pages/HomeDashboard'
 import AllResources from './pages/AllResources'
+import Recent from './pages/Recent'
+import Favorites from './pages/Favorites'
+import Newsfeed from './pages/Newsfeed'
 import SmartFolder from './pages/SmartFolder'
 import TrashPage from './pages/TrashPage'
 import VariantManagement from './pages/VariantManagement'
 import ModelingConventions from './pages/ModelingConventions'
 import ProcessConsultingAgent from './pages/ProcessConsultingAgent'
 import ProcessLandscape from './pages/ProcessLandscape'
+import ObjectivesPage from './pages/ObjectivesPage'
+import InitiativesPage from './pages/InitiativesPage'
+import InitiativeDetailPage from './pages/InitiativeDetailPage'
+import InsightsPage from './pages/InsightsPage'
 import ConventionsStandalone from './pages/ConventionsStandalone'
+import JourneyModelerLayout from './pages/JourneyModelerLayout'
 import ModelerLobby from './pages/ModelerLobby'
 import ModelerLayout from './pages/ModelerLayout'
-import JourneyModelerLayout from './pages/JourneyModelerLayout'
+import { ValueAcceleratorLibrary } from './pages/ValueAccelerator/ValueAcceleratorLibrary'
 import TemplatesShell from './templates/TemplatesShell'
 import TemplatesIndex from './templates/TemplatesIndex'
 import TemplateSettingsPage from './templates/pages/TemplateSettingsPage'
@@ -64,13 +78,17 @@ import TemplateTwoColumnPagePanel from './templates/pages/TemplateTwoColumnPageP
 import TemplateSideNavPage from './templates/pages/TemplateSideNavPage'
 import TemplateSideNavPageWide from './templates/pages/TemplateSideNavPageWide'
 
-export default function App() {
+function AuthGate() {
+  const { isLoggedIn, workspaceSelected } = useAuth()
+  const [showRegister, setShowRegister] = useState(false)
+
+  if (!isLoggedIn) {
+    if (showRegister) return <RegisterPage onBackToLogin={() => setShowRegister(false)} />
+    return <LoginPage onRegister={() => setShowRegister(true)} />
+  }
+  if (!workspaceSelected) return <WorkspaceSelectionPage />
   return (
-    <ReleaseProvider>
-    <DirtyStateProvider>
-    <WorkspaceProvider>
-    <HashRouter>
-      <Routes>
+    <Routes>
         <Route path="conventions-standalone" element={<ConventionsStandalone />} />
         <Route path="templates" element={<TemplatesShell />}>
           <Route index element={<TemplatesIndex />} />
@@ -84,7 +102,7 @@ export default function App() {
           <Route path="side-nav" element={<TemplateSideNavPage />} />
           <Route path="side-nav-wide" element={<TemplateSideNavPageWide />} />
         </Route>
-        <Route path="/" element={<Shell />}>
+        <Route path="/" element={<PCAProvider><Shell /></PCAProvider>}>
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="audience" element={<Audience />} />
           <Route path="users" element={<Users />} />
@@ -124,20 +142,40 @@ export default function App() {
           <Route path="attribute-definitions" element={<AttributeDefinitions />} />
           <Route path="home" element={<HomeDashboard />} />
           <Route path="all-resources" element={<AllResources />} />
+          <Route path="recent" element={<Recent />} />
+          <Route path="favorites" element={<Favorites />} />
+          <Route path="newsfeed" element={<Newsfeed />} />
           <Route path="smart-folder" element={<SmartFolder />} />
           <Route path="trash" element={<TrashPage />} />
           <Route path="variant-management" element={<VariantManagement />} />
           <Route path="modeling-conventions" element={<ModelingConventions />} />
           <Route path="process-consulting-agent" element={<ProcessConsultingAgent />} />
           <Route path="process-landscape" element={<ProcessLandscape />} />
+          <Route path="objectives" element={<ObjectivesPage />} />
+          <Route path="initiatives" element={<InitiativesPage />} />
+          <Route path="initiatives/:id" element={<InitiativeDetailPage />} />
+          <Route path="insights" element={<InsightsPage />} />
           <Route path="modeler" element={<ModelerLobby />} />
           <Route path="modeler/new-journey" element={<JourneyModelerLayout />} />
           <Route path="modeler/:assetId" element={<ModelerLayout />} />
+          <Route path="value-accelerator" element={<ValueAcceleratorLibrary />} />
         </Route>
       </Routes>
-    </HashRouter>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+    <ReleaseProvider>
+    <DirtyStateProvider>
+    <WorkspaceProvider>
+      <HashRouter>
+        <AuthGate />
+      </HashRouter>
     </WorkspaceProvider>
     </DirtyStateProvider>
     </ReleaseProvider>
+    </AuthProvider>
   )
 }

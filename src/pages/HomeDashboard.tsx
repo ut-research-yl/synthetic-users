@@ -1,15 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ObjectPage, ObjectPageTitle, ObjectPageSection, ObjectPageMode, Toolbar, Button, IllustratedMessage, Toast, MessageBox, Menu, MenuItem } from '@ui5/webcomponents-react'
-import '@ui5/webcomponents-fiori/dist/illustrations/NoData.js'
+import { Button, Toast, MessageBox, Menu, MenuItem } from '@ui5/webcomponents-react'
+import { usePCA } from '@/contexts/PCAContext'
+import { DesignProvider } from '@/contexts/DesignContext'
+import { PCASidePanel } from '../components/pca/PCASidePanel'
+import { PCAConversationPage } from '../components/pca/PCAConversationPage'
+import { PCAInputField } from '../components/pca/PCAInputField'
 import { CardGridFlexWidth } from '../components/CardGridFlexWidth'
 import { FavoritesWidget } from '../widgets/FavoritesWidget'
 import { RecentlyViewedWidget } from '../widgets/RecentlyViewedWidget'
-import { MyTasksWidget } from '../widgets/MyTasksWidget'
+import { MyTasksWidget, buildMyTasksPreviewGroups } from '../widgets/MyTasksWidget'
 import { QuickLinksWidget } from '../widgets/QuickLinksWidget'
-import { PreviewCard } from '../components/PreviewCard'
 import { EntryDiagramCard } from '../components/EntryDiagramCard'
 import type { WidgetListItemData } from '../widgets/WidgetListItem'
+import LoginBackground from '../LoginBackground.jpg'
 import SampleProcess1 from '../models/SampleProcess1.svg'
 import SampleProcess2 from '../models/SampleProcess2.svg'
 import SampleProcess3 from '../models/SampleProcess3.svg'
@@ -21,11 +25,10 @@ import type { QuickLinkItem } from '../widgets/QuickLinksWidget'
 import { WidgetCatalogDialog, WIDGET_LABELS } from '../components/WidgetCatalogDialog'
 import ImportFileDialog from '../components/ImportFileDialog'
 import { QuickLinksEditDialog } from '../components/QuickLinksEditDialog'
-import { SaveStateIndicator } from '../components/SaveStateIndicator'
 import { SectionHeader } from '../components/SectionHeader'
-import { useMockSave } from '../hooks/useMockSave'
 import { getCookie, setCookie } from '../utils/cookies'
 import { useWorkspace } from '../contexts/WorkspaceContext'
+import '../components/pca/pca.css'
 
 const MODEL_SRCS: Record<string, string> = {
   SampleProcess1,
@@ -35,28 +38,19 @@ const MODEL_SRCS: Record<string, string> = {
   EntryDiagram,
 }
 
-const TABS = ['Home', 'My Page', 'My Process Overview']
-
 export type WidgetType = 'favorites' | 'recentlyViewed' | 'tasks' | 'quickLinks'
 
 export interface WidgetConfig {
-  /** Unique instance key (used as React key and for removal). */
   id: string
   type: WidgetType
-  /** For quickLinks: distinguishes multiple instances in the UI. */
   instanceLabel?: number
-  /** For quickLinks: the configured link items. */
   items?: QuickLinkItem[]
-  /** For quickLinks: user-defined custom title. */
   customTitle?: string
 }
 
-const INITIAL_WIDGETS: WidgetConfig[] = [
-  { id: 'recentlyViewed', type: 'recentlyViewed' },
-  { id: 'favorites',      type: 'favorites' },
-]
+const INITIAL_WIDGETS: WidgetConfig[] = []
 
-const COOKIE_NAME = 'MyPagePrototypeConfig'
+const COOKIE_NAME = 'HomepageWidgetConfig'
 const COOKIE_DAYS = 90
 
 function loadWidgets(): WidgetConfig[] {
@@ -71,25 +65,92 @@ function saveWidgets(widgets: WidgetConfig[]): void {
   setCookie(COOKIE_NAME, JSON.stringify(widgets), COOKIE_DAYS)
 }
 
-const TAB_SLUGS = ['home', 'my-page', 'my-process-overview']
+const SUGGESTED_PROMPTS = [
+  'What can you help me with?',
+  'Help me find relevant analyses for my processes',
+  'I want to benchmark my processes',
+  "What's impacting my process performance?",
+  'Where should I focus to improve?',
+]
 
-export default function HomeDashboard() {
+// ─── PCA hero — custom centered layout matching HeroBanner visual style ─────
+
+function PCAHero({ title, subtitle }: { title: string; subtitle: string }) {
+  const { sendMessage } = usePCA()
+  return (
+    <div
+      style={{
+        minHeight: 320,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 24px 32px',
+        gap: 20,
+        textAlign: 'center',
+      }}
+    >
+      {/* Title + subtitle */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        <h1
+          style={{
+            margin: 0,
+            fontFamily: "'72', sans-serif",
+            fontSize: 28,
+            fontWeight: 700,
+            color: 'white',
+            lineHeight: 1.25,
+          }}
+        >
+          {title}
+        </h1>
+        <p
+          style={{
+            margin: 0,
+            fontFamily: "'72', sans-serif",
+            fontSize: 16,
+            fontWeight: 400,
+            color: 'rgba(255,255,255,0.85)',
+            lineHeight: 1.4,
+          }}
+        >
+          {subtitle}
+        </p>
+      </div>
+
+      {/* Input + suggested prompts — full width, no background */}
+      <div className="pca-scope" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', background: 'transparent' }}>
+        <PCAInputField onSend={sendMessage} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }}>
+          {SUGGESTED_PROMPTS.map((prompt) => (
+            <button
+              key={prompt}
+              onClick={() => sendMessage(prompt)}
+              style={{
+                padding: '8px 16px', borderRadius: 16, backgroundColor: '#eae5ff', color: '#5d36ff',
+                fontFamily: "'72', sans-serif", fontSize: 14, whiteSpace: 'nowrap',
+                border: '1px solid transparent', cursor: 'pointer', transition: 'background-color 0.15s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(93,54,255,0.25)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#eae5ff' }}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Homepage (start state: hero + widgets), fully scrollable ───────────────
+
+function HomepageContent() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { homeTitle, homeWelcomeMessage } = useWorkspace()
+  const { sidebarOpen, setSidebarOpen } = usePCA()
 
-  // ?tab= drives the selected tab (slugs: home, my-page, my-process-overview)
-  const tabParam = searchParams.get('tab')
-  const selectedTab = Math.max(0, TAB_SLUGS.indexOf(tabParam ?? 'home'))
-
-  const setSelectedTab = (i: number) => {
-    setSearchParams(prev => {
-      if (i === 0) prev.delete('tab')
-      else prev.set('tab', TAB_SLUGS[i])
-      return prev
-    }, { replace: true })
-  }
-
-  // ?overlay= drives catalog/ql-edit dialogs
   const overlayParam = searchParams.get('overlay')
   const catalogOpen = overlayParam === 'widget-catalog'
   const setCatalogOpen = (v: boolean) => setSearchParams(prev => {
@@ -113,23 +174,8 @@ export default function HomeDashboard() {
   const [qlRemoveConfirmId, setQlRemoveConfirmId] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState('')
   const [toastKey, setToastKey] = useState(0)
-  const { saveState, triggerSave } = useMockSave()
-  const { homeTitle, homeWelcomeMessage } = useWorkspace()
 
   const getModelSrc = (item: MockItem) => item.preview ? MODEL_SRCS[item.preview] : undefined
-
-  const toCard = (item: MockItem, showLastAccessed = true) => (
-    <PreviewCard
-      key={item.title}
-      title={item.title}
-      object={item.object}
-      modelSrc={getModelSrc(item)}
-      type={item.type}
-      lastAccessed={showLastAccessed ? formatAccessed(item.lastAccessed) : undefined}
-      isFavorite={item.isFavorite}
-      onClick={() => navigate('/repository')}
-    />
-  )
 
   const toListItem = (item: MockItem, showDate = true): WidgetListItemData => ({
     object: item.object,
@@ -145,7 +191,6 @@ export default function HomeDashboard() {
     setToastKey(k => k + 1)
   }
 
-  /** Types currently present on the page — used by the catalog to show "Added" state. */
   const activeWidgetTypes = new Set(widgets.map(w => w.type))
 
   const removeWidget = (id: string) =>
@@ -153,7 +198,6 @@ export default function HomeDashboard() {
       const removed = prev.find(w => w.id === id)
       const next = prev.filter(w => w.id !== id)
       saveWidgets(next)
-      triggerSave()
       if (removed) showToast(`${WIDGET_LABELS[removed.type]} widget removed`)
       return next
     })
@@ -164,7 +208,6 @@ export default function HomeDashboard() {
       const [moved] = next.splice(draggedIndex, 1)
       next.splice(dropIndex, 0, moved)
       saveWidgets(next)
-      triggerSave()
       return next
     })
 
@@ -183,7 +226,6 @@ export default function HomeDashboard() {
         return next
       })
     }
-    triggerSave()
     showToast(`${WIDGET_LABELS[type]} widget added`)
   }
 
@@ -193,7 +235,6 @@ export default function HomeDashboard() {
       saveWidgets(next)
       return next
     })
-    triggerSave()
   }
 
   const handleRenameQl = (id: string, title: string) => {
@@ -202,169 +243,154 @@ export default function HomeDashboard() {
       saveWidgets(next)
       return next
     })
-    triggerSave()
   }
 
   return (
-    <>
-      <ObjectPage
-        className="home-dashboard"
-        style={{ height: '100%' } as React.CSSProperties}
-        mode={ObjectPageMode.IconTabBar}
-        hidePinButton
-        selectedSectionId={TAB_SLUGS[selectedTab]}
-        onSelectedSectionChange={(e) => setSelectedTab(e.detail.selectedSectionIndex ?? 0)}
-        titleArea={
-          <ObjectPageTitle
-            header={
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: 'var(--sapFontHeader3Size)',
-                    fontFamily: 'var(--sapFontBlackFamily)',
-                    fontWeight: 700,
-                    color: 'var(--sapObjectHeader_Title_TextColor)',
-                  }}>
-                    {homeTitle || 'Welcome to SAP Signavio'}
-                  </h3>
-                  {selectedTab === 1 && <SaveStateIndicator state={saveState} />}
-                </div>
-                <span style={{ fontSize: 'var(--sapFontSize)', fontFamily: '"72", Arial, Helvetica, sans-serif', color: 'var(--sapContent_NonInteractiveIconColor)' }}>
-                  {homeWelcomeMessage || 'Your starting point for everything process'}
-                </span>
-              </div>
-            }
-            actionsBar={
-              <Toolbar>
-                <Button id="create-btn" design="Emphasized" endIcon="slim-arrow-down" onClick={() => setCreateMenuOpen(true)}>
-                  Create
-                </Button>
-                <Menu
-                  opener="create-btn"
-                  open={createMenuOpen}
-                  horizontalAlign="End"
-                  onClose={() => setCreateMenuOpen(false)}
-                  onItemClick={(e) => {
-                    setCreateMenuOpen(false)
-                    if ((e.detail as { text?: string })?.text === 'Import file') setImportDialogOpen(true)
-                  }}
-                >
-                  <MenuItem icon="SAP-icons-v4/upload" text="Import file" />
-                  <MenuItem icon="SAP-icons-v4/process-manager" text="BPMN" />
-                  <MenuItem icon="SAP-icons-v4/quickmodel" text="QuickModel" />
-                  <MenuItem icon="SAP-icons-v4/customer-journey" text="Customer-Journey-Map" />
-                  <MenuItem icon="SAP-icons-v4/graph-unspecified" text="BPMN-Choreographie" />
-                  <MenuItem icon="SAP-icons-v4/graph-unspecified" text="BPMN-Konversation" />
-                  <MenuItem icon="SAP-icons-v4/process-manager" text="BPMN 1.2" />
-                </Menu>
-              </Toolbar>
+    <div style={{ height: '100%', overflowY: 'auto', background: 'var(--sapBackgroundColor)' }}>
+
+      {/* HeroBanner — full-width minus 16px margin on all sides, outside page-content */}
+      <div
+        className="home-hero-banner pca-scope"
+        style={{
+          margin: 16,
+          position: 'relative',
+          '--home-hero-bg-image': `url(${LoginBackground})`,
+        } as React.CSSProperties}
+      >
+        {/* Sidebar toggle overlay — left side of the banner */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex items-center justify-center rounded-full transition-colors"
+            style={{
+              position: 'absolute', top: 36, left: 24, zIndex: 10,
+              width: 36, height: 36, flexShrink: 0,
+              backgroundColor: '#eae5ff', border: '1px solid transparent', cursor: 'pointer',
+            }}
+            title="Open sidebar"
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(93,54,255,0.25)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#eae5ff' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="14" height="14" rx="2" stroke="#5d36ff" strokeWidth="1.2" />
+              <rect x="1" y="1" width="5" height="14" rx="2" fill="#5d36ff" fillOpacity="0.15" />
+              <line x1="6" y1="1" x2="6" y2="15" stroke="#5d36ff" strokeWidth="1.2" />
+              <path d="M9 6l2 2-2 2" stroke="#5d36ff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
+
+        {/* Create button — top-right corner */}
+        <div style={{ position: 'absolute', top: 36, right: 24, zIndex: 10, display: 'flex', alignItems: 'center' }}>
+          <Button
+            id="create-btn"
+            design="Default"
+            endIcon="slim-arrow-down"
+            onClick={() => setCreateMenuOpen(true)}
+            style={{ '--sapButton_Background': 'white', '--sapButton_BorderColor': 'white', '--sapButton_TextColor': '#5d36ff', '--sapButton_Hover_Background': 'rgba(255,255,255,0.85)', '--sapButton_Hover_BorderColor': 'white', '--sapButton_Hover_TextColor': '#5d36ff', '--sapButton_Active_Background': 'rgba(255,255,255,0.75)', '--sapButton_Active_BorderColor': 'white', '--sapButton_Active_TextColor': '#5d36ff', '--sapButton_IconColor': '#5d36ff' } as React.CSSProperties}
+          >
+            Create
+          </Button>
+          <Menu
+            opener="create-btn"
+            open={createMenuOpen}
+            horizontalAlign="End"
+            onClose={() => setCreateMenuOpen(false)}
+            onItemClick={(e) => {
+              setCreateMenuOpen(false)
+              if ((e.detail as { text?: string })?.text === 'Import file') setImportDialogOpen(true)
+            }}
+          >
+            <MenuItem icon="SAP-icons-v4/upload" text="Import file" />
+            <MenuItem icon="SAP-icons-v4/process-manager" text="BPMN" />
+            <MenuItem icon="SAP-icons-v4/quickmodel" text="QuickModel" />
+            <MenuItem icon="SAP-icons-v4/customer-journey" text="Customer-Journey-Map" />
+            <MenuItem icon="SAP-icons-v4/graph-unspecified" text="BPMN-Choreographie" />
+            <MenuItem icon="SAP-icons-v4/graph-unspecified" text="BPMN-Konversation" />
+            <MenuItem icon="SAP-icons-v4/process-manager" text="BPMN 1.2" />
+          </Menu>
+        </div>
+
+        <PCAHero
+          title={homeTitle || 'Welcome to SAP Signavio'}
+          subtitle={homeWelcomeMessage || 'Your starting point for everything process'}
+        />
+      </div>
+
+      {/* Content below hero — standard page padding, no sidebar offset */}
+      <div className="page-content" style={{ marginInline: 0, padding: '0 3rem var(--spacing-md)' }}>
+        <div className="page-content__grid">
+
+          {/* My Widgets section */}
+          <SectionHeader
+            title="My Widgets"
+            action={
+              <>
+                <span className="section-header__spacer" />
+                <Button design="Default" onClick={() => setCatalogOpen(true)}>Add Widgets</Button>
+              </>
             }
           />
-        }
-      >
-        <ObjectPageSection id={TAB_SLUGS[0]} titleText={TABS[0]} hideTitleText>
-          <div className="page-content">
-            <div className="page-content__grid">
-              <SectionHeader title="Modeling Files" onSeeAll={() => navigate('/repository')} />
-              <EntryDiagramCard
-                title={REPOSITORY_ITEMS[0].title}
-                modelSrc={getModelSrc(REPOSITORY_ITEMS[0])}
-                onDiagramClick={() => navigate('/repository')}
-              />
-              <SectionHeader title="Favorites" onSeeAll={() => navigate('/favorites')} />
-              <CardGridFlexWidth stretch minCardWidth="240px">
-                {REPOSITORY_ITEMS.filter(item => item.isFavorite).slice(0, 6).map(item => toCard(item, false))}
-              </CardGridFlexWidth>
-              <SectionHeader title="Recently Viewed" onSeeAll={() => navigate('/repository')} />
-              <CardGridFlexWidth stretch minCardWidth="240px">
-                {REPOSITORY_ITEMS.slice(0, 6).map(item => toCard(item))}
-              </CardGridFlexWidth>
-            </div>
-          </div>
-        </ObjectPageSection>
+          <CardGridFlexWidth stretch minCardWidth="320px">
+            <RecentlyViewedWidget
+              items={REPOSITORY_ITEMS.slice(0, 4).map(i => toListItem(i))}
+              gridSpan={4}
+              onViewAll={() => navigate('/repository')}
+            />
+            <FavoritesWidget
+              items={REPOSITORY_ITEMS.filter(i => i.isFavorite).slice(0, 4).map(i => toListItem(i, false))}
+              gridSpan={4}
+              onViewAll={() => navigate('/favorites')}
+            />
+            <MyTasksWidget
+              taskGroups={buildMyTasksPreviewGroups().slice(0, 4)}
+              gridSpan={4}
+              onItemClick={() => navigate('/repository')}
+              onViewAll={() => navigate('/repository')}
+            />
+          </CardGridFlexWidth>
+          {widgets.length > 0 && (
+            <CardGridFlexWidth stretch draggable onOrderChange={onOrderChange}>
+              {widgets.map((widget) => {
+                if (widget.type === 'tasks') {
+                  return (
+                    <MyTasksWidget
+                      key={widget.id}
+                      gridSpan={4}
+                      onItemClick={() => navigate('/repository')}
+                      onViewAll={() => navigate('/repository')}
+                      onRemove={() => removeWidget(widget.id)}
+                    />
+                  )
+                }
+                if (widget.type === 'quickLinks') {
+                  return (
+                    <QuickLinksWidget
+                      key={widget.id}
+                      gridSpan={4}
+                      instanceLabel={widget.instanceLabel!}
+                      title={widget.customTitle ?? (widget.instanceLabel === 1 ? 'Quick Links' : `Quick Links ${widget.instanceLabel}`)}
+                      items={widget.items ?? []}
+                      onRemove={() => setQlRemoveConfirmId(widget.id)}
+                      onEdit={() => { setQlEditTarget(widget.id); setQlEditOpen(true) }}
+                      onRename={(t) => handleRenameQl(widget.id, t)}
+                    />
+                  )
+                }
+              })}
+            </CardGridFlexWidth>
+          )}
 
-        <ObjectPageSection id={TAB_SLUGS[1]} titleText={TABS[1]} hideTitleText>
-          <div className="page-content">
-            <div className="page-configure">
-              <Button design="Default" onClick={() => setCatalogOpen(true)}>Add Widgets</Button>
-            </div>
-            <div className="page-content__grid">
-              {widgets.length === 0 ? (
-                <div className="page-empty-state">
-                  <IllustratedMessage
-                    name="NoData"
-                    titleText="Your page looks quite empty"
-                    subtitleText="Customize what items appear on this page."
-                  >
-                    <Button design="Emphasized" onClick={() => setCatalogOpen(true)}>
-                      Add Widgets
-                    </Button>
-                  </IllustratedMessage>
-                </div>
-              ) : (
-                <CardGridFlexWidth stretch draggable onOrderChange={onOrderChange}>
-                  {widgets.map((widget) => {
-                    if (widget.type === 'favorites') {
-                      return (
-                        <FavoritesWidget
-                          key={widget.id}
-                          items={REPOSITORY_ITEMS.filter(i => i.isFavorite).slice(0, 6).map(i => toListItem(i, false))}
-                          gridSpan={4}
-                          onViewAll={() => navigate('/favorites')}
-                          onRemove={() => removeWidget(widget.id)}
-                        />
-                      )
-                    }
-                    if (widget.type === 'recentlyViewed') {
-                      return (
-                        <RecentlyViewedWidget
-                          key={widget.id}
-                          items={REPOSITORY_ITEMS.slice(0, 6).map(i => toListItem(i))}
-                          gridSpan={4}
-                          onViewAll={() => navigate('/repository')}
-                          onRemove={() => removeWidget(widget.id)}
-                        />
-                      )
-                    }
-                    if (widget.type === 'tasks') {
-                      return (
-                        <MyTasksWidget
-                          key={widget.id}
-                          gridSpan={4}
-                          onItemClick={() => navigate('/repository')}
-                          onViewAll={() => navigate('/repository')}
-                          onRemove={() => removeWidget(widget.id)}
-                        />
-                      )
-                    }
-                    if (widget.type === 'quickLinks') {
-                      return (
-                        <QuickLinksWidget
-                          key={widget.id}
-                          gridSpan={4}
-                          instanceLabel={widget.instanceLabel!}
-                          title={widget.customTitle ?? (widget.instanceLabel === 1 ? 'Quick Links' : `Quick Links ${widget.instanceLabel}`)}
-                          items={widget.items ?? []}
-                          onRemove={() => setQlRemoveConfirmId(widget.id)}
-                          onEdit={() => { setQlEditTarget(widget.id); setQlEditOpen(true) }}
-                          onRename={(t) => handleRenameQl(widget.id, t)}
-                        />
-                      )
-                    }
-                  })}
-                </CardGridFlexWidth>
-              )}
-            </div>
-          </div>
-        </ObjectPageSection>
+          {/* Company Overview */}
+          <SectionHeader title="Company Overview" onSeeAll={() => navigate('/repository')} />
+          <EntryDiagramCard
+            title={REPOSITORY_ITEMS[0].title}
+            modelSrc={getModelSrc(REPOSITORY_ITEMS[0])}
+            onDiagramClick={() => navigate('/repository')}
+          />
 
-        <ObjectPageSection id={TAB_SLUGS[2]} titleText={TABS[2]} hideTitleText>
-          <div className="under-construction">
-            <span className="under-construction__text">Under construction: {TABS[2]}</span>
-          </div>
-        </ObjectPageSection>
-      </ObjectPage>
+        </div>
+      </div>
 
       <WidgetCatalogDialog
         open={catalogOpen}
@@ -408,9 +434,9 @@ export default function HomeDashboard() {
         open={importDialogOpen}
         onClose={() => setImportDialogOpen(false)}
         onSuccess={() => {
-            setImportToast('Import successfully completed')
-            setTimeout(() => setImportToast(''), 3500)
-          }}
+          setImportToast('Import successfully completed')
+          setTimeout(() => setImportToast(''), 3500)
+        }}
       />
 
       {importToast && (
@@ -432,18 +458,70 @@ export default function HomeDashboard() {
         open={toastKey > 0}
         placement="BottomCenter"
         style={{
-          zIndex: 9999,
-          background: '#253040',
-          color: 'white',
-          borderRadius: '12px',
-          fontSize: '1rem',
-          fontWeight: 600,
-          padding: '0.75rem 1.5rem',
+          zIndex: 9999, background: '#253040', color: 'white', borderRadius: '12px',
+          fontSize: '1rem', fontWeight: 600, padding: '0.75rem 1.5rem',
           boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
         } as React.CSSProperties}
       >
         {toastMessage}
       </Toast>
-    </>
+    </div>
+  )
+}
+
+// ─── Inner shell: sidebar + (conversation | homepage) ───────────────────────
+
+function HomeDashboardInner() {
+  const { getActiveConversation, sidebarOpen, setActiveConversationId, setSidebarOpen } = usePCA()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const conversation = getActiveConversation()
+  const hasMessages = !!(conversation && conversation.messages.length > 0)
+  const sidebarWidth = sidebarOpen ? 340 : 0
+
+  // ?fresh=1 → reset to homepage initial state (drop active conversation, clear param)
+  useEffect(() => {
+    if (searchParams.get('fresh') === '1') {
+      setActiveConversationId(null)
+      setSidebarOpen(false)
+      setSearchParams(prev => { prev.delete('fresh'); return prev }, { replace: true })
+    }
+  }, [searchParams]) // re-run whenever URL params change
+
+  return (
+    <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden', background: 'white' }}>
+      {/* Animated PCA sidebar — slides in from left, 0 width when closed */}
+      <div
+        className="pca-scope pca-sidebar-transparent"
+        style={{
+          width: sidebarWidth,
+          flexShrink: 0,
+          overflow: 'hidden',
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <PCASidePanel />
+      </div>
+
+      {/* Main area */}
+      <div style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+        {hasMessages ? (
+          <div className="pca-scope" style={{ height: '100%' }}>
+            <PCAConversationPage />
+          </div>
+        ) : (
+          <HomepageContent />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Public export wraps providers ──────────────────────────────────────────
+
+export default function HomeDashboard() {
+  return (
+    <DesignProvider>
+      <HomeDashboardInner />
+    </DesignProvider>
   )
 }

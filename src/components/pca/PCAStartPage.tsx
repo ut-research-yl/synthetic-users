@@ -1,8 +1,26 @@
-import { useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePCA } from '@/contexts/PCAContext';
 import { PCAInputField } from './PCAInputField';
 
-// AI sparkle icon as SVG (matches Figma design closely)
+const SUBTITLES = [
+  'Explore your process performance, in plain language.',
+  'Understand your process bottlenecks, without the complexity.',
+  'Turn process data into clear insights, instantly.',
+  'Benchmark, analyze, and improve — just by asking.',
+  'Your processes, explained in plain language.',
+  'Ask anything about your operations. Get answers that matter.',
+  'From raw process data to actionable insights, in seconds.',
+];
+
+const SUGGESTED_PROMPTS = [
+  'What can you help me with?',
+  'Help me find relevant analyses for my processes',
+  'I want to benchmark my processes',
+  "What's impacting my process performance?",
+  'Where should I focus to improve?',
+  'How can MCP apps be embedded in the UI?',
+];
+
 function AiSparkleIcon({ size = 64 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -20,6 +38,7 @@ function AiSparkleIcon({ size = 64 }: { size?: number }) {
 
 export function PCAStartPage() {
   const { sendMessage } = usePCA();
+  const [subtitle] = useState(() => SUBTITLES[Math.floor(Math.random() * SUBTITLES.length)]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -35,25 +54,64 @@ export function PCAStartPage() {
         className="flex flex-col items-center"
         style={{ gap: 48, width: '100%', maxWidth: 960, padding: '0 24px 32px' }}
       >
-        {/* AI Icon */}
         <AiSparkleIcon size={64} />
 
-        {/* Title */}
-        <h1
-          className="text-center leading-tight"
-          style={{
-            fontSize: 32,
-            fontFamily: "'72', sans-serif",
-            fontWeight: 700,
-            color: '#1d2d3e',
-            margin: 0,
-          }}
-        >
-          Process Consulting Agent
-        </h1>
+        <div className="flex flex-col items-center" style={{ gap: 8, maxWidth: 840, width: '100%' }}>
+          <h1
+            className="text-center leading-tight"
+            style={{
+              fontSize: 32,
+              fontFamily: "'72', sans-serif",
+              fontWeight: 700,
+              color: '#1d2d3e',
+              margin: 0,
+            }}
+          >
+            Process Consulting Agent
+          </h1>
+          <p
+            className="text-center"
+            style={{
+              fontSize: 32,
+              fontFamily: "'72', sans-serif",
+              fontWeight: 400,
+              color: '#1d2d3e',
+              margin: 0,
+            }}
+          >
+            {subtitle}
+          </p>
+        </div>
 
-        {/* Input area */}
         <PCAInputField ref={textareaRef} onSend={sendMessage} />
+
+        <div
+          className="flex flex-wrap items-center justify-center"
+          style={{ gap: 10, width: '100%' }}
+        >
+          {SUGGESTED_PROMPTS.map((prompt) => (
+            <button
+              key={prompt}
+              onClick={() => sendMessage(prompt)}
+              className="px-4 py-2 rounded-2xl text-sm transition-all"
+              style={{
+                backgroundColor: '#eae5ff',
+                color: '#5d36ff',
+                fontFamily: "'72', sans-serif",
+                fontSize: 14,
+                whiteSpace: 'nowrap',
+                border: '1px solid transparent',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(93,54,255,0.25)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#eae5ff'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'transparent'; }}
+              onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#eae5ff'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#5d36ff'; }}
+              onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(93,54,255,0.25)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'transparent'; }}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

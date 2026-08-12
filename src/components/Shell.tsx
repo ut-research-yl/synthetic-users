@@ -44,15 +44,17 @@ import {
   Icon,
   IllustratedMessage,
   MessageBox,
+  Tag,
 } from '@ui5/webcomponents-react'
 import '@ui5/webcomponents-fiori/dist/illustrations/UnableToLoad.js'
 import { SigChipV2, SigDomainObject, SigTableWrapper } from '@signavio/sap-signavio-uixtension'
 import { useWorkspace } from '../contexts/WorkspaceContext'
+import { usePCA } from '../contexts/PCAContext'
 import { useRelease } from '../contexts/ReleaseContext'
+import { useAuth } from '../contexts/AuthContext'
 import { RELEASES } from '../releases'
 import SearchDropdown from './SearchDropdown'
 import WelcomeModal from './WelcomeModal'
-import HotspotTooltip from './HotspotTooltip'
 import ConventionsDialog from './Shell/ConventionsDialog'
 import AboutDialog from './Shell/AboutDialog'
 import { ADMIN_USERS } from '../contexts/WorkspaceContext'
@@ -157,7 +159,9 @@ export default function Shell() {
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { additionalInfo, helpLinks, smartFolders, workspaceName, ownerId, contentLanguages } = useWorkspace()
-  const { currentRelease, setCurrentRelease, isAvailable } = useRelease()
+  const { getActiveConversation } = usePCA()
+  const { currentRelease, setCurrentRelease } = useRelease()
+  const auth = useAuth()
   useNavigationLog()
   const dirtyState = useDirtyState()
   const pendingNavRef = useRef<string | null>(null)
@@ -206,13 +210,12 @@ export default function Shell() {
   const [wipBannerVisible, setWipBannerVisible] = useState(true)
   const [errorStateEnabled, setErrorStateEnabled] = useState(false)
   const [releaseSelectorOpen, setReleaseSelectorOpen] = useState(false)
-  const [hotspotVisible, setHotspotVisible] = useState(false)
 
   // URL-driven overlays: ?overlay=welcome|about|conventions|settings
   const settingsOpen = overlayParam === 'settings'
   const conventionsOpen = overlayParam === 'conventions'
   const aboutOpen = overlayParam === 'about'
-  const showWelcome = overlayParam === 'welcome' || (overlayParam === null && localStorage.getItem('welcomeDismissed') !== 'true')
+  const showWelcome = overlayParam === 'welcome'
 
   const openOverlay = (name: string) =>
     setSearchParams(prev => { prev.set('overlay', name); return prev }, { replace: false })
@@ -324,7 +327,7 @@ export default function Shell() {
   const handleOuterNavChange = (e: CustomEvent) => {
     const text = (e.detail?.item as any)?.text as string
     if (text === 'Home') {
-      guardedNavigate('/home')
+      guardedNavigate('/home?fresh=1')
       setNavExpanded(false)
     } else if (text === 'Repository') {
       guardedNavigate('/repository')
@@ -342,7 +345,28 @@ export default function Shell() {
       guardedNavigate('/users')
       setNavExpanded(false)
     } else if (text === 'Modeler') {
-      navigate('/modeler')
+      guardedNavigate('/modeler')
+      setNavExpanded(false)
+    } else if (text === 'Recent') {
+      guardedNavigate('/recent')
+      setNavExpanded(false)
+    } else if (text === 'Newsfeed') {
+      guardedNavigate('/newsfeed')
+      setNavExpanded(false)
+    } else if (text === 'Favorites') {
+      guardedNavigate('/favorites')
+      setNavExpanded(false)
+    } else if (text === 'Objectives') {
+      guardedNavigate('/objectives')
+      setNavExpanded(false)
+    } else if (text === 'Initiatives') {
+      guardedNavigate('/initiatives')
+      setNavExpanded(false)
+    } else if (text === 'Insights') {
+      guardedNavigate('/insights')
+      setNavExpanded(false)
+    } else if (text === 'Value Accelerator Library') {
+      guardedNavigate('/value-accelerator')
       setNavExpanded(false)
     }
   }
@@ -366,9 +390,16 @@ export default function Shell() {
   const isRepository = location.pathname === '/repository'
   const isSearch = location.pathname === '/search'
   const isReporting = location.pathname === '/reporting'
-  const isHome = location.pathname === '/home'
+  const isHome = location.pathname === '/home' && !getActiveConversation()?.messages.length
   const isPCA = location.pathname === '/process-consulting-agent'
   const isProcessLandscape = location.pathname === '/process-landscape'
+  const isNewsfeed = location.pathname === '/newsfeed'
+  const isRecent = location.pathname === '/recent'
+  const isFavorites = location.pathname === '/favorites'
+  const isObjectives = location.pathname === '/objectives'
+  const isInitiatives = /^\/initiatives/.test(location.pathname)
+  const isInsights = location.pathname === '/insights'
+  const isValueAccelerator = location.pathname === '/value-accelerator'
 
   const isModeler = /^\/modeler/.test(location.pathname)
   const isModelingAssetType = /^\/asset-types\/(bpmn|dmn|value-chain|nav-map)/.test(location.pathname)
@@ -516,6 +547,7 @@ export default function Shell() {
           }
         }}
         onManageAccountClick={() => { setSettingsTab('account'); setSettingsOpen(true); setUserMenuOpen(false) }}
+        onSignOutClick={() => { setUserMenuOpen(false); auth.signOut() }}
       >
         <UserMenuAccount
           slot="accounts"
@@ -894,25 +926,26 @@ export default function Shell() {
 
       <SideNavigation slot="sideContent" onSelectionChange={handleOuterNavChange}>
         <SideNavigationItem icon="home" text="Home" selected={isHome} />
-        {isAvailable('MVP') && <SideNavigationItem icon="SAP-icons-v4/pca" text="Process Consulting Agent" selected={isPCA} />}
-        <SideNavigationItem icon="SAP-icons-v4/news" text="Newsfeed" />
-        <SideNavigationItem icon="unfavorite" text="Favorites" />
-        <SideNavigationItem icon="history" text="Recent" />
+        <SideNavigationItem icon="SAP-icons-v4/news" text="Newsfeed" selected={isNewsfeed} />
+        <SideNavigationItem icon="unfavorite" text="Favorites" selected={isFavorites} />
+        <SideNavigationItem icon="history" text="Recent" selected={isRecent} />
         <SideNavigationItem icon="task" text="Tasks" />
         <SideNavigationGroup text="Browse and Manage" expanded>
           <SideNavigationItem icon="folder-blank" text="Repository" selected={isRepository} />
-          {isAvailable('Vision') && <SideNavigationItem icon="SAP-icons-v4/navigation-map" text="Process Landscape" selected={isProcessLandscape} />}
-          <SideNavigationItem icon="SAP-icons-v4/company-memory" text="Company Memory" />
-          <SideNavigationItem icon="SAP-icons-v4/rocket" text="Value Accelerator Library" />
+          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/navigation-map" text="Process Landscape" selected={isProcessLandscape} />}
+          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/company-memory" text="Company Memory" />}
+          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/rocket" text="Value Accelerator Library" selected={isValueAccelerator} />}
         </SideNavigationGroup>
-        <SideNavigationGroup text="Transform and Realize Value" expanded>
-          {audience === 'administrators' && <SideNavigationItem icon="target-group" text="Objectives" />}
-          {audience === 'administrators' && <SideNavigationItem icon="overview-chart" text="Initiatives" />}
-          {audience === 'administrators' && <SideNavigationItem icon="compare-2" text="Benchmarking Analytics" />}
-          <SideNavigationItem icon="lightbulb" text="Insights" />
-          {audience === 'administrators' && <SideNavigationItem icon="money-bills" text="Value Analysis" />}
-        </SideNavigationGroup>
-        {audience === 'administrators' && (
+        {currentRelease !== 'NS2' && (
+          <SideNavigationGroup text="Transform and Realize Value" expanded>
+            {audience === 'administrators' && <SideNavigationItem icon="target-group" text="Objectives" selected={isObjectives} />}
+            {audience === 'administrators' && <SideNavigationItem icon="overview-chart" text="Initiatives" selected={isInitiatives} />}
+            {audience === 'administrators' && <SideNavigationItem icon="compare-2" text="Benchmarking Analytics" />}
+            <SideNavigationItem icon="lightbulb" text="Insights" selected={isInsights} />
+            {audience === 'administrators' && <SideNavigationItem icon="money-bills" text="Value Analysis" />}
+          </SideNavigationGroup>
+        )}
+        {currentRelease !== 'NS2' && audience === 'administrators' && (
           <SideNavigationGroup text="Mine and Analyze" expanded>
             <SideNavigationItem icon="provision" text="Data Management" />
             <SideNavigationItem icon="developer-settings" text="Analysis Configuration" />
@@ -921,17 +954,19 @@ export default function Shell() {
           </SideNavigationGroup>
         )}
         <SideNavigationGroup text="Model and Govern" expanded>
-          <SideNavigationItem icon="SAP-icons-v4/process-manager" text="Process Manager" />
-          <SideNavigationItem icon="write-new" text="Modeler" selected={isModeler} onClick={() => { navigate('/modeler') }} />
-          <SideNavigationItem icon="SAP-icons-v4/customer-journey" text="Journey Models" />
-          <SideNavigationItem icon="SAP-icons-v4/bpmn-type-service" text="Governance Workflows" />
+          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/process-manager" text="Process Manager" />}
+          <SideNavigationItem icon="write-new" text="Modeler" selected={isModeler}>
+            <Tag slot="tag" design="Set2" colorScheme="5" hideStateIcon>Beta</Tag>
+          </SideNavigationItem>
+          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/customer-journey" text="Journey Models" />}
+          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/bpmn-type-service" text="Governance Workflows" />}
         </SideNavigationGroup>
-        <SideNavigationItem slot="fixedItems" icon="lab" text="Lab Space" />
+        {currentRelease !== 'NS2' && <SideNavigationItem slot="fixedItems" icon="lab" text="Lab Space" />}
         {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="SAP-icons-v4/report" text="Reporting" selected={isReporting} />}
-        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape && !isModeler} />}
+        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape && !isRecent && !isFavorites && !isNewsfeed && !isObjectives && !isInitiatives && !isInsights && !isValueAccelerator} />}
       </SideNavigation>
 
-      {isRepository || isSearch || isReporting || isHome || isPCA || isModeler || isModelingAssetType || isProcessLandscape ? (
+      {isRepository || isSearch || isReporting || isHome || isPCA || isModeler || isModelingAssetType || isProcessLandscape || isRecent || isFavorites || isNewsfeed || isObjectives || isInitiatives || isInsights || isValueAccelerator || (location.pathname === '/home' && !!getActiveConversation()?.messages.length) ? (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
           <Outlet />
         </div>
@@ -1018,7 +1053,6 @@ export default function Shell() {
       isOpen={showWelcome}
       onClose={() => { localStorage.setItem('welcomeDismissed', 'true'); clearOverlay() }}
     />
-    {hotspotVisible && <HotspotTooltip onDismiss={() => setHotspotVisible(false)} />}
     <MessageBox
       open={unsavedChangesOpen}
       type="Warning"

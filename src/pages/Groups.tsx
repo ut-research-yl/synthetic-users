@@ -705,7 +705,7 @@ function GroupsListColumn({ groups, selectedGroup, onSelectGroup, migrationState
   })
 
   return (
-    <PageHeader title="Groups" subtitle="Organize workspace members into groups" isDirty={false}>
+    <PageHeader title="Groups" subtitle="Organize workspace members into groups." isDirty={false}>
       <SigTableWrapper
         titleSlot={
           <ToolbarItem>

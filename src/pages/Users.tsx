@@ -149,7 +149,7 @@ function UserDetailPanel({ user, onClose, onRemoveUser, onUpdate, migrationState
   const addGroupPopoverRef   = useRef<PopoverDomRef>(null)
   const addGroupBtnId        = useRef('add-group-btn-' + user.id).current
 
-  const isInvited = user.status === 'Invited'
+  const isInvited = user.status === 'Invited' && migrationState === 'pre'
 
   const availableLicenses = ALL_LICENSES.filter(l => !userLicenses.includes(l))
   const availableGroups   = ALL_GROUPS.filter(g => !userGroups.includes(g))
@@ -519,14 +519,15 @@ function UsersListColumn({ users, selectedUser, onSelectUser, migrationState, on
     const q = search.toLowerCase()
     return !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
   }).sort((a, b) => {
-    // Invited users always sort to the top
-    if (a.status === 'Invited' && b.status !== 'Invited') return -1
-    if (a.status !== 'Invited' && b.status === 'Invited') return 1
+    if (migrationState === 'pre') {
+      if (a.status === 'Invited' && b.status !== 'Invited') return -1
+      if (a.status !== 'Invited' && b.status === 'Invited') return 1
+    }
     return a.name.localeCompare(b.name)
   })
 
   const renderUserRow = (user: User) => {
-    const isInvited = user.status === 'Invited'
+    const isInvited = user.status === 'Invited' && migrationState === 'pre'
     return (
       <TableRow key={user.id} interactive rowKey={user.id}
         style={selectedUser?.id === user.id ? { background: 'var(--sapList_SelectionBackgroundColor)', borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties : { borderBottom: '1px solid var(--sapList_BorderColor)' } as React.CSSProperties}>
@@ -557,9 +558,9 @@ function UsersListColumn({ users, selectedUser, onSelectUser, migrationState, on
       return filtered.map(renderUserRow)
     }
 
-    const admins = filtered.filter(u => u.isAdmin && u.status !== 'Invited')
-    const normalUsers = filtered.filter(u => !u.isAdmin && u.status !== 'Invited')
-    const invited = filtered.filter(u => u.status === 'Invited')
+    const admins = filtered.filter(u => u.isAdmin && (migrationState === 'post' || u.status !== 'Invited'))
+    const normalUsers = filtered.filter(u => !u.isAdmin && (migrationState === 'post' || u.status !== 'Invited'))
+    const invited = migrationState === 'pre' ? filtered.filter(u => u.status === 'Invited') : []
 
     const renderGroup = (label: string, groupUsers: User[]) => {
       if (groupUsers.length === 0) return null
@@ -583,7 +584,7 @@ function UsersListColumn({ users, selectedUser, onSelectUser, migrationState, on
   }
 
   return (
-    <PageHeader title="Users" subtitle="Manage workspace members and their licenses" isDirty={false}>
+    <PageHeader title="Users" subtitle="Manage workspace members and their licenses." isDirty={false}>
       <SigTableWrapper
         titleSlot={
           <ToolbarItem>
@@ -748,14 +749,12 @@ export default function Users() {
             : <div />
         }
       />
-      {false && (
       <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 100, background: 'var(--sapButton_Emphasized_Background)', border: 'none', borderRadius: '0.5rem', boxShadow: 'var(--sapContent_Shadow2)', padding: '0.25rem' }}>
         <SegmentedButton onSelectionChange={(e: any) => setMigrationState(e.detail.selectedItems[0]?.dataset.key ?? 'post')}>
           <SegmentedButtonItem data-key="pre" selected={migrationState === 'pre'}>Pre-migration</SegmentedButtonItem>
           <SegmentedButtonItem data-key="post" selected={migrationState === 'post'}>Post-migration (SCI)</SegmentedButtonItem>
         </SegmentedButton>
       </div>
-      )}
       <AddUserDialog
         open={addUserOpen}
         availableLicenses={ALL_LICENSES}

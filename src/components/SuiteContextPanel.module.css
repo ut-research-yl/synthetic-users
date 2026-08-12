@@ -14,35 +14,12 @@
   width: 64px;
   height: 100%;
   align-self: stretch;
+  border-left: 1px solid var(--sapList_BorderColor);
   background: var(--sapBaseColor);
   overflow: visible;
   position: relative;
   z-index: 10;
 }
-
-.rail::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--sapList_BorderColor);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.railSep {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  height: 1px;
-  top: calc(8px + 36px * 2 + 6px);
-  background: var(--sapList_BorderColor);
-  pointer-events: none;
-}
-
-/* (indicator position handled in App.css via .modeler-rail) */
 
 /* ── Placeholder for unimplemented panels ────────────────────────────────────── */
 .placeholderPanel {

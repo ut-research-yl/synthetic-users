@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { usePCA } from '@/contexts/PCAContext';
-import type { ChatMessage, TableData, WidgetData, BarWidgetData, ScatterWidgetData, BpmnListItem } from '@/contexts/PCAContext';
-import { Copy, ThumbsUp, ThumbsDown, ChevronRight } from 'lucide-react';
+import type { ChatMessage, TableData, BpmnListItem, BarWidgetData, ScatterWidgetData, WidgetData, PanelListItem } from '@/contexts/PCAContext';
+import { Copy, ThumbsUp, ThumbsDown, ChevronRight, PanelLeftOpen, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { PCAInputField } from './PCAInputField';
 import { MessageStrip, Button as UI5Button, List, Tab, ListItemGroup, Input, SegmentedButton, SegmentedButtonItem, Dialog, Bar as UI5Bar, TextArea } from '@ui5/webcomponents-react';
@@ -21,7 +21,7 @@ import '@signavio/icons/dist/published.js';
 import '@signavio/icons/dist/published-changed.js';
 import '@signavio/icons/dist/link.js';
 import '@signavio/icons/dist/computer.js';
-import '@signavio/icons/dist/group.js';
+import '@signavio/icons/dist/group-frame.js';
 import '@signavio/icons/dist/risk.js';
 import '@signavio/icons/dist/organization.js';
 const publishedIcon = 'SAP-icons-v4/published';
@@ -59,7 +59,7 @@ import '@ui5/webcomponents-icons/dist/business-objects-mobile.js';
 import '@ui5/webcomponents-icons/dist/document-text.js';
 import '@ui5/webcomponents-icons/dist/document.js';
 import '@ui5/webcomponents-icons/dist/employee.js';
-import processDiagramImage from '@/assets/screenshot_BPMN.png';
+import processDiagramImage from '@/assets/hero.png';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
   ScatterChart, Scatter, Label,
@@ -1019,7 +1019,7 @@ function TypingIndicator() {
 }
 
 // --- Single message bubble ---
-function MessageBubble({ msg, isLast, breakoutMargin, onQuickReply, selectedBpmnItem, onSelectBpmnItem }: { msg: ChatMessage; isLast: boolean; breakoutMargin: number; onQuickReply: (p: string) => void; selectedBpmnItem: BpmnListItem | null; onSelectBpmnItem: (item: BpmnListItem) => void }) {
+function MessageBubble({ msg, isLast, breakoutMargin, onQuickReply, selectedBpmnItem, onSelectBpmnItem, canvasOpen, onOpenCanvas, selectedPanelItem, onSelectPanelItem, panelOpen }: { msg: ChatMessage; isLast: boolean; breakoutMargin: number; onQuickReply: (p: string) => void; selectedBpmnItem: BpmnListItem | null; onSelectBpmnItem: (item: BpmnListItem) => void; canvasOpen?: boolean; onOpenCanvas?: () => void; selectedPanelItem?: PanelListItem | null; onSelectPanelItem?: (item: PanelListItem) => void; panelOpen?: boolean }) {
   const [listView, setListView] = useState<'list' | 'graph'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -1077,6 +1077,125 @@ function MessageBubble({ msg, isLast, breakoutMargin, onQuickReply, selectedBpmn
       )}
       {msg.widgets && msg.widgets.length > 0 && (
         <WidgetGrid widgets={msg.widgets} breakoutMargin={breakoutMargin} />
+      )}
+      {msg.mcpDisplayMode === 'widget' && (
+        <div style={{ maxWidth: 1040, width: '100%', margin: '0 auto' }}>
+          <p style={{ fontFamily: "'72', sans-serif", fontSize: 12, color: '#556b82', marginBottom: 8 }}>
+            Widget · 3 embedded data cards
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{ flex: '1 1 200px', height: 200, backgroundColor: '#d9d9d9', borderRadius: 16 }} />
+            ))}
+          </div>
+        </div>
+      )}
+      {msg.mcpDisplayMode === 'applet' && (
+        <div style={{ maxWidth: 720, width: '100%', margin: '0 auto' }}>
+          <p style={{ fontFamily: "'72', sans-serif", fontSize: 12, color: '#556b82', marginBottom: 8 }}>
+            Applet · embedded mini-application
+          </p>
+          <div style={{ height: 360, backgroundColor: '#d9d9d9', borderRadius: 16 }} />
+        </div>
+      )}
+      {msg.mcpDisplayMode === 'canvas' && (
+        <div style={{ maxWidth: 720, width: '100%', margin: '0 auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              borderRadius: 12,
+              border: canvasOpen ? '2px solid #5d36ff' : '2px solid #e5e5e5',
+              backgroundColor: canvasOpen ? '#f3f0ff' : '#fafafa',
+              transition: 'border-color 0.15s, background-color 0.15s',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: '#d9d9d9', flexShrink: 0 }} />
+              <div>
+                <p style={{ fontFamily: "'72', sans-serif", fontSize: 14, fontWeight: 600, color: '#1d2d3e', margin: 0, lineHeight: '20px' }}>
+                  Canvas
+                </p>
+                <p style={{ fontFamily: "'72', sans-serif", fontSize: 12, color: '#556b82', margin: 0, lineHeight: '18px' }}>
+                  {canvasOpen ? 'Open in canvas view' : 'Canvas view · closed'}
+                </p>
+              </div>
+            </div>
+            {!canvasOpen && (
+              <button
+                onClick={onOpenCanvas}
+                style={{
+                  flexShrink: 0,
+                  padding: '5px 14px',
+                  borderRadius: 8,
+                  border: '1px solid #5d36ff',
+                  backgroundColor: 'white',
+                  color: '#5d36ff',
+                  fontFamily: "'72', sans-serif",
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.12s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f3f0ff' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'white' }}
+              >
+                Open
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {msg.mcpDisplayMode === 'panel' && msg.panelItems && msg.panelItems.length > 0 && (
+        <div style={{ maxWidth: 720, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {msg.panelItems.map((item) => {
+            const isSelected = selectedPanelItem?.id === item.id;
+            return (
+              <div
+                key={item.id}
+                onClick={() => onSelectPanelItem?.(item)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: isSelected ? '2px solid #5d36ff' : '2px solid #e5e5e5',
+                  backgroundColor: isSelected ? '#f3f0ff' : '#fafafa',
+                  transition: 'border-color 0.15s, background-color 0.15s',
+                  gap: 12,
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.borderColor = '#c4b5fd'; }}
+                onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.borderColor = '#e5e5e5'; }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isSelected ? '#c4b5fd' : '#d9d9d9', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <UI5Icon name="document-text" style={{ fontSize: 18, color: isSelected ? '#5d36ff' : '#556b82' } as React.CSSProperties} />
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: "'72', sans-serif", fontSize: 14, fontWeight: 600, color: '#1d2d3e', margin: 0, lineHeight: '20px' }}>
+                      {item.title}
+                    </p>
+                    <p style={{ fontFamily: "'72', sans-serif", fontSize: 12, color: '#556b82', margin: 0, lineHeight: '18px' }}>
+                      {item.subtitle}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  {isSelected && panelOpen && (
+                    <span style={{ fontFamily: "'72', sans-serif", fontSize: 12, color: '#5d36ff' }}>Open in panel</span>
+                  )}
+                  {(!isSelected || !panelOpen) && (
+                    <UI5Icon name="slim-arrow-right" style={{ fontSize: 14, color: isSelected ? '#5d36ff' : '#8696a9' } as React.CSSProperties} />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
       {msg.crossGraphEnabled && msg.bpmnList && msg.bpmnList.length > 0 && (() => {
         const DIRECTION_LABEL: Record<string, string> = {
@@ -1274,7 +1393,7 @@ function MessageBubble({ msg, isLast, breakoutMargin, onQuickReply, selectedBpmn
 
 
 export function PCAConversationPage() {
-  const { getActiveConversation, sendMessage, isTyping } = usePCA();
+  const { getActiveConversation, sendMessage, isTyping, sidebarOpen, setSidebarOpen, createConversation } = usePCA();
   const conversation = getActiveConversation();
   const [contentWidth, setContentWidth] = useState(0);
   const [selectedBpmnItem, setSelectedBpmnItem] = useState<BpmnListItem | null>(null);
@@ -1283,6 +1402,13 @@ export function PCAConversationPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevMsgCountRef = useRef(0);
   const prevIsTypingRef = useRef(false);
+  const [panelWidth, setPanelWidth] = useState(360);
+  const panelDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasFlex, setCanvasFlex] = useState(2);
+  const canvasDragRef = useRef<{ startX: number; startFlex: number; totalWidth: number } | null>(null);
+  const [mcpDismissedMsgId, setMcpDismissedMsgId] = useState<string | null>(null);
+  const [selectedPanelItem, setSelectedPanelItem] = useState<PanelListItem | null>(null);
 
   // Measure scroll container inner width to compute safe table breakout
   useEffect(() => {
@@ -1333,6 +1459,10 @@ export function PCAConversationPage() {
   const messages = conversation.messages;
   const lastAssistantIndex = [...messages].reverse().findIndex((m) => m.role === 'assistant');
   const lastAssistantIdx = lastAssistantIndex === -1 ? -1 : messages.length - 1 - lastAssistantIndex;
+  const lastAssistantMsg = lastAssistantIdx >= 0 ? messages[lastAssistantIdx] : null;
+  const activeMcpMode = lastAssistantMsg && lastAssistantMsg.id !== mcpDismissedMsgId
+    ? (lastAssistantMsg.mcpDisplayMode ?? null)
+    : null;
 
   // How far the table can break out of the 720px column on each side.
   // contentWidth is the scroll container's inner width (excludes its 32px padding).
@@ -1341,13 +1471,79 @@ export function PCAConversationPage() {
     ? Math.min(160, (contentWidth - 720 - 48) / 2)
     : 0;
 
+  const startPanelDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    panelDragRef.current = { startX: e.clientX, startWidth: panelWidth };
+    const onMove = (ev: MouseEvent) => {
+      if (!panelDragRef.current) return;
+      const delta = panelDragRef.current.startX - ev.clientX;
+      setPanelWidth(Math.max(200, Math.min(800, panelDragRef.current.startWidth + delta)));
+    };
+    const onUp = () => {
+      panelDragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  const startCanvasDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const totalWidth = containerRef.current?.offsetWidth ?? 0;
+    canvasDragRef.current = { startX: e.clientX, startFlex: canvasFlex, totalWidth };
+    const onMove = (ev: MouseEvent) => {
+      if (!canvasDragRef.current) return;
+      const { startX, startFlex, totalWidth: tw } = canvasDragRef.current;
+      const delta = ev.clientX - startX;
+      // chat is flex 1, canvas is canvasFlex; total flex = 1 + canvasFlex
+      // deltaFlex = delta / tw * (1 + canvasFlex)
+      const totalFlex = 1 + startFlex;
+      const deltaFlex = (delta / tw) * totalFlex * -1;
+      setCanvasFlex(Math.max(0.5, Math.min(5, startFlex + deltaFlex)));
+    };
+    const onUp = () => {
+      canvasDragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
   return (
-    <div className="flex h-full w-full overflow-hidden" style={{ backgroundColor: 'white' }}>
-      {/* Main conversation column */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+    <div ref={containerRef} className="flex h-full w-full overflow-hidden" style={{ backgroundColor: 'white' }}>
+      {/* Main conversation column — narrows to flex:1 in canvas mode */}
+      <div
+        className="flex flex-col min-w-0 overflow-hidden"
+        style={{ flex: activeMcpMode === 'canvas' ? 1 : '1 1 0%' }}
+      >
         {/* Header */}
         <div className="flex items-center shrink-0 px-4" style={{ height: 72, position: 'relative' }}>
-          <div className="flex items-center gap-1" />
+          {!sidebarOpen && (
+            <div className="flex items-center" style={{ gap: 8 }}>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex items-center justify-center rounded-full transition-colors"
+                style={{ width: 36, height: 36, flexShrink: 0, backgroundColor: '#eae5ff', border: '1px solid transparent', cursor: 'pointer' }}
+                title="Open sidebar"
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(93,54,255,0.25)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#eae5ff' }}
+              >
+                <PanelLeftOpen size={16} color="#5d36ff" />
+              </button>
+              <button
+                onClick={createConversation}
+                className="flex items-center justify-center rounded-full transition-colors"
+                style={{ width: 36, height: 36, flexShrink: 0, backgroundColor: '#eae5ff', border: '1px solid transparent', cursor: 'pointer' }}
+                title="New Conversation"
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(93,54,255,0.25)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#eae5ff' }}
+              >
+                <Plus size={16} color="#5d36ff" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Messages */}
@@ -1364,6 +1560,11 @@ export function PCAConversationPage() {
                     onQuickReply={(p) => sendMessage(p)}
                     selectedBpmnItem={selectedBpmnItem}
                     onSelectBpmnItem={setSelectedBpmnItem}
+                    canvasOpen={msg.mcpDisplayMode === 'canvas' && activeMcpMode === 'canvas'}
+                    onOpenCanvas={() => setMcpDismissedMsgId(null)}
+                    selectedPanelItem={msg.mcpDisplayMode === 'panel' ? selectedPanelItem : null}
+                    onSelectPanelItem={(item) => { setSelectedPanelItem(item); setMcpDismissedMsgId(null); }}
+                    panelOpen={msg.mcpDisplayMode === 'panel' && activeMcpMode === 'panel'}
                   />
                 </div>
               );
@@ -1383,7 +1584,111 @@ export function PCAConversationPage() {
         </div>
       </div>
 
-      {/* Detail panel */}
+      {/* Canvas panel — 2/3 split, resizable */}
+      {activeMcpMode === 'canvas' && (
+        <>
+          {/* Drag handle */}
+          <div
+            onMouseDown={startCanvasDrag}
+            style={{
+              width: 4,
+              flexShrink: 0,
+              backgroundColor: '#d9d9d9',
+              cursor: 'col-resize',
+              transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#5d36ff' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#d9d9d9' }}
+          />
+          <div
+            style={{
+              flex: canvasFlex,
+              minWidth: 200,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'white',
+              overflow: 'hidden',
+              padding: 16,
+            }}
+          >
+            <div style={{ flex: 1, position: 'relative' }}>
+              <div style={{ width: '100%', height: '100%', backgroundColor: '#d9d9d9', borderRadius: 16 }} />
+              <button
+                onClick={() => lastAssistantMsg && setMcpDismissedMsgId(lastAssistantMsg.id)}
+                title="Close canvas"
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(0,0,0,0.18)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: 16,
+                  lineHeight: 1,
+                  fontFamily: 'sans-serif',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.32)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.18)' }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* MCP side panel — SigRightSidePanel, resizable */}
+      {activeMcpMode === 'panel' && (
+        <>
+          {/* Drag handle */}
+          <div
+            onMouseDown={startPanelDrag}
+            style={{
+              width: 4,
+              flexShrink: 0,
+              backgroundColor: '#d9d9d9',
+              cursor: 'col-resize',
+              transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#5d36ff' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#d9d9d9' }}
+          />
+          <div style={{ width: panelWidth, flexShrink: 0, height: '100%', overflow: 'hidden' }}>
+            <SigRightSidePanel
+              headerTitle={selectedPanelItem?.title ?? 'Panel'}
+              isOpen={true}
+              toggleRightSidePanel={() => { if (lastAssistantMsg) { setMcpDismissedMsgId(lastAssistantMsg.id); setSelectedPanelItem(null); } }}
+              style={{ width: '100%', height: '100%' }}
+            >
+              {selectedPanelItem ? (
+                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <p style={{ fontFamily: "'72', sans-serif", fontSize: 14, color: '#556b82', margin: 0 }}>
+                    {selectedPanelItem.subtitle}
+                  </p>
+                  <div style={{ height: 120, backgroundColor: '#f0f0f0', borderRadius: 8 }} />
+                  <div style={{ height: 80, backgroundColor: '#f0f0f0', borderRadius: 8 }} />
+                  <div style={{ height: 80, backgroundColor: '#f0f0f0', borderRadius: 8 }} />
+                </div>
+              ) : (
+                <div style={{ padding: '1rem' }}>
+                  <p style={{ fontFamily: "'72', sans-serif", fontSize: 14, color: '#556b82', margin: 0 }}>
+                    Select an item from the chat to view details here.
+                  </p>
+                </div>
+              )}
+            </SigRightSidePanel>
+          </div>
+        </>
+      )}
+
+      {/* BPMN detail panel */}
       {selectedBpmnItem && (
         <BpmnDetailPanel item={selectedBpmnItem} onClose={() => setSelectedBpmnItem(null)} />
       )}

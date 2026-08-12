@@ -94,7 +94,7 @@ export default function MergeDictionaryEntriesDialog({ open, entries: initialEnt
   const columns: AnalyticalTableColumnDefinition[] = useMemo(() => {
     const DIALOG_WIDTH = 900
     const LABEL_WIDTH = 180
-    const MIN_COL_WIDTH = 250
+    const MIN_COL_WIDTH = 300
     const entryCols = entries.length + 1 // entries + add column
     const colWidth = Math.max(MIN_COL_WIDTH, Math.floor((DIALOG_WIDTH - LABEL_WIDTH) / entryCols))
 
@@ -106,11 +106,18 @@ export default function MergeDictionaryEntriesDialog({ open, entries: initialEnt
         accessor: 'label',
         width: LABEL_WIDTH,
         disableSortBy: true,
-        Cell: (_: any) => (
-          <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '600', color: 'var(--sapTextColor)', whiteSpace: 'nowrap' }}>
-            [Attribute]
-          </Text>
-        ),
+        Cell: ({ row }: any) => {
+          const LANG_CHIPS = ['EN', 'DE', 'FR', 'EN', 'DE']
+          const lang = LANG_CHIPS[row.index % LANG_CHIPS.length]
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '600', color: 'var(--sapTextColor)', whiteSpace: 'nowrap' }}>
+                [Attribute]
+              </Text>
+              <SigChipV2 value={lang} design="none" condensed />
+            </div>
+          )
+        },
       },
       // One column per entry
       ...entries.map((entry, colIdx) => ({
@@ -126,12 +133,14 @@ export default function MergeDictionaryEntriesDialog({ open, entries: initialEnt
               onChange={() => setTargetIdx(colIdx)}
               style={{ marginLeft: '-0.5rem', flexShrink: 0 }}
             />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, minWidth: 0 }}>
-              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapTextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+              <Text style={{ fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapTextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, display: 'block' }}>
                 {entry.name}
               </Text>
               {targetIdx === colIdx && (
-                <SigChipV2 value="Target" design="indication5" condensed />
+                <div style={{ flexShrink: 0 }}>
+                  <SigChipV2 value="Target" design="indication5" condensed />
+                </div>
               )}
             </div>
             {entries.length > 1 && (

@@ -316,17 +316,17 @@ export default function ModelingLanguages() {
                   >
                     {lang.active ? (
                       <>
-                        <MenuItem text="Rename" disabled={lang.variant === 'Default'} />
+                        {lang.variant !== 'Default' && <MenuItem text="Rename" />}
                         <MenuItem text="Duplicate" />
                         <MenuItem text="Disable" />
-                        <MenuItem text="Delete" />
+                        {lang.variant !== 'Default' && <MenuItem text="Delete" />}
                       </>
                     ) : (
                       <>
-                        <MenuItem text="Rename" disabled={lang.variant === 'Default'} />
+                        {lang.variant !== 'Default' && <MenuItem text="Rename" />}
                         <MenuItem text="Duplicate" />
                         <MenuItem text="Enable" />
-                        <MenuItem text="Delete" />
+                        {lang.variant !== 'Default' && <MenuItem text="Delete" />}
                       </>
                     )}
                   </Menu>
@@ -422,28 +422,9 @@ export default function ModelingLanguages() {
                         }
                       }}
                     >
-                      {selected.active ? (
-                        selected.variant === 'Default' ? (
-                          <>
-                            <MenuItem text="Duplicate" />
-                            <MenuItem text="Delete" />
-                          </>
-                        ) : (
-                          <>
-                            <MenuItem text="Rename" />
-                            <MenuItem text="Duplicate" />
-                            <MenuItem text="Delete" />
-                          </>
-                        )
-                      ) : selected.variant === 'Default' ? (
-                        <MenuItem text="Duplicate" />
-                      ) : (
-                        <>
-                          <MenuItem text="Rename" />
-                          <MenuItem text="Duplicate" />
-                          <MenuItem text="Delete" />
-                        </>
-                      )}
+                      {selected.variant !== 'Default' && <MenuItem text="Rename" />}
+                      <MenuItem text="Duplicate" />
+                      {selected.variant !== 'Default' && <MenuItem text="Delete" />}
                     </Menu>
                   </div>
                 </div>
@@ -472,7 +453,9 @@ export default function ModelingLanguages() {
                       checked={allFilteredEnabled || (!allFilteredEnabled && someFilteredEnabled)}
                       indeterminate={!allFilteredEnabled && someFilteredEnabled}
                       accessibleName="Toggle all elements"
+                      readonly={selected.variant === 'Default'}
                       onChange={() => {
+                        if (selected.variant === 'Default') return
                         filteredItems.forEach(item => {
                           const group = selected.groups.find(g => g.items.some(i => i.id === item.id))
                           if (group && item.enabled === allFilteredEnabled) {
@@ -524,7 +507,9 @@ export default function ModelingLanguages() {
                         checked={allEnabled || (!allEnabled && !noneEnabled)}
                         indeterminate={!allEnabled && !noneEnabled}
                         accessibleName={`Toggle all items in ${group.label}`}
+                        readonly={selected.variant === 'Default'}
                         onChange={() => {
+                          if (selected.variant === 'Default') return
                           if (elementSearch) {
                             visibleItems.forEach(item => {
                               if (item.enabled === allEnabled) toggleItem(selected.id, group.id, item.id)
@@ -552,6 +537,7 @@ export default function ModelingLanguages() {
                           key={item.id}
                           className="element-row"
                           onClick={() => {
+                            if (selected.variant === 'Default') return
                             setSelectedElementId(isItemSelected ? null : item.id)
                             toggleItem(selected.id, group.id, item.id)
                           }}
@@ -560,11 +546,11 @@ export default function ModelingLanguages() {
                             padding: '0.5rem 1rem 0.5rem 5.5rem',
                             background: isItemSelected ? 'var(--sapList_SelectionBackgroundColor)' : 'var(--sapList_Background)',
                             borderBottom: (!isLastItem || !isLastGroup) ? BORDER : 'none',
-                            cursor: 'pointer',
+                            cursor: selected.variant === 'Default' ? 'default' : 'pointer',
                             userSelect: 'none',
                           }}
                         >
-                          <CheckBox checked={item.enabled} accessibleName={item.label} onChange={() => toggleItem(selected.id, group.id, item.id)} onClick={(e: any) => e.stopPropagation()} style={{ opacity: selected.active ? 1 : 0.4 }} />
+                          <CheckBox checked={item.enabled} accessibleName={item.label} readonly={selected.variant === 'Default'} onChange={() => { if (selected.variant !== 'Default') toggleItem(selected.id, group.id, item.id) }} onClick={(e: any) => e.stopPropagation()} style={{ opacity: selected.active ? 1 : 0.4 }} />
                           <div style={{
                             width: '48px', height: '48px', flexShrink: 0,
                             border: '1px solid var(--sapGroup_ContentBorderColor)',
@@ -804,7 +790,7 @@ export default function ModelingLanguages() {
       <ObjectPageSection id="modeler" titleText="Modeler" hideTitleText>
         <div style={{ padding: '1rem 0 16px' }}>
           <MessageStrip design="Critical" hideCloseButton>
-            This configuration applies to <strong>the New Process Modeler only.</strong> It has no effect on the Old Process Modeler.
+            This configuration applies to <strong>the New Process Modeler only.</strong> It has no effect on the legacy Process Modeler.
           </MessageStrip>
         </div>
         {body}
@@ -812,7 +798,7 @@ export default function ModelingLanguages() {
       <ObjectPageSection id="pm-legacy" titleText="Process Manager (legacy)" hideTitleText>
         <div style={{ padding: '1rem 0 16px' }}>
           <MessageStrip design="Critical" hideCloseButton>
-            This configuration applies to <strong>the Old Process Modeler only.</strong> It has no effect on the New Process Modeler.
+            This configuration applies to <strong>the legacy Process Modeler only.</strong> It has no effect on the New Process Modeler.
           </MessageStrip>
         </div>
         {body}

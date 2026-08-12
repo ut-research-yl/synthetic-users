@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, List, ListItemCustom, MessageStrip, Text, IllustratedMessage, Icon } from '@ui5/webcomponents-react'
+import { Button, List, ListItemCustom, MessageStrip, Text, IllustratedMessage, Icon, Dialog, Bar } from '@ui5/webcomponents-react'
 import { SigDomainObject, SigChipV2 } from '@signavio/sap-signavio-uixtension'
 import { entryBg, entryIconColor, CAT_TYPE_ICON } from './dictionaryData'
 import type { DictCategoryType } from '../../contexts/WorkspaceContext'
@@ -76,7 +76,7 @@ function OriginalRelationGroup({ group }: { group: OriginalRelationGroup }) {
       {expanded && (
         <List separators="None" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {visibleItems.map(item => (
-            <ListItemCustom key={item.id} type="Active" style={{ paddingBlock: '6px', borderRadius: '8px', overflow: 'hidden' }}>
+            <ListItemCustom key={item.id} type="Active" style={{ paddingBlock: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
                 <SigDomainObject size="XS" object={item.object as never} style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -165,36 +165,36 @@ function DictRelationGroup({ group }: { group: DictRelationGroup }) {
         </Text>
       </div>
       {expanded && (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <List separators="None" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {visibleItems.map((item) => {
             const isDictEntry = item.objectType === 'Dictionary Entry'
             return (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', background: 'var(--sapList_Background)' }}>
-                {isDictEntry ? (
-                  <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: item.categoryType ? entryBg(item.categoryType) : 'var(--sapAvatar_6_Background)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon name={item.categoryType ? (CAT_TYPE_ICON[item.categoryType] ?? 'document') : 'document'} style={{ width: '16px', height: '16px', color: item.categoryType ? entryIconColor(item.categoryType) : 'var(--sapAvatar_6_TextColor)' }} />
+              <ListItemCustom key={item.id} type="Active" style={{ paddingBlock: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                  {isDictEntry ? (
+                    <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: item.categoryType ? entryBg(item.categoryType) : 'var(--sapAvatar_6_Background)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon name={item.categoryType ? (CAT_TYPE_ICON[item.categoryType] ?? 'document') : 'document'} style={{ width: '16px', height: '16px', color: item.categoryType ? entryIconColor(item.categoryType) : 'var(--sapAvatar_6_TextColor)' }} />
+                    </div>
+                  ) : (
+                    <SigDomainObject size="XS" object={item.objectType as never} style={{ flexShrink: 0 }} />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ display: 'block', fontWeight: '700', fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>
+                      {item.title}
+                    </Text>
+                    <Text style={{ display: 'block', fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor, #556b82)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>
+                      {item.description ?? item.subtitle}
+                    </Text>
                   </div>
-                ) : (
-                  <div style={{ flexShrink: 0 }}>
-                    <SigDomainObject size="XS" object={item.objectType as never} />
-                  </div>
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ display: 'block', fontWeight: '700', fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>
-                    {item.title}
-                  </Text>
-                  <Text style={{ display: 'block', fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor, #556b82)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>
-                    {item.description ?? item.subtitle}
-                  </Text>
+                  {item.chip && (
+                    <SigChipV2 value={item.chip.value} design={(item.chip.design ?? 'none') as any} condensed {...(item.chip.leadingIcon ? { leadingIcon: item.chip.leadingIcon } : {})} />
+                  )}
+                  <Button icon="SAP-icons-v4/link" design="Transparent" style={{ flexShrink: 0 }} tooltip="Open" />
                 </div>
-                {item.chip && (
-                  <SigChipV2 value={item.chip.value} design={(item.chip.design ?? 'none') as any} condensed {...(item.chip.leadingIcon ? { leadingIcon: item.chip.leadingIcon } : {})} />
-                )}
-                <Button icon="SAP-icons-v4/link" design="Transparent" style={{ flexShrink: 0 }} tooltip="Open" />
-              </div>
+              </ListItemCustom>
             )
           })}
-        </div>
+        </List>
       )}
       {expanded && !showAll && group.items.length > VISIBLE_COUNT && (
         <Button design="Default" onClick={() => setShowAll(true)} style={{ marginTop: '4px' }}>Show More</Button>
@@ -205,7 +205,8 @@ function DictRelationGroup({ group }: { group: DictRelationGroup }) {
 
 // ── Exports ────────────────────────────────────────────────────────────────────
 
-export function RelationsTab({ variant = 'default', isEmpty = false }: { variant?: 'default' | 'dict-entry'; isEmpty?: boolean }) {
+export function RelationsTab({ variant = 'default', isEmpty = false, entryName }: { variant?: 'default' | 'dict-entry'; isEmpty?: boolean; entryName?: string }) {
+  const [usageGraphOpen, setUsageGraphOpen] = useState(false)
   if (isEmpty) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '200px' }}>
@@ -220,11 +221,22 @@ export function RelationsTab({ variant = 'default', isEmpty = false }: { variant
           <Text style={{ fontWeight: '700', fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapPageHeader_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>
             Used In
           </Text>
-          <Button design="Default">Open Usage Graph</Button>
+          <Button design="Default" onClick={() => setUsageGraphOpen(true)}>Open Usage Graph</Button>
         </div>
         {DICT_RELATION_GROUPS.map(group => (
           <DictRelationGroup key={group.id} group={group} />
         ))}
+        <Dialog
+          open={usageGraphOpen}
+          onClose={() => setUsageGraphOpen(false)}
+          headerText={`Usage Graph for ${entryName ?? 'Dictionary Entry'}`}
+          style={{ width: '600px', minHeight: '400px' }}
+        >
+          <div style={{ padding: '1rem', minHeight: '300px' }} />
+          <Bar slot="footer" design="Footer">
+            <Button slot="endContent" design="Transparent" onClick={() => setUsageGraphOpen(false)}>Close</Button>
+          </Bar>
+        </Dialog>
       </div>
     )
   }

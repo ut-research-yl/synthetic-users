@@ -3,7 +3,6 @@ import { CheckBox, Label, Text, Input, Button, TextArea, Link, List, ListItemCus
 import PageHeader from '../components/PageHeader'
 import SettingsPageLayout, { SettingsSection } from '../components/SettingsPageLayout'
 import s from '../components/SettingsPage.module.css'
-import { StickyNote } from '../components/StickyNote'
 
 // TODO ask Sebastian: should this page have explicit Save/Reset buttons or auto-save?
 
@@ -181,7 +180,6 @@ export default function NetworkPrivacy() {
         </SettingsSection>
       </SettingsPageLayout>
     </PageHeader>
-    <StickyNote position="bottom-right" text='The "Embedded Mode" setting at the bottom of this page was initially on a separate page:<br>"Security > External Embedding".<br> The text "SAP Signavio Process Collaboration Hub" was replaced with "SAP Signavio content".' />
   </>
   )
 }

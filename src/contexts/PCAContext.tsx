@@ -22,6 +22,8 @@ export interface ChatMessage {
   graphLayout?: 'hops' | 'collision';
   graphCenterFlagged?: boolean;
   graphCenterWarning?: boolean;
+  mcpDisplayMode?: 'widget' | 'applet' | 'panel' | 'canvas';
+  panelItems?: PanelListItem[];
   timestamp: Date;
 }
 
@@ -50,6 +52,13 @@ export interface ScatterWidgetData {
 }
 
 export type WidgetData = BarWidgetData | ScatterWidgetData;
+
+export interface PanelListItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon?: string;
+}
 
 export interface BpmnListItem {
   name: string;
@@ -106,12 +115,52 @@ interface PCAContextValue {
 
 const PCAContext = createContext<PCAContextValue | null>(null);
 
-type FakeResponse = { content: string; type: ChatMessage['type']; tableData?: TableData; widgets?: WidgetData[]; thinking?: string[]; followUpPrompts?: string[]; bpmnList?: BpmnListItem[]; graphBpmnList?: BpmnListItem[]; closingText?: string; graphEnabled?: boolean; graphCenterNodeName?: string; graphCenterFlagged?: boolean; graphCenterWarning?: boolean; crossGraphEnabled?: boolean; treeListEnabled?: boolean; tableEnabled?: boolean; graphLayout?: 'hops' | 'collision' };
+type FakeResponse = { content: string; type: ChatMessage['type']; tableData?: TableData; widgets?: WidgetData[]; thinking?: string[]; followUpPrompts?: string[]; bpmnList?: BpmnListItem[]; graphBpmnList?: BpmnListItem[]; closingText?: string; graphEnabled?: boolean; graphCenterNodeName?: string; graphCenterFlagged?: boolean; graphCenterWarning?: boolean; crossGraphEnabled?: boolean; treeListEnabled?: boolean; tableEnabled?: boolean; graphLayout?: 'hops' | 'collision'; mcpDisplayMode?: 'widget' | 'applet' | 'panel' | 'canvas'; panelItems?: PanelListItem[] };
 
 const COMING_SOON_RESPONSE: FakeResponse = {
   type: 'text',
   content: 'I don\'t have enough information to answer that question yet. This capability is coming soon.',
   followUpPrompts: ['Draft a migration impact summary', 'Which models have active Celonis analyses?', 'Are there other IT systems with similar dependencies?', 'Help me plan the replacement rollout'],
+};
+
+const MCP_INTRO_RESPONSE: FakeResponse = {
+  type: 'text',
+  content: 'MCP Apps can be embedded in the Process Consulting Agent in four distinct ways, each suited to a different type of answer:\n\n**Widget** — compact data cards rendered inline in the chat stream, ideal for KPIs, charts, or metrics that complement a text answer.\n\n**Applet** — a self-contained mini-application embedded in the chat, providing richer interaction without leaving the conversation.\n\n**Panel** — a resizable side panel that opens alongside the conversation, keeping context visible while working in a dedicated view.\n\n**Canvas** — a full two-thirds-width immersive area next to the chat, for tasks that need maximum space like process maps, dashboards, or editing tools.\n\nWhich pattern would you like to explore?',
+  followUpPrompts: ['As Widget', 'As Applet', 'As Panel', 'As Canvas'],
+};
+
+const MCP_WIDGET_RESPONSE: FakeResponse = {
+  type: 'text',
+  content: 'In **Widget** mode, MCP Apps appear as compact, side-by-side data cards embedded directly in the chat response. Each card can show a KPI, a mini chart, or a metric summary — giving the user a quick overview without leaving the conversation flow.',
+  mcpDisplayMode: 'widget',
+  followUpPrompts: ['As Applet', 'As Panel', 'As Canvas', 'How can MCP apps be embedded in the UI?'],
+};
+
+const MCP_APPLET_RESPONSE: FakeResponse = {
+  type: 'text',
+  content: 'In **Applet** mode, the MCP App is rendered as a self-contained embedded application directly in the chat stream. It provides richer interaction — forms, drill-downs, filters — within a dedicated card, while keeping the conversation context visible above and below.',
+  mcpDisplayMode: 'applet',
+  followUpPrompts: ['As Widget', 'As Panel', 'As Canvas', 'How can MCP apps be embedded in the UI?'],
+};
+
+const MCP_PANEL_RESPONSE: FakeResponse = {
+  type: 'text',
+  content: 'In **Panel** mode, the MCP App opens in a resizable side panel alongside the conversation. This keeps the chat visible while giving the app a dedicated, draggable-width workspace — ideal for reference content, process detail views, or configuration screens.\n\nHere are the available process detail views. Select one to open it in the panel:',
+  mcpDisplayMode: 'panel',
+  panelItems: [
+    { id: 'p1', title: 'Order to Cash', subtitle: 'End-to-end process · 12 steps' },
+    { id: 'p2', title: 'Purchase Order Creation', subtitle: 'Procurement · 8 steps' },
+    { id: 'p3', title: 'Employee Onboarding', subtitle: 'HR · 15 steps' },
+    { id: 'p4', title: 'Incident Management', subtitle: 'IT Service · 6 steps' },
+  ],
+  followUpPrompts: ['As Widget', 'As Applet', 'As Canvas', 'How can MCP apps be embedded in the UI?'],
+};
+
+const MCP_CANVAS_RESPONSE: FakeResponse = {
+  type: 'text',
+  content: 'In **Canvas** mode, the MCP App takes up two-thirds of the screen width alongside the conversation. The chat narrows to one-third, and the canvas fills the rest — perfect for process maps, dashboards, or immersive editing tools that need maximum space.',
+  mcpDisplayMode: 'canvas',
+  followUpPrompts: ['As Widget', 'As Applet', 'As Panel', 'How can MCP apps be embedded in the UI?'],
 };
 
 
@@ -1348,6 +1397,12 @@ const BUTTON_RESPONSE_MAP: Record<string, FakeResponse> = {
   'Show me everything in my area': COMING_SOON_RESPONSE,
   'Can you show me only the shared process?': COMING_SOON_RESPONSE,
   'Who owns the Purchase Order Creation BPMN model?': COMING_SOON_RESPONSE,
+  // MCP display mode demos
+  'How can MCP apps be embedded in the UI?': MCP_INTRO_RESPONSE,
+  'As Widget': MCP_WIDGET_RESPONSE,
+  'As Applet': MCP_APPLET_RESPONSE,
+  'As Panel': MCP_PANEL_RESPONSE,
+  'As Canvas': MCP_CANVAS_RESPONSE,
 };
 
 function resolveResponse(content: string): FakeResponse | undefined {
@@ -1436,6 +1491,31 @@ function resolveResponse(content: string): FakeResponse | undefined {
       response: LENA_T1_RESPONSE,
       must: ['attention'],
       keywords: ['attention', 'area', 'right', 'now', 'procurement', 'emea', 'needs', 'my'],
+    },
+    {
+      response: MCP_INTRO_RESPONSE,
+      must: ['mcp'],
+      keywords: ['mcp', 'app', 'embed', 'display', 'mode', 'pattern', 'show', 'render'],
+    },
+    {
+      response: MCP_WIDGET_RESPONSE,
+      must: ['widget'],
+      keywords: ['widget', 'card', 'inline', 'compact', 'kpi', 'chart'],
+    },
+    {
+      response: MCP_APPLET_RESPONSE,
+      must: ['applet'],
+      keywords: ['applet', 'embed', 'app', 'self-contained', 'mini'],
+    },
+    {
+      response: MCP_PANEL_RESPONSE,
+      must: ['panel'],
+      keywords: ['panel', 'side', 'resizable', 'alongside'],
+    },
+    {
+      response: MCP_CANVAS_RESPONSE,
+      must: ['canvas'],
+      keywords: ['canvas', 'immersive', 'full', 'width', 'two-thirds'],
     },
   ];
 
@@ -1590,7 +1670,7 @@ export function PCAProvider({ children }: { children: React.ReactNode }) {
   const [isTyping, setIsTyping] = useState(false);
 
   // Sidebar: auto-derived from viewport, overridable by user for the session
-  const [sidebarOpen, setSidebarOpenState] = useState(true);
+  const [sidebarOpen, setSidebarOpenState] = useState(false);
   const [sidebarUserOverride, setSidebarUserOverride] = useState(false);
 
   // Re-apply auto rule when viewport crosses the breakpoint (only if user hasn't overridden)
@@ -1729,6 +1809,8 @@ export function PCAProvider({ children }: { children: React.ReactNode }) {
           graphLayout: fakeResponse.graphLayout,
           graphCenterFlagged: fakeResponse.graphCenterFlagged,
           graphCenterWarning: fakeResponse.graphCenterWarning,
+          mcpDisplayMode: fakeResponse.mcpDisplayMode,
+          panelItems: fakeResponse.panelItems,
           timestamp: new Date(),
         };
         setConversations((prev) =>

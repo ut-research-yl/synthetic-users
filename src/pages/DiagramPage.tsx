@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Select, Option, Icon, Text, CheckBox, Button, RadioButton, MultiComboBox, List, ListItemCustom, Label } from '@ui5/webcomponents-react'
 import InfoPopover from '../components/InfoPopover'
-import { StickyNote } from '../components/StickyNote'
 import AudienceSectionBar from '../components/AudienceSectionBar'
 import PageHeader from '../components/PageHeader'
 import SettingsPageLayout, { SettingsSection } from '../components/SettingsPageLayout'
@@ -116,11 +115,6 @@ export default function DiagramPage() {
 
   return (
     <PageHeader title="Model Page" subtitle="Configure the layout and default content shown on the model detail page." isDirty={isDirty} onSave={handleSave} onReset={handleReset}>
-      <StickyNote
-        position="right"
-        header="Hint on Featured Attributes"
-        text='Page Sections > Featured Attributes formerly had this info description:<br><i>Create attribute groups to enable the usage of Featured Attributes.</i><br><b>Hint:</b> Attribute groups are now part of "Asset Types" so the info text was updated including a link to the new location.'
-      />
       <SettingsPageLayout gap="1.5rem">
         <SettingsSection
           title="Page Sections"

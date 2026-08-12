@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react'
-import { Avatar, Button, Menu, MenuItem, Text, type MenuDomRef, IllustratedMessage } from '@ui5/webcomponents-react'
+import { Avatar, Button, Menu, MenuItem, Text, Dialog, Bar, type MenuDomRef, IllustratedMessage } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
+import type { DictCategory } from '../../contexts/WorkspaceContext'
+import { CreateDictEntryAttributesTab } from './AssetInfoPanel'
 
 type ActivityEntry = {
   id: string
@@ -324,6 +326,7 @@ const DE_REVISION_GROUPS: RevisionGroup[] = [
     revision: 3,
     description: 'Created automatically',
     createdAt: '4 Jan 2025 · 11:20 AM',
+    createdBy: 'John Miller',
     entries: [
       { id: 'de1', author: 'John Miller', initials: 'JM', action: 'updated the dictionary entry', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
       { id: 'de2', author: 'John Miller', initials: 'JM', action: 'restored the revision', timestamp: '4 Jan 2025 - 12:10 PM', type: 'change' },
@@ -333,6 +336,7 @@ const DE_REVISION_GROUPS: RevisionGroup[] = [
     revision: 2,
     description: 'Created automatically',
     createdAt: '4 Jan 2025 · 11:20 AM',
+    createdBy: 'John Miller',
     entries: [
       { id: 'de3', author: 'John Miller', initials: 'JM', action: 'updated the dictionary entry', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
       { id: 'de4', author: 'John Miller', initials: 'JM', action: 'changed the title to:', value: 'Procurement Unit', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
@@ -343,6 +347,7 @@ const DE_REVISION_GROUPS: RevisionGroup[] = [
     revision: 1,
     description: 'Created automatically',
     createdAt: '4 Jan 2025 · 11:20 AM',
+    createdBy: 'John Miller',
     entries: [
       { id: 'de6', author: 'John Miller', initials: 'JM', action: 'created the dictionary entry', timestamp: '4 Jan 2025 - 11:27 AM', type: 'create' },
     ],
@@ -354,20 +359,20 @@ const DE_REVISION_GROUPS: RevisionGroup[] = [
 type DictCatRevisionCard = RevisionGroup & { entryName: string; chipStatus?: string }
 
 const DC_TODAY_CARDS: DictCatRevisionCard[] = [
-  { revision: 1, entryName: 'Procurement Unit', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', entries: [
+  { revision: 1, entryName: 'Procurement Unit', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', createdBy: 'John Miller', entries: [
     { id: 'dc1', author: 'John Miller', initials: 'JM', action: 'created the dictionary entry', timestamp: '4 Jan 2025 - 11:27 AM', type: 'create' },
   ]},
-  { revision: 3, entryName: 'Purchase Order', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', chipStatus: 'Published', entries: [
+  { revision: 3, entryName: 'Purchase Order', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', createdBy: 'John Miller', chipStatus: 'Published', entries: [
     { id: 'dc2', author: 'John Miller', initials: 'JM', action: 'updated the dictionary entry', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
     { id: 'dc3', author: 'John Miller', initials: 'JM', action: 'restored the revision', timestamp: '4 Jan 2025 - 12:10 PM', type: 'change' },
   ]},
 ]
 
 const DC_YESTERDAY_CARDS: DictCatRevisionCard[] = [
-  { revision: 1, entryName: 'Goods Receipt', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', entries: [
+  { revision: 1, entryName: 'Goods Receipt', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', createdBy: 'John Miller', entries: [
     { id: 'dc4', author: 'John Miller', initials: 'JM', action: 'created the dictionary entry', timestamp: '4 Jan 2025 - 11:27 AM', type: 'create' },
   ]},
-  { revision: 2, entryName: 'Procurement Unit', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', entries: [
+  { revision: 2, entryName: 'Procurement Unit', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', createdBy: 'John Miller', entries: [
     { id: 'dc5', author: 'John Miller', initials: 'JM', action: 'updated the dictionary entry', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
     { id: 'dc6', author: 'John Miller', initials: 'JM', action: 'changed the title to:', value: 'Procurement Unit', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
     { id: 'dc7', author: 'John Miller', initials: 'JM', action: 'changed the description to:', value: 'A procurement org unit responsible for procuring goods and services.', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
@@ -375,12 +380,12 @@ const DC_YESTERDAY_CARDS: DictCatRevisionCard[] = [
 ]
 
 const DC_EARLIER_CARDS: DictCatRevisionCard[] = [
-  { revision: 2, entryName: 'Goods Receipt', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', entries: [
+  { revision: 2, entryName: 'Goods Receipt', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', createdBy: 'John Miller', entries: [
     { id: 'dc8', author: 'John Miller', initials: 'JM', action: 'updated the dictionary entry', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
     { id: 'dc9', author: 'John Miller', initials: 'JM', action: 'changed the title to:', value: 'Goods Receipt', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
     { id: 'dc10', author: 'John Miller', initials: 'JM', action: 'changed the description to:', value: 'Physical receipt of ordered goods into the warehouse management system.', timestamp: '4 Jan 2025 - 11:50AM', type: 'change' },
   ]},
-  { revision: 1, entryName: 'Goods Receipt', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', entries: [
+  { revision: 1, entryName: 'Goods Receipt', description: 'Created automatically', createdAt: '4 Jan 2025 - 11:20 AM', createdBy: 'John Miller', entries: [
     { id: 'dc11', author: 'John Miller', initials: 'JM', action: 'created the dictionary entry', timestamp: '4 Jan 2025 - 11:27 AM', type: 'create' },
   ]},
 ]
@@ -500,11 +505,21 @@ function ActivityItem({ entry }: { entry: ActivityEntry }) {
   )
 }
 
-function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled, assetName, assetType: assetTypeProp }: { group: RevisionGroup; isPublished?: boolean; showRestoreButton?: boolean; restoreDisabled?: boolean; assetName?: string; assetType?: string }) {
+function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled, assetName, assetType: assetTypeProp, manualPublish, entryName, isDictEntry, dictCategory }: { group: RevisionGroup; isPublished?: boolean; showRestoreButton?: boolean; restoreDisabled?: boolean; assetName?: string; assetType?: string; manualPublish?: boolean; entryName?: string; isDictEntry?: boolean; dictCategory?: DictCategory }) {
   const menuRef = useRef<MenuDomRef>(null)
   const btnId = `revision-menu-${group.revision}`
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const dialogTitle = `${entryName ?? assetName ?? 'Entry'} · Revision ${group.revision}`
+
+  const openMenu = (e: any) => {
+    if (menuRef.current) {
+      menuRef.current.opener = e.currentTarget as HTMLElement
+      menuRef.current.open = true
+    }
+  }
 
   return (
+    <>
     <div style={{
       border: '1px solid var(--sapGroup_ContentBorderColor, #d9d9d9)',
       borderRadius: '16px',
@@ -541,7 +556,7 @@ function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled, 
           color: 'var(--sapList_TextColor)',
           fontFamily: "var(--sapFontFamily,'72',sans-serif)",
         }}>
-          {group.createdBy ? `Created by ${group.createdBy}` : (assetTypeProp ?? group.description)}
+          {group.createdBy && manualPublish ? `Created by ${group.createdBy}` : (assetTypeProp ?? group.description)}
         </div>
         {!assetTypeProp && !group.createdBy && null}
         <div style={{
@@ -553,39 +568,55 @@ function RevisionCard({ group, isPublished, showRestoreButton, restoreDisabled, 
         </div>
       </div>
       {showRestoreButton ? (
-        <Button design="Transparent" icon="undo" disabled={restoreDisabled}>Restore</Button>
+        <>
+          <Button id={btnId} icon="overflow" design="Transparent" onClick={openMenu} />
+          <Menu ref={menuRef} onItemClick={(e: any) => { if (e?.detail?.text === 'Revision Details') setDetailsOpen(true) }}>
+            <MenuItem text="Restore" icon="undo" disabled={restoreDisabled} />
+            <MenuItem text="Revision Details" icon="message-information" />
+          </Menu>
+        </>
+      ) : manualPublish ? (
+        <>
+          <Button id={btnId} icon="overflow" design="Transparent" onClick={openMenu} />
+          <Menu ref={menuRef} onItemClick={(e: any) => { if (e?.detail?.text === 'Revision Details') setDetailsOpen(true) }}>
+            <MenuItem text={isPublished ? 'Unpublish' : 'Publish'} icon={isPublished ? 'write-new-document' : 'SAP-icons-v4/published'} />
+            <MenuItem text="Restore" icon="undo" disabled={restoreDisabled} />
+            <MenuItem text="Revision Details" icon="message-information" />
+          </Menu>
+        </>
       ) : (
         <>
-          <Button
-            id={btnId}
-            icon="overflow"
-            design="Transparent"
-            onClick={(e) => {
-              if (menuRef.current) {
-                menuRef.current.opener = e.currentTarget as HTMLElement
-                menuRef.current.open = true
-              }
-            }}
-          />
-          <Menu ref={menuRef}>
+          <Button id={btnId} icon="overflow" design="Transparent" onClick={openMenu} />
+          <Menu ref={menuRef} onItemClick={(e: any) => { if (e?.detail?.text === 'Revision Details') setDetailsOpen(true) }}>
             <MenuItem text="Open" icon="full-screen" />
             <MenuItem text="Edit in Editor" icon="write-new" />
             <MenuItem text="Compare" icon="compare" />
             <MenuItem text="Restore" icon="undo" />
             <MenuItem text="Publish" icon="world" />
+            <MenuItem text="Revision Details" icon="message-information" />
           </Menu>
         </>
       )}
     </div>
+    <Dialog open={detailsOpen} onClose={() => setDetailsOpen(false)} headerText={dialogTitle} style={{ width: '560px' }}>
+      {isDictEntry && dictCategory
+        ? <div style={{ padding: '8px 1rem' }}><CreateDictEntryAttributesTab category={dictCategory} prefilled readOnly nameValue={entryName} /></div>
+        : <div style={{ padding: '1rem', minHeight: '200px' }} />
+      }
+      <Bar slot="footer" design="Footer">
+        <Button slot="endContent" design="Transparent" onClick={() => setDetailsOpen(false)}>Close</Button>
+      </Bar>
+    </Dialog>
+    </>
   )
 }
 
-function RevisionFeedSection({ group, isPublished }: { group: RevisionGroup; isPublished?: boolean }) {
+function RevisionFeedSection({ group, isPublished, assetName }: { group: RevisionGroup; isPublished?: boolean; assetName?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {group.entries.map(e => <ActivityItem key={e.id} entry={e} />)}
       <div style={{ paddingBottom: '12px', paddingTop: '4px' }}>
-        <RevisionCard group={group} isPublished={isPublished} />
+        <RevisionCard group={group} isPublished={isPublished} entryName={assetName} />
       </div>
     </div>
   )
@@ -621,9 +652,9 @@ function GroupSection({ label, entries, defaultExpanded = true }: {
   )
 }
 
-type Props = { assetType?: string; isEmpty?: boolean }
+type Props = { assetType?: string; isEmpty?: boolean; manualPublish?: boolean; entryName?: string; assetName?: string; dictCategory?: DictCategory }
 
-export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Props) {
+export default function ActivityFeed({ assetType = 'File', isEmpty = false, manualPublish = false, entryName, assetName: assetNameProp, dictCategory }: Props) {
   const [showMore, setShowMore] = useState(false)
 
   if (isEmpty) {
@@ -653,7 +684,7 @@ export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Pr
               {label}
             </Text>
             {groups.map(group => (
-              <RevisionFeedSection key={group.revision} group={group} isPublished={group.revision === latestPublishedRevision} />
+              <RevisionFeedSection key={group.revision} group={group} isPublished={group.revision === latestPublishedRevision} assetName={assetNameProp} />
             ))}
           </div>
         ))}
@@ -704,6 +735,9 @@ export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Pr
   }
 
   // Dictionary Category: combined feed for all entries, date-grouped with entry-labelled revision cards
+  const [dcDetailsOpen, setDcDetailsOpen] = useState(false)
+  const [dcDetailsEntryName, setDcDetailsEntryName] = useState('')
+  const [dcDetailsRevision, setDcDetailsRevision] = useState(0)
   if (assetType === 'Dictionary Category') {
     const DC_SECTIONS = [
       { label: 'Today', cards: DC_TODAY_CARDS },
@@ -712,6 +746,7 @@ export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Pr
     ]
     const visibleSections = showMore ? DC_SECTIONS : DC_SECTIONS.slice(0, 2)
     return (
+      <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0', fontFamily: "var(--sapFontFamily,'72',sans-serif)", overflowY: 'auto', flex: 1 }}>
         {visibleSections.map(({ label, cards }) => (
           <div key={label}>
@@ -729,10 +764,45 @@ export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Pr
                       </span>
                       {card.chipStatus && <SigChipV2 value={card.chipStatus} design={card.chipStatus === 'Published' ? 'indication5' : 'indication10'} condensed leadingIcon={card.chipStatus === 'Published' ? 'SAP-icons-v4/published' : undefined} />}
                     </div>
-                    <div style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>{card.description}</div>
+                    <div style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>{card.createdBy && manualPublish ? `Created by ${card.createdBy}` : card.description}</div>
                     <div style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }}>{card.createdAt}</div>
                   </div>
-                  <Button design="Transparent" icon="undo">Restore</Button>
+                  {manualPublish ? (
+                    <>
+                      <Button
+                        id={`dc-overflow-${card.entryName}-${card.revision}`}
+                        icon="overflow"
+                        design="Transparent"
+                        onClick={(e: any) => {
+                          const btn = e.currentTarget as HTMLElement
+                          const menu = btn.nextElementSibling as any
+                          if (menu) { menu.opener = btn; menu.open = true }
+                        }}
+                      />
+                      <Menu onItemClick={(e: any) => { if (e?.detail?.text === 'Revision Details') { setDcDetailsEntryName(card.entryName); setDcDetailsRevision(card.revision); setDcDetailsOpen(true) } }}>
+                        <MenuItem text={card.chipStatus === 'Published' ? 'Unpublish' : 'Publish'} icon={card.chipStatus === 'Published' ? 'write-new-document' : 'SAP-icons-v4/published'} />
+                        <MenuItem text="Restore" icon="undo" />
+                        <MenuItem text="Revision Details" icon="message-information" />
+                      </Menu>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        id={`dc-overflow-${card.entryName}-${card.revision}`}
+                        icon="overflow"
+                        design="Transparent"
+                        onClick={(e: any) => {
+                          const btn = e.currentTarget as HTMLElement
+                          const menu = btn.nextElementSibling as any
+                          if (menu) { menu.opener = btn; menu.open = true }
+                        }}
+                      />
+                      <Menu onItemClick={(e: any) => { if (e?.detail?.text === 'Revision Details') { setDcDetailsEntryName(card.entryName); setDcDetailsRevision(card.revision); setDcDetailsOpen(true) } }}>
+                        <MenuItem text="Restore" icon="undo" />
+                        <MenuItem text="Revision Details" icon="message-information" />
+                      </Menu>
+                    </>
+                  )}
                 </div>
                 {card.entries.map(e => <ActivityItem key={e.id} entry={e} />)}
               </div>
@@ -743,6 +813,13 @@ export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Pr
           {showMore ? 'Show less' : 'Show more'}
         </Button>
       </div>
+      <Dialog open={dcDetailsOpen} onClose={() => setDcDetailsOpen(false)} headerText={`${dcDetailsEntryName} · Revision ${dcDetailsRevision}`} style={{ width: '560px', minHeight: '300px' }}>
+        <div style={{ padding: '1rem', minHeight: '200px' }} />
+        <Bar slot="footer" design="Footer">
+          <Button slot="endContent" design="Transparent" onClick={() => setDcDetailsOpen(false)}>Close</Button>
+        </Bar>
+      </Dialog>
+      </>
     )
   }
 
@@ -763,7 +840,7 @@ export default function ActivityFeed({ assetType = 'File', isEmpty = false }: Pr
               {label}
             </Text>
             <div style={{ paddingBottom: '8px', paddingTop: '4px' }}>
-              <RevisionCard group={group} showRestoreButton isPublished={group.revision === 3} restoreDisabled={i === 0} />
+              <RevisionCard group={group} showRestoreButton={!manualPublish} isPublished={group.revision === 3} restoreDisabled={i === 0} manualPublish={manualPublish} entryName={entryName} isDictEntry dictCategory={dictCategory} />
             </div>
             {group.entries.map(e => <ActivityItem key={e.id} entry={e} />)}
           </div>

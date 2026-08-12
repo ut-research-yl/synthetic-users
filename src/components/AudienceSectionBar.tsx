@@ -5,9 +5,10 @@ type Props = {
   value: string
   onChange: (audience: string) => void
   className?: string
+  subtitle?: string
 }
 
-export default function AudienceSectionBar({ value, onChange, className }: Props) {
+export default function AudienceSectionBar({ value, onChange, className, subtitle }: Props) {
   const { audiences } = useWorkspace()
 
   return (
@@ -30,7 +31,7 @@ export default function AudienceSectionBar({ value, onChange, className }: Props
             Audience-specific settings
           </Text>
           <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' }}>
-            Settings below apply only to the selected audience
+            {subtitle ?? 'Settings below apply only to the selected audience'}
           </Text>
         </FlexBox>
       </div>
