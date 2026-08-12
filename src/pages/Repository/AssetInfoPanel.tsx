@@ -378,6 +378,7 @@ type Props = {
   onEmbed?: () => void
   hideHeaderActions?: boolean
   hideRevisionInfo?: boolean
+  hideThumbnail?: boolean
   isFavorite?: boolean
   onToggleFavorite?: () => void
   isDictView?: boolean
@@ -680,6 +681,7 @@ export default function AssetInfoPanel({
   onDictEntryEdited,
   onDictEntryMoved,
   hideRevisionInfo,
+  hideThumbnail,
   isFavorite,
   onToggleFavorite,
   isDictView,
@@ -754,9 +756,11 @@ export default function AssetInfoPanel({
 
   const subHeader = selectedAsset ? (
     <>
-      <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--sapPageHeader_BorderColor)', marginBottom: '0.75rem' }}>
-        <DiagramThumbnail onClick={onThumbnailClick} onMouseMove={onThumbnailMove} viewport={zoomViewport} style={{ cursor: onThumbnailClick ? 'zoom-in' : undefined } as React.CSSProperties} />
-      </div>
+      {!hideThumbnail && (
+        <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--sapPageHeader_BorderColor)', marginBottom: '0.75rem' }}>
+          <DiagramThumbnail onClick={onThumbnailClick} onMouseMove={onThumbnailMove} viewport={zoomViewport} style={{ cursor: onThumbnailClick ? 'zoom-in' : undefined } as React.CSSProperties} />
+        </div>
+      )}
       {(() => {
         const chipFor = (status: string) => {
           const design = status === 'Published' ? 'indication5' : status === 'Draft' ? 'indication10' : status === 'On Track' ? 'indication4' : status === 'At Risk' ? 'indication2' : status === 'Modified' ? 'indication7' : status === 'Deprecated' ? 'indication2' : 'indication10'
@@ -806,9 +810,11 @@ export default function AssetInfoPanel({
     </>
   ) : externalSelectedAsset && externalSelectedAsset.objectType !== 'Process Atoms' && externalSelectedAsset.objectType !== 'Initiative' && externalSelectedAsset.objectType !== 'Business Goal' && externalSelectedAsset.objectType !== 'Dashboard' && externalSelectedAsset.objectType !== 'Dictionary Entry' ? (
     <>
-      <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--sapPageHeader_BorderColor)', marginBottom: '0.75rem' }}>
-        <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />
-      </div>
+      {!hideThumbnail && (
+        <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--sapPageHeader_BorderColor)', marginBottom: '0.75rem' }}>
+          <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />
+        </div>
+      )}
       {(() => {
         const isPublished = externalSelectedAsset.chips.some(c => c.value === 'Published')
         const chipFor2 = (status: string) => {

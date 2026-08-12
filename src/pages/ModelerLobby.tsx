@@ -5,7 +5,7 @@ import {
   Button, ToggleButton, Menu, MenuItem, MenuSeparator,
   AnalyticalTable, Input, Icon, List,
   SegmentedButton, SegmentedButtonItem,
-  Card, CardHeader,
+  Card, CardHeader, Toast,
   type AnalyticalTableColumnDefinition,
   type MenuDomRef,
 } from '@ui5/webcomponents-react'
@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom'
 import { RESULTS, type ResultItem, STATUS_OPTIONS, enrichChips } from '../components/SearchResultsPanel'
 import { AssetListItem } from '../components/AssetListItem'
 import { HighlightedText } from '../components/SearchResultsPanel'
+import ImportFileDialog from '../components/ImportFileDialog'
 
 type ViewType = 'list' | 'table'
 type SortOption = 'recent' | 'name'
@@ -55,8 +56,10 @@ export default function ModelerLobby() {
   const [sortBy, setSortBy]                 = useState<SortOption>('recent')
   const [searchQuery, setSearchQuery]       = useState('')
   const [filters, setFilters]               = useState<Record<string, unknown>>({})
-  const [_navigatedId, _setNavigatedId] = useState<string | null>(null)
+  const [_navigatedId, _setNavigatedId]     = useState<string | null>(null)
   const [openOverflowId, setOpenOverflowId] = useState<string | null>(null)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [importToast, setImportToast] = useState('')
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const baseItems = useMemo(
@@ -129,6 +132,7 @@ export default function ModelerLobby() {
           onOverflow={() => setOpenOverflowId(item.id)}
           highlightQuery={searchQuery}
           onClick={() => openAsset(item)}
+          onTitleClick={() => openAsset(item)}
           isLast={i === displayItems.length - 1}
         />
       ))}
@@ -231,7 +235,19 @@ export default function ModelerLobby() {
 
   // ── Overflow menu for row items ───────────────────────────────────────────
   const overflowMenu = openOverflowId && (
-    <Menu opener={`mod-overflow-${openOverflowId}`} open onClose={() => setOpenOverflowId(null)}>
+    <Menu
+      opener={`mod-overflow-${openOverflowId}`}
+      open
+      onClose={() => setOpenOverflowId(null)}
+      onItemClick={(e: any) => {
+        const text = e.detail?.item?.text ?? e.detail?.text
+        if (text === 'Open') {
+          const item = displayItems.find(i => i.id === openOverflowId)
+          if (item) openAsset(item)
+        }
+        setOpenOverflowId(null)
+      }}
+    >
       <MenuItem text="Open" />
       <MenuSeparator />
       <MenuItem text="Add to Favorites" />
@@ -387,6 +403,19 @@ export default function ModelerLobby() {
               }
               onClick={() => navigate('/modeler/new-dmn')}
             />
+            <Card
+              className="new-model-card"
+              style={{ width: '280px', cursor: 'pointer' }}
+              header={
+                <CardHeader
+                  interactive
+                  titleText="Import"
+                  subtitleText="Import a BPMN or Visio file"
+                  avatar={<Icon name="upload-to-cloud" style={{ fontSize: '1.5rem' }} />}
+                />
+              }
+              onClick={() => setImportDialogOpen(true)}
+            />
           </div>
         </div>
 
@@ -398,6 +427,21 @@ export default function ModelerLobby() {
       </div>
 
       {overflowMenu}
+
+      <ImportFileDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        onSuccess={(filename) => {
+          setImportDialogOpen(false)
+          setImportToast(`"${filename}" imported successfully`)
+          setTimeout(() => setImportToast(''), 3500)
+        }}
+      />
+      {importToast && (
+        <Toast open duration={3000} placement="BottomCenter">
+          {importToast}
+        </Toast>
+      )}
     </DynamicPage>
   )
 }

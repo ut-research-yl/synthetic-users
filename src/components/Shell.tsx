@@ -963,7 +963,7 @@ export default function Shell() {
         </SideNavigationGroup>
         {currentRelease !== 'NS2' && <SideNavigationItem slot="fixedItems" icon="lab" text="Lab Space" />}
         {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="SAP-icons-v4/report" text="Reporting" selected={isReporting} />}
-        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape && !isRecent && !isFavorites && !isNewsfeed && !isObjectives && !isInitiatives && !isInsights && !isValueAccelerator} />}
+        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape && !isRecent && !isFavorites && !isNewsfeed && !isObjectives && !isInitiatives && !isInsights && !isValueAccelerator && !isModeler && !isModelingAssetType} />}
       </SideNavigation>
 
       {isRepository || isSearch || isReporting || isHome || isPCA || isModeler || isModelingAssetType || isProcessLandscape || isRecent || isFavorites || isNewsfeed || isObjectives || isInitiatives || isInsights || isValueAccelerator || (location.pathname === '/home' && !!getActiveConversation()?.messages.length) ? (

@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react'
-import { Button } from '@ui5/webcomponents-react'
 import { useParams } from 'react-router-dom'
-import ModelerApp, { type LiShape } from './ModelerApp'
+import ModelerApp, { type LiShape, getAssetName } from './ModelerApp'
 import { SuiteContextPanelContent, SuiteContextRail } from '../components/SuiteContextPanel'
 import type { Widget, ExternalWidget } from '../components/DataPanel'
 import type { DictPanelItem } from '../components/DictionaryDetailPanel'
@@ -27,9 +26,6 @@ export default function ModelerLayout() {
   const containerRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
 
-  const [splitterHover, setSplitterHover] = useState(false)
-  const [splitterActive, setSplitterActive] = useState(false)
-
   const togglePanel = (id: ModelerPanelId) =>
     setActivePanel((prev: ModelerPanelId) => (id === null || prev === id ? null : id))
 
@@ -47,7 +43,6 @@ export default function ModelerLayout() {
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     dragging.current = true
-    setSplitterActive(true)
     const onMove = (ev: MouseEvent) => {
       if (!dragging.current || !containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
@@ -56,7 +51,6 @@ export default function ModelerLayout() {
     }
     const onUp = () => {
       dragging.current = false
-      setSplitterActive(false)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
@@ -69,7 +63,7 @@ export default function ModelerLayout() {
       <div ref={containerRef} style={{ flex: 1, position: 'relative', minWidth: 0, height: '100%', overflow: 'hidden' }}>
         <ModelerApp
           assetId={assetId}
-          panelOffset={activePanel ? panelWidth + 16 : 0}
+          panelOffset={activePanel ? panelWidth + 1 : 0}
           onTogglePanel={() => setActivePanel(prev => {
             const target = (selectedElementId || selectedLiShape) ? 'element-detail' : 'diagram-attributes'
             return prev === target ? null : target
@@ -119,43 +113,19 @@ export default function ModelerLayout() {
         />
         {activePanel && (
           <>
-            {/* UI5 SplitterLayout separator */}
+            {/* 1px gray divider line */}
+            <div style={{
+              position: 'absolute', top: 0, right: panelWidth, width: 1, height: '100%',
+              background: 'var(--sapList_BorderColor)', zIndex: 11, pointerEvents: 'none',
+            }} />
+            {/* transparent drag handle centered on the line */}
             <div
               onMouseDown={onMouseDown}
-              onMouseEnter={() => setSplitterHover(true)}
-              onMouseLeave={() => setSplitterHover(false)}
               style={{
-                position: 'absolute', top: 0, right: panelWidth, width: 16, height: '100%',
-                zIndex: 11, cursor: 'col-resize',
-                background: 'var(--sapShell_Background)',
-                borderLeft: `1px solid ${splitterActive ? 'var(--sapHighlightColor)' : 'var(--sapPageHeader_BorderColor, #d9d9d9)'}`,
-                borderRight: `1px solid ${splitterActive ? 'var(--sapHighlightColor)' : 'var(--sapPageHeader_BorderColor, #d9d9d9)'}`,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                boxSizing: 'border-box',
+                position: 'absolute', top: 0, right: panelWidth - 4, width: 9, height: '100%',
+                zIndex: 12, cursor: 'col-resize',
               }}
-            >
-              <div style={{
-                backgroundImage: `linear-gradient(to top, ${(splitterHover || splitterActive) ? 'var(--sapHighlightColor)' : 'var(--_ui5wcr_Splitter_ContentBorderColor, var(--sapHighlightColor))'}, transparent)`,
-                backgroundSize: '1px 100%', backgroundRepeat: 'no-repeat', backgroundPosition: '50%',
-                width: 16, pointerEvents: 'none',
-                flexGrow: (splitterHover || splitterActive) ? 1 : 0,
-                height: (splitterHover || splitterActive) ? undefined : '4rem',
-                transition: 'flex-grow 0.1s ease-in',
-              }} />
-              <Button
-                design="Transparent"
-                icon="vertical-grip"
-                style={{ minWidth: '1.5rem', height: '1.625rem', cursor: 'col-resize', pointerEvents: 'none', flexShrink: 0 } as React.CSSProperties}
-              />
-              <div style={{
-                backgroundImage: `linear-gradient(to bottom, ${(splitterHover || splitterActive) ? 'var(--sapHighlightColor)' : 'var(--_ui5wcr_Splitter_ContentBorderColor, var(--sapHighlightColor))'}, transparent)`,
-                backgroundSize: '1px 100%', backgroundRepeat: 'no-repeat', backgroundPosition: '50%',
-                width: 16, pointerEvents: 'none',
-                flexGrow: (splitterHover || splitterActive) ? 1 : 0,
-                height: (splitterHover || splitterActive) ? undefined : '4rem',
-                transition: 'flex-grow 0.1s ease-in',
-              }} />
-            </div>
+            />
 
             <div style={{
               position: 'absolute', top: 0, right: 0, width: panelWidth, height: '100%',
@@ -166,6 +136,7 @@ export default function ModelerLayout() {
                 activePanel={activePanel}
                 onTogglePanel={togglePanel}
                 assetId={assetId}
+                assetName={getAssetName(assetId)}
                 selectedElementId={selectedElementId}
                 selectedLiShape={selectedLiShape}
                 selectedWidget={selectedWidget}

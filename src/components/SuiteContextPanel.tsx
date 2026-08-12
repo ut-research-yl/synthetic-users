@@ -78,7 +78,7 @@ function makeMockAsset(assetId?: string, assetName?: string): SelectedAssetInfo 
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, assetName, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem, onLinkDictItem }: SharedProps & { assetId?: string; assetName?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null; onLinkDictItem?: (elementId: string, dictId: string, dictName: string) => void }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, pendingMessage, onPendingConsumed, assetId, assetName, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem, onLinkDictItem }: SharedProps & { assetId?: string; assetName?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null; onLinkDictItem?: (elementId: string, dictId: string, dictName: string) => void }) {
   if (!activePanel) return null
 
   if (activePanel === 'create-dict-item' && selectedDictItem) {
@@ -193,7 +193,7 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
           onClose={() => onTogglePanel(null)}
           onOpenModelDetail={() => {}}
           hideHeaderActions
-          hideThumbnailAndRevision
+          hideThumbnail
         />
       </div>
     )
@@ -220,6 +220,7 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
           onClose={() => onTogglePanel(null)}
           onOpenModelDetail={() => {}}
           hideHeaderActions
+          hideThumbnail
         />
       </div>
     )
@@ -286,44 +287,28 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, 
 // z-index + overflow:visible so tooltips paint over the panel content.
 
 export function SuiteContextRail({ activePanel, onTogglePanel }: SharedProps) {
-  const makeItemClick = (panelId: string) => () =>
+  const makeClick = (panelId: string) => () =>
     onTogglePanel(panelId === activePanel ? null : panelId as ModelerPanelId)
 
   const section1 = PANELS.filter(p => p.section === 1)
   const section2 = PANELS.filter(p => p.section === 2)
 
+  const renderBtn = (p: PanelDef) => (
+    <button
+      key={p.id}
+      className={`${s.railBtn} ${activePanel === p.id ? s.railBtnActive : ''}`}
+      onClick={makeClick(p.id)}
+      title={p.label}
+    >
+      <Icon name={p.icon} />
+    </button>
+  )
+
   return (
-    <div className={s.rail} dir="rtl">
-      <SideNavigation collapsed style={{ height: '100%' } as React.CSSProperties}>
-        {section1.map(p => (
-          <SideNavigationItem
-            key={p.id}
-            icon={p.icon}
-            text={p.label}
-            tooltip={p.label}
-            selected={activePanel === p.id}
-            onClick={makeItemClick(p.id)}
-          />
-        ))}
-        <SideNavigationItem
-          key="sep"
-          icon=""
-          text=""
-          unselectable
-          style={{ pointerEvents: 'none', height: '1px', padding: 0, margin: '2px 8px',
-            background: 'var(--sapList_BorderColor)', overflow: 'hidden' } as React.CSSProperties}
-        />
-        {section2.map(p => (
-          <SideNavigationItem
-            key={p.id}
-            icon={p.icon}
-            text={p.label}
-            tooltip={p.label}
-            selected={activePanel === p.id}
-            onClick={makeItemClick(p.id)}
-          />
-        ))}
-      </SideNavigation>
+    <div className={s.rail}>
+      {section1.map(renderBtn)}
+      <div className={s.railSep} />
+      {section2.map(renderBtn)}
     </div>
   )
 }

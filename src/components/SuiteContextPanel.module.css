@@ -11,7 +11,7 @@
 /* dir="rtl" on the wrapper, z-index + overflow:visible so hover popups are unclipped */
 .rail {
   flex-shrink: 0;
-  width: 64px;
+  width: 3.5rem;
   height: 100%;
   align-self: stretch;
   border-left: 1px solid var(--sapList_BorderColor);
@@ -19,6 +19,42 @@
   overflow: visible;
   position: relative;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.railBtn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  color: var(--sapContent_IconColor);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.railBtn:hover {
+  background: var(--sapList_Hover_Background);
+}
+
+.railBtnActive {
+  color: var(--sapHighlightColor);
+  background: var(--sapList_SelectionBackgroundColor);
+}
+
+.railSep {
+  height: 1px;
+  width: 2rem;
+  margin: 0.25rem 0;
+  background: var(--sapList_BorderColor);
+  flex-shrink: 0;
 }
 
 /* ── Placeholder for unimplemented panels ────────────────────────────────────── */
