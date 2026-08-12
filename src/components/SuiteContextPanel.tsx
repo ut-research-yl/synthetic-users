@@ -55,13 +55,16 @@ type SharedProps = {
 // ── Mock asset data for the modeler context ──────────────────────────────────
 // In the real app this would be driven by the loaded asset; here we match the
 // Onboarding Process fixture that matches the canvas placeholder.
-function makeMockAsset(assetId?: string): SelectedAssetInfo {
+function makeMockAsset(assetId?: string, assetName?: string): SelectedAssetInfo {
+  const name = assetName ?? (
+    assetId === 'a1' ? 'Onboarding Process'
+    : assetId === 'a2' ? 'Incident Management'
+    : assetId === 'a3' ? 'Order-to-Cash Value Chain'
+    : 'Untitled'
+  )
   return {
     id: assetId ?? 'a1',
-    name: assetId === 'a1' ? 'Onboarding Process'
-        : assetId === 'a2' ? 'Incident Management'
-        : assetId === 'a3' ? 'Order-to-Cash Value Chain'
-        : 'Untitled',
+    name,
     objectType: 'Process Model',
     typeName: 'BPMN Model',
     folder: 'Human Resources',
@@ -75,12 +78,130 @@ function makeMockAsset(assetId?: string): SelectedAssetInfo {
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, pendingMessage, onPendingConsumed }: SharedProps & { assetId?: string }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, assetId, assetName, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem, onLinkDictItem }: SharedProps & { assetId?: string; assetName?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null; onLinkDictItem?: (elementId: string, dictId: string, dictName: string) => void }) {
   if (!activePanel) return null
+
+  if (activePanel === 'create-dict-item' && selectedDictItem) {
+    return (
+      <div className={s.panelContent}>
+        <CreateDictionaryItemPanel
+          elementName={selectedDictItem.name}
+          onClose={() => onTogglePanel(null)}
+          onCreateAndLink={(name, category, subCategory, description) => {
+            const elementId = (selectedDictItem as any)?.elementId
+            if (elementId) {
+              const newDictId = `dict-new-${Date.now()}`
+              onLinkDictItem?.(elementId, newDictId, name)
+            }
+            onTogglePanel(null)
+          }}
+        />
+      </div>
+    )
+  }
+
+  // dict detail panel
+  if (activePanel === 'dict-detail' && selectedDictItem) {
+    return (
+      <div className={`${s.panelContent} dict-detail-panel`}>
+        <DictionaryDetailPanel item={selectedDictItem} onClose={() => onTogglePanel(null)} />
+      </div>
+    )
+  }
+
+  // dictionary linked panel
+  if (activePanel === 'dictionary-linked' && selectedElementId) {
+    // use selectedDictId prop, or fall back to elementData lookup
+    const dictId = selectedDictId || elementData[selectedElementId]?.linkedDictId
+    if (dictId) {
+      return (
+        <div className={s.panelContent}>
+          <DictionaryLinkedPanel
+            elementId={selectedElementId}
+            dictId={dictId}
+            onClose={() => onTogglePanel(null)}
+            onSwitchToElement={() => onTogglePanel('element-detail')}
+          />
+        </div>
+      )
+    }
+  }
+
+  // widget detail
+  if (activePanel === 'widget-detail' && selectedWidget) {
+    return (
+      <div className={s.panelContent}>
+        <WidgetDetailPanel widget={selectedWidget} onClose={() => onTogglePanel(null)} />
+      </div>
+    )
+  }
+
+  // li shape detail
+  if (activePanel === 'element-detail' && selectedLiShape) {
+    return (
+      <div className={s.panelContent}>
+        <LiShapeDetailPanel
+          key={selectedLiShape.id}
+          shape={selectedLiShape}
+          onClose={() => onTogglePanel(null)}
+          onUpdate={onLiShapeUpdate}
+          onSelectLinkedElement={onSelectElement}
+        />
+      </div>
+    )
+  }
+
+  // element-detail: shows selected canvas element attributes
+  if (activePanel === 'element-detail' && selectedElementId) {
+    const connectedShapes = (liShapes ?? []).filter(ls => ls.linkedBpmnId === selectedElementId)
+    return (
+      <div className={s.panelContent}>
+        <ElementDetailPanel
+          key={selectedElementId}
+          elementId={selectedElementId}
+          onClose={() => onTogglePanel(null)}
+          dictId={selectedDictId ?? undefined}
+          onViewDictEntry={() => onTogglePanel('dictionary-linked')}
+          linkedShapes={connectedShapes.map(ls => ({ id: ls.id, widgetName: ls.widgetName, widgetId: ls.widgetId, label: ls.label, shapeType: ls.shapeType }))}
+          onSelectLinkedShape={(id) => {
+            const ls = (liShapes ?? []).find(s => s.id === id)
+            if (ls) onSelectLiShape?.(ls)
+          }}
+        />
+      </div>
+    )
+  }
+
+  // element-detail with nothing selected — show diagram attributes as fallback
+  if (activePanel === 'element-detail') {
+    const asset = makeMockAsset(assetId, assetName)
+    return (
+      <div className={s.panelContent}>
+        <AssetInfoPanel
+          selectedAsset={null}
+          selectedDictEntry={null}
+          dictCategories={[]}
+          externalSelectedAsset={asset}
+          pageTitle={asset.name}
+          selectionCount={0}
+          zoomViewport={null}
+          subscriptions={{}}
+          onSubscriptionChange={() => {}}
+          onThumbnailEnter={() => {}}
+          onThumbnailLeave={() => {}}
+          onThumbnailMove={() => {}}
+          onClose={() => onTogglePanel(null)}
+          onOpenModelDetail={() => {}}
+          hideHeaderActions
+          hideThumbnailAndRevision
+        />
+      </div>
+    )
+  }
 
   // diagram-attributes uses the existing AssetInfoPanel which owns its own SigRightSidePanel
   if (activePanel === 'diagram-attributes') {
-    const asset = makeMockAsset(assetId)
+    const asset = makeMockAsset(assetId, assetName)
     return (
       <div className={s.panelContent}>
         <AssetInfoPanel
