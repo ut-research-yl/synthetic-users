@@ -103,7 +103,7 @@ function AuthGate() {
           <Route path="side-nav-wide" element={<TemplateSideNavPageWide />} />
         </Route>
         <Route path="/" element={<PCAProvider><Shell /></PCAProvider>}>
-          <Route index element={<Navigate to="/home" replace />} />
+          <Route index element={<Navigate to="/modeler/1" replace />} />
           <Route path="audience" element={<Audience />} />
           <Route path="users" element={<Users />} />
           <Route path="groups" element={<Groups />} />
@@ -155,7 +155,7 @@ function AuthGate() {
           <Route path="initiatives" element={<InitiativesPage />} />
           <Route path="initiatives/:id" element={<InitiativeDetailPage />} />
           <Route path="insights" element={<InsightsPage />} />
-          <Route path="modeler" element={<ModelerLobby />} />
+          <Route path="modeler" element={<Navigate to="/modeler/1" replace />} />
           <Route path="modeler/new-journey" element={<JourneyModelerLayout />} />
           <Route path="modeler/:assetId" element={<ModelerLayout />} />
           <Route path="value-accelerator" element={<ValueAcceleratorLibrary />} />

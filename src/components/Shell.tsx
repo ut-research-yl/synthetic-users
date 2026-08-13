@@ -428,7 +428,7 @@ export default function Shell() {
             position: 'relative',
           }}>
             <Text style={{ color: 'var(--sapHighlightTextColor)', textAlign: 'center', fontSize: 'var(--sapFontSmallSize)' }}>
-              <strong>Work in progress</strong> — placement and user experience are still being designed and may change.
+              <strong>Prototype for research purposes only</strong> — this is not the final design. Some features may be incomplete or non-functional.
             </Text>
             <Button
               design="Transparent"
@@ -450,8 +450,6 @@ export default function Shell() {
         )}
       <ShellBar
         primaryTitle="Signavio"
-        onLogoClick={() => navigate('/home')}
-        onProfileClick={() => setUserMenuOpen(v => !v)}
         style={{ paddingInlineStart: '14px', paddingInlineEnd: '14px' } as React.CSSProperties}
       >
         <Button
@@ -459,12 +457,11 @@ export default function Shell() {
           icon="menu2"
           design="Transparent"
           tooltip="Toggle navigation"
-          onClick={() => setNavExpanded(v => !v)}
         />
         <img slot="logo" src="https://www.sap.com/content/dam/application/shared/logos/sap-logo-svg.svg" alt="SAP" style={{ height: 32 }} />
         <div slot="content" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SigChipV2
-            value="NGM Prototype"
+            value={workspaceName}
             design="none"
             className="shellbar-chip--transparent"
           />
@@ -475,27 +472,15 @@ export default function Shell() {
           slot="searchField"
           placeholder="Search your workspace"
           showClearIcon
-          onInput={(e) => {
-            setSearchQuery((e.target as unknown as { value?: string }).value ?? '')
-            openSearchDropdown()
-          }}
-          onSearch={(e) => {
-            const q = ((e.target as unknown as { value?: string }).value ?? '').trim()
-            if (q) {
-              setSearchHistory(prev => [q, ...prev.filter(h => h !== q)].slice(0, 5))
-              setSearchQuery(q)
-              navigate(`/search?q=${encodeURIComponent(q)}`)
-              setSearchDropdownOpen(false)
-            }
-          }}
+          readonly
         />
         <ShellBarItem icon="da" text="Joule" />
-        <ShellBarItem icon="bell" text="Notifications" count="3" />
+        <ShellBarItem icon="bell" text="Notifications" />
         <ShellBarItem icon="ai" text="Process Consulting Agent" />
         <ShellBarItem icon="px-survey" text="PX Survey" />
         <ShellBarItem icon="walk-me" text="WalkMe" />
         <ShellBarItem icon="headset" text="Built-In Support" />
-        <ShellBarItem id="help-menu-btn" icon="sys-help" text="Help" onClick={() => setHelpMenuOpen(v => !v)} />
+        <ShellBarItem id="help-menu-btn" icon="sys-help" text="Help" />
       </ShellBar>
       </div>
 
@@ -924,47 +909,6 @@ export default function Shell() {
         </div>
       </Popover>
 
-      <SideNavigation slot="sideContent" onSelectionChange={handleOuterNavChange}>
-        <SideNavigationItem icon="home" text="Home" selected={isHome} />
-        <SideNavigationItem icon="SAP-icons-v4/news" text="Newsfeed" selected={isNewsfeed} />
-        <SideNavigationItem icon="unfavorite" text="Favorites" selected={isFavorites} />
-        <SideNavigationItem icon="history" text="Recent" selected={isRecent} />
-        <SideNavigationItem icon="task" text="Tasks" />
-        <SideNavigationGroup text="Browse and Manage" expanded>
-          <SideNavigationItem icon="folder-blank" text="Repository" selected={isRepository} />
-          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/navigation-map" text="Process Landscape" selected={isProcessLandscape} />}
-          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/company-memory" text="Company Memory" />}
-          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/rocket" text="Value Accelerator Library" selected={isValueAccelerator} />}
-        </SideNavigationGroup>
-        {currentRelease !== 'NS2' && (
-          <SideNavigationGroup text="Transform and Realize Value" expanded>
-            {audience === 'administrators' && <SideNavigationItem icon="target-group" text="Objectives" selected={isObjectives} />}
-            {audience === 'administrators' && <SideNavigationItem icon="overview-chart" text="Initiatives" selected={isInitiatives} />}
-            {audience === 'administrators' && <SideNavigationItem icon="compare-2" text="Benchmarking Analytics" />}
-            <SideNavigationItem icon="lightbulb" text="Insights" selected={isInsights} />
-            {audience === 'administrators' && <SideNavigationItem icon="money-bills" text="Value Analysis" />}
-          </SideNavigationGroup>
-        )}
-        {currentRelease !== 'NS2' && audience === 'administrators' && (
-          <SideNavigationGroup text="Mine and Analyze" expanded>
-            <SideNavigationItem icon="provision" text="Data Management" />
-            <SideNavigationItem icon="developer-settings" text="Analysis Configuration" />
-            <SideNavigationItem icon="SAP-icons-v4/process-intelligence" text="Process Analysis" />
-            <SideNavigationItem icon="workflow-tasks" text="Analysis Workflows" />
-          </SideNavigationGroup>
-        )}
-        <SideNavigationGroup text="Model and Govern" expanded>
-          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/process-manager" text="Process Manager" />}
-          <SideNavigationItem icon="write-new" text="Modeler" selected={isModeler}>
-            <Tag slot="tag" design="Set2" colorScheme="5" hideStateIcon>Beta</Tag>
-          </SideNavigationItem>
-          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/customer-journey" text="Journey Models" />}
-          {currentRelease !== 'NS2' && <SideNavigationItem icon="SAP-icons-v4/bpmn-type-service" text="Governance Workflows" />}
-        </SideNavigationGroup>
-        {currentRelease !== 'NS2' && <SideNavigationItem slot="fixedItems" icon="lab" text="Lab Space" />}
-        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="SAP-icons-v4/report" text="Reporting" selected={isReporting} />}
-        {audience === 'administrators' && <SideNavigationItem slot="fixedItems" icon="action-settings" text="Workspace Settings" selected={!isRepository && !isSearch && !isReporting && !isHome && !isPCA && !isProcessLandscape && !isRecent && !isFavorites && !isNewsfeed && !isObjectives && !isInitiatives && !isInsights && !isValueAccelerator && !isModeler && !isModelingAssetType} />}
-      </SideNavigation>
 
       {isRepository || isSearch || isReporting || isHome || isPCA || isModeler || isModelingAssetType || isProcessLandscape || isRecent || isFavorites || isNewsfeed || isObjectives || isInitiatives || isInsights || isValueAccelerator || (location.pathname === '/home' && !!getActiveConversation()?.messages.length) ? (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
@@ -1004,7 +948,7 @@ export default function Shell() {
                     </Text>
                   </div>
                 ) : (
-                  <SideNavigation onSelectionChange={handleNavChange} style={{ height: 'auto', boxShadow: 'none', '--_ui5_side_navigation_shadow': 'none', '--_ui5_side_nav_shadow': 'none' } as React.CSSProperties}>
+                  <SideNavigation style={{ height: 'auto', boxShadow: 'none', '--_ui5_side_navigation_shadow': 'none', '--_ui5_side_nav_shadow': 'none' } as React.CSSProperties}>
                     {filteredNav.map(group => (
                       <SideNavigationGroup key={group.title} text={group.title} expanded>
                         {group.items.map(item => (
@@ -1039,16 +983,6 @@ export default function Shell() {
         </div>
       )}
     </NavigationLayout>
-    <SearchDropdown
-      open={searchDropdownOpen}
-      rect={searchRect}
-      query={searchQuery}
-      history={searchHistory}
-      savedSearches={smartFolders}
-      onAddHistory={(term) => setSearchHistory(prev => [term, ...prev.filter(h => h !== term)].slice(0, 5))}
-      onRemoveHistory={(term) => setSearchHistory(prev => prev.filter(h => h !== term))}
-      onClose={() => setSearchDropdownOpen(false)}
-    />
     <WelcomeModal
       isOpen={showWelcome}
       onClose={() => { localStorage.setItem('welcomeDismissed', 'true'); clearOverlay() }}

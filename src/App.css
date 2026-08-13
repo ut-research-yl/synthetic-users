@@ -470,3 +470,8 @@ section[id^="ObjectPageSection-"] > [class*="outlineSpacerDiv"] {
     padding: 1rem 2rem 0;
   }
 }
+
+/* Hide side navigation hover tooltip popups */
+.ui5-side-navigation-popover {
+  display: none !important;
+}

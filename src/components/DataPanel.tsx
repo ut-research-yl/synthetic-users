@@ -155,6 +155,72 @@ const EXTERNAL_WIDGETS: ExternalWidget[] = [
   { id: 'ext-005', name: 'Headcount Report',            source: 'Grafana',         url: 'https://grafana.example.com/d/headcount' },
 ]
 
+// ── Drag ghost ────────────────────────────────────────────────────────────────
+
+const TYPE_SVG: Record<string, string> = {
+  'Value':           `<svg width="16" height="16" viewBox="0 0 16 16" fill="#0070f2"><text x="1" y="13" font-size="10" font-weight="700" font-family="sans-serif">123</text></svg>`,
+  'Bar Chart':       `<svg width="16" height="16" viewBox="0 0 16 16" fill="#0070f2"><rect x="1" y="7" width="3" height="7" rx="0.5"/><rect x="6" y="4" width="3" height="10" rx="0.5"/><rect x="11" y="1" width="3" height="13" rx="0.5"/></svg>`,
+  'Line Chart':      `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0070f2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,12 5,6 9,9 13,3"/></svg>`,
+  'Area Chart':      `<svg width="16" height="16" viewBox="0 0 16 16"><path d="M1,12 5,6 9,9 13,3 13,14 1,14Z" fill="#0070f2" opacity="0.35"/><polyline points="1,12 5,6 9,9 13,3" fill="none" stroke="#0070f2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  'Dual Axis Chart': `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="1,12 5,6 9,9 13,3" stroke="#0070f2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="1,9 5,13 9,7 13,10" stroke="#1db8c4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  'Pie Chart':       `<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8,8 L8,1.5 A6.5,6.5 0 1,1 1.5,8 Z" fill="#0070f2"/><path d="M8,8 L1.5,8 A6.5,6.5 0 0,1 8,1.5 Z" fill="#0070f2" opacity="0.35"/></svg>`,
+  'Treemap':         `<svg width="16" height="16" viewBox="0 0 16 16" fill="#0070f2"><rect x="1" y="1" width="8" height="9" rx="0.5" opacity="0.9"/><rect x="10" y="1" width="5" height="9" rx="0.5" opacity="0.5"/><rect x="1" y="11" width="14" height="4" rx="0.5" opacity="0.3"/></svg>`,
+  'Heat Map':        `<svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="1" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.2"/><rect x="6" y="1" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.6"/><rect x="11" y="1" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.95"/><rect x="1" y="6" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.7"/><rect x="6" y="6" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.35"/><rect x="11" y="6" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.5"/><rect x="1" y="11" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.45"/><rect x="6" y="11" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.8"/><rect x="11" y="11" width="4" height="4" rx="0.5" fill="#0070f2" opacity="0.15"/></svg>`,
+  'Sankey Chart':    `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1,4 Q8,4 15,7" stroke="#0070f2" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/><path d="M1,9 Q8,9 15,11" stroke="#0070f2" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/></svg>`,
+  'Histogram':       `<svg width="16" height="16" viewBox="0 0 16 16" fill="#0070f2"><rect x="1" y="8" width="2" height="6" rx="0.3"/><rect x="4" y="5" width="2" height="9" rx="0.3"/><rect x="7" y="3" width="2" height="11" rx="0.3"/><rect x="10" y="6" width="2" height="8" rx="0.3"/><rect x="13" y="10" width="2" height="4" rx="0.3"/></svg>`,
+  'external':        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0070f2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6,2 L2,2 L2,14 L14,14 L14,10"/><path d="M9,2 L14,2 L14,7"/><line x1="14" y1="2" x2="8" y2="8"/></svg>`,
+}
+
+function createDragGhost(label: string, subtitle: string | undefined, iconType: string): { el: HTMLElement; cleanup: () => void } {
+  const ghost = document.createElement('div')
+  ghost.style.cssText = [
+    'position:fixed', 'top:-300px', 'left:-300px',
+    'display:flex', 'align-items:center', 'gap:8px',
+    'padding:8px 12px 8px 8px',
+    'background:#ffffff',
+    'border:1px solid rgba(0,0,0,0.12)',
+    'border-radius:10px',
+    'box-shadow:0 6px 20px rgba(0,0,0,0.18)',
+    'font-family:72,\'72 Full\',sans-serif',
+    'pointer-events:none',
+    'max-width:260px',
+    'z-index:99999',
+  ].join(';')
+
+  const iconBox = document.createElement('div')
+  iconBox.style.cssText = [
+    'width:32px', 'height:32px', 'flex-shrink:0',
+    'border-radius:8px', 'background:#e8f3ff',
+    'display:flex', 'align-items:center', 'justify-content:center',
+  ].join(';')
+  iconBox.innerHTML = TYPE_SVG[iconType] ?? TYPE_SVG['Bar Chart']
+
+  const textArea = document.createElement('div')
+  textArea.style.cssText = 'display:flex;flex-direction:column;gap:1px;min-width:0'
+
+  const nameEl = document.createElement('div')
+  const truncated = label.length > 24 ? label.slice(0, 24) + '…' : label
+  nameEl.textContent = truncated
+  nameEl.style.cssText = 'font-size:13px;font-weight:600;color:#1d2d3e;white-space:nowrap'
+
+  textArea.appendChild(nameEl)
+
+  if (subtitle) {
+    const subEl = document.createElement('div')
+    const truncSub = subtitle.length > 28 ? subtitle.slice(0, 28) + '…' : subtitle
+    subEl.textContent = truncSub
+    subEl.style.cssText = 'font-size:11px;color:#556b82;white-space:nowrap'
+    textArea.appendChild(subEl)
+  }
+
+  ghost.appendChild(iconBox)
+  ghost.appendChild(textArea)
+  document.body.appendChild(ghost)
+
+  const cleanup = () => { if (ghost.parentNode) ghost.parentNode.removeChild(ghost) }
+  return { el: ghost, cleanup }
+}
+
 // ── Widget card ───────────────────────────────────────────────────────────────
 
 function WidgetCard({ widget, onSelect }: { widget: Widget; onSelect?: () => void }) {
@@ -163,6 +229,10 @@ function WidgetCard({ widget, onSelect }: { widget: Widget; onSelect?: () => voi
         e.dataTransfer.setData('text/plain', widget.id)
         e.dataTransfer.setData('application/di-widget', widget.id)
         e.dataTransfer.setData('application/di-widget-name', widget.name)
+        const subtitle = [widget.process, widget.source].filter(Boolean).join(' / ')
+        const { el, cleanup } = createDragGhost(widget.name, subtitle || undefined, widget.type)
+        e.dataTransfer.setDragImage(el, 20, 24)
+        setTimeout(cleanup, 0)
       }}>
       <div className={s.cardIcon} title={widget.type}>
         <Icon name={TYPE_ICON[widget.type]} style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties} />
@@ -195,6 +265,9 @@ function ExternalWidgetCard({ widget, onSelect }: { widget: ExternalWidget; onSe
         e.dataTransfer.setData('application/di-widget', widget.id)
         e.dataTransfer.setData('application/di-widget-name', widget.name)
         e.dataTransfer.setData('application/di-widget-shape', widget.shapeType ?? '')
+        const { el, cleanup } = createDragGhost(widget.name, widget.source, 'external')
+        e.dataTransfer.setDragImage(el, 20, 24)
+        setTimeout(cleanup, 0)
       }}>
       <div className={s.cardIcon} title="External Widget">
         <Icon name="SAP-icons-v4/link" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties} />
@@ -262,7 +335,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
     ? `${location.process} › ${location.section}`
     : location.type
     ? `${location.process} › ${location.type}`
-    : location.process ?? 'Process'
+    : location.process ?? 'Analysis Configuration'
 
   const filtered = WIDGETS.filter(w => {
     if (selectedSource === 'External Widget') return false

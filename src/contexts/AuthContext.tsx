@@ -13,8 +13,8 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [workspaceSelected, setWorkspaceSelected] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(true)
+  const [workspaceSelected, setWorkspaceSelected] = useState(true)
   const [signedOut, setSignedOut] = useState(false)
 
   function login() {

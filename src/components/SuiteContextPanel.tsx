@@ -170,8 +170,6 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, pendingMe
           key={selectedElementId}
           elementId={selectedElementId}
           onClose={() => onTogglePanel(null)}
-          dictId={selectedDictId ?? undefined}
-          onViewDictEntry={() => onTogglePanel('dictionary-linked')}
           linkedShapes={connectedShapes.map(ls => ({ id: ls.id, widgetName: ls.widgetName, widgetId: ls.widgetId, label: ls.label, shapeType: ls.shapeType }))}
           onSelectLinkedShape={(id) => {
             const ls = (liShapes ?? []).find(s => s.id === id)
@@ -204,6 +202,7 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, pendingMe
           onOpenModelDetail={() => {}}
           hideHeaderActions
           hideThumbnail
+          hideRevisionInfo
         />
       </div>
     )
@@ -231,6 +230,7 @@ export function SuiteContextPanelContent({ activePanel, onTogglePanel, pendingMe
           onOpenModelDetail={() => {}}
           hideHeaderActions
           hideThumbnail
+          hideRevisionInfo
         />
       </div>
     )

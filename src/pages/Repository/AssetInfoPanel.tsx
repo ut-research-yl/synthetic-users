@@ -815,7 +815,7 @@ export default function AssetInfoPanel({
           <DiagramThumbnail onMouseEnter={onThumbnailEnter} onMouseLeave={onThumbnailLeave} onMouseMove={onThumbnailMove} viewport={zoomViewport} />
         </div>
       )}
-      {(() => {
+      {!hideRevisionInfo && (() => {
         const isPublished = externalSelectedAsset.chips.some(c => c.value === 'Published')
         const chipFor2 = (status: string) => {
           const design = status === 'Published' ? 'indication5' : status === 'Draft' ? 'indication10' : status === 'On Track' ? 'indication4' : status === 'At Risk' ? 'indication2' : status === 'Modified' ? 'indication7' : 'indication10'

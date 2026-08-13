@@ -9,7 +9,7 @@ type CwdProcess = {
   Investigation?: SectionMap; Dashboard?: SectionMap
 }
 
-const CWD_DATA: Record<string, CwdProcess> = {
+export const CWD_DATA: Record<string, CwdProcess> = {
   'Order to Cash':      { cases: '306k', events: '12m', investigations: 17, dashboards: 14, lastEdited: '08/20/2025', Investigation: { 'O2C Analysis': { pages: { Overview: ['value-I-001','bar-chart-I-001'], Detail: ['treemap-I-001'], Variants: ['sankey-I-002'] } }, 'O2C Performance': { pages: { KPIs: ['value-I-001'], Trends: ['line-I-001'] } } }, Dashboard: { 'O2C Dashboard': { pages: { Overview: ['value-D-001','pie-D-001'], Comparisons: ['bar-chart-D-001'], Trends: ['line-D-001'] } }, 'O2C Executive Summary': { pages: { Overview: ['value-D-001'] } } } },
   'SAP O2C Onboarding': { cases: '128k', events: '8m', investigations: 7, dashboards: 7, lastEdited: '08/20/2025', Investigation: { 'Onboarding Analysis': { pages: { Main: ['bar-chart-I-002','value-I-002'], Funnel: ['hist-I-001'] } } }, Dashboard: { 'Onboarding Dashboard': { pages: { Overview: ['bar-chart-D-002','value-D-002'] } }, 'Onboarding KPIs': { pages: { Summary: ['value-I-002'] } } } },
   'Record to Report':   { cases: '94k', events: '5m', investigations: 7, dashboards: 10, lastEdited: '08/20/2025', Investigation: { 'R2R Investigation': { pages: { Main: ['ring-I-002','line-I-002'], Flow: ['sankey-I-001'] } } }, Dashboard: { 'R2R Dashboard': { pages: { Summary: ['value-D-003','bar-chart-D-003'] } }, 'R2R Period Analysis': { pages: { Overview: ['line-I-002'], Details: ['treemap-I-003'] } } } },

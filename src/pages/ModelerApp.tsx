@@ -24,6 +24,7 @@ import {
   type ElementGeometry,
   type Connection,
 } from '../data/liveInsightsData'
+import { RESULTS } from '../components/SearchResultsPanel'
 import s from './ModelerApp.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -41,12 +42,13 @@ type CanvasElement = ElementData & ElementGeometry & {
 }
 
 export function getAssetName(assetId?: string): string {
+  if (!assetId || assetId === 'new') return 'Untitled'
+  if (assetId === '1') return 'HR Hiring Process'
+  const found = RESULTS.find(r => r.id === assetId)
+  if (found) return found.name
   return assetId === 'a1' ? 'HR Hiring Process GER'
     : assetId === 'a2' ? 'Incident Management'
     : assetId === 'a3' ? 'Order-to-Cash Value Chain'
-    : assetId === '5' ? 'Procurement Experience Analysis'
-    : assetId === 'new' ? 'Untitled'
-    : assetId ? `Asset ${assetId}`
     : 'Untitled'
 }
 
@@ -60,6 +62,7 @@ export type LiShape = {
   label?: string
   linkedBpmnId?: string
   linkedBpmnName?: string
+  linkedBpmnElements?: { id: string; name: string }[]
   manualValue?: string
 }
 
@@ -94,9 +97,6 @@ function buildInitialElements(): CanvasElement[] {
     id,
     ...ELEMENT_GEOMETRY[id],
     ...INITIAL_ELEMENT_DATA[id],
-    // pre-set dict badges that were hardcoded visually
-    linkedDictId: id === 'el-plan' ? 'd28' : id === 'el-offer' ? 'd30' : id === 'el-onboard' ? 'd31' : id === 'el-system' ? 'd41' : undefined,
-    linkedDictName: id === 'el-plan' ? 'Plan interview' : id === 'el-offer' ? 'Make offer' : id === 'el-onboard' ? 'Onboard candidate' : id === 'el-system' ? 'ATS System' : undefined,
   }))
 }
 
@@ -1875,17 +1875,16 @@ function BpmnCanvas({
 
       {/* ── Top-left title bar ──────────────────────────────────────────────── */}
       <div className={s.floatingTopLeft}>
-        <Button design="Transparent" icon="slim-arrow-left" tooltip="Back to list" onClick={onClose} className={s.backBtn} />
+        <Button design="Transparent" icon="slim-arrow-left" tooltip="Back to list" className={s.backBtn} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SigDomainObject object={assetObjectType as any} size="XS" />
           <SigInlineEdit
             text={editableTitle}
             placeholder="Untitled"
             size="H4"
-            onChange={(e: any) => setEditableTitle(e.detail?.value ?? e.target?.value ?? editableTitle)}
+            readonly
           />
-          <Button id="modeler-overflow" icon="slim-arrow-down" design="Transparent" tooltip="More options" className={s.overflowBtn}
-            onClick={() => openMenu(overflowMenuRef, 'modeler-overflow')} />
+          <Button id="modeler-overflow" icon="slim-arrow-down" design="Transparent" tooltip="More options" className={s.overflowBtn} />
         </div>
         <div className={s.vDivider} />
         <SigChipV2 value="Draft" leadingIcon="write-new-document" design={'indication10' as any} condensed />
@@ -1894,17 +1893,13 @@ function BpmnCanvas({
           leadingIcon={SAVE_CHIP[saveState].icon}
           design={SAVE_CHIP[saveState].design as any}
           condensed
-          onClick={() => {
-            const states: SaveState[] = ['saved', 'saving', 'offline', 'error']
-            setSaveState(st => states[(states.indexOf(st) + 1) % states.length] ?? 'saved')
-          }}
         />
       </div>
 
       {/* ── Top-right toolbar ───────────────────────────────────────────────── */}
       <div className={s.floatingTopRight} style={{ right: `calc(0.75rem + ${panelOffset}px)` }}>
         <PresenceAvatarGroup users={COLLABORATORS} visible={isCollabCanvas && collaboratorsActive} />
-        <Button design="Emphasized" className={s.shareBtn} onClick={() => setShareOpen(true)}>Share</Button>
+
         <button className={s.tbBtn} title="Toggle Side Panel" onClick={onTogglePanel}>
           <svg width="36" height="36" viewBox="0 0 36 36" fill="currentColor"><path d="M12.8125 11C12.0208 11 11.3542 11.2708 10.8125 11.8125C10.2708 12.3542 10 13.0208 10 13.8125V22.1875C10 22.9792 10.2708 23.6458 10.8125 24.1875C11.3542 24.7292 12.0208 25 12.8125 25H23.1875C23.9792 25 24.6458 24.7292 25.1875 24.1875C25.7292 23.6458 26 22.9792 26 22.1875V13.8125C26 13.0208 25.7292 12.3542 25.1875 11.8125C24.6458 11.2708 23.9792 11 23.1875 11H12.8125ZM24.4062 22.1875C24.4062 22.5417 24.2917 22.8333 24.0625 23.0625C23.8333 23.2917 23.5417 23.4062 23.1875 23.4062H22V12.5938H23.1875C23.5417 12.5938 23.8333 12.7083 24.0625 12.9375C24.2917 13.1667 24.4062 13.4583 24.4062 13.8125V22.1875ZM11.5938 13.8125C11.5938 13.4583 11.7083 13.1667 11.9375 12.9375C12.1667 12.7083 12.4583 12.5938 12.8125 12.5938H20.4062V23.4062H12.8125C12.4583 23.4062 12.1667 23.2917 11.9375 23.0625C11.7083 22.8333 11.5938 22.5417 11.5938 22.1875V13.8125Z"/></svg>
         </button>
@@ -2154,43 +2149,6 @@ function BpmnCanvas({
               {el.type === 'system'  && <SystemShape  el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} />}
               {el.type === 'data'     && <DataObjectShape el={el} selected={selected} hovered={hovered} ringW={ringW} aiPreview={isAiPreview} />}
               {el.type === 'artifact' && <ArtifactShape   el={el} selected={selected} hovered={hovered} ringW={ringW} editing={editingId === el.id} aiPreview={isAiPreview} />}
-              {/* ── Dictionary icon (selected only) ── */}
-              {(el.type === 'task' || el.type === 'system' || el.type === 'artifact' || el.type === 'event' || el.type === 'data') && selected && (() => {
-                const btnSize = 24 / (zoom / 100)
-                const pad = 2 / (zoom / 100)
-                const bx = el.cx - el.hw + pad
-                const by = el.cy + el.hh - pad - btnSize
-                const linked = !!el.linkedDictId
-                return (
-                  <foreignObject x={bx} y={by} width={btnSize} height={btnSize} style={{ overflow: 'visible' }}>
-                    <ToggleButton
-                      icon={linked ? 'course-book' : 'add-coursebook'}
-                      pressed={linked}
-                      design={linked ? 'Emphasized' : 'Default'}
-                      tooltip={linked ? 'Show Dictionary Item' : 'Link to Dictionary Item'}
-                      onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation()
-                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-                        setDictPopup({ elId: el.id, rect })
-                      }}
-                      onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
-                      style={{
-                        width: `${btnSize * (zoom / 100)}px`,
-                        height: `${btnSize * (zoom / 100)}px`,
-                        '--_ui5_button_base_min_width': `${btnSize * (zoom / 100)}px`,
-                        transform: `scale(${100 / zoom})`,
-                        transformOrigin: '0 0',
-                        ...(linked ? {
-                          '--_ui5_button_emphasized_background': 'var(--sapHighlightColor)',
-                          '--_ui5_toggle_btn_pressed_background': 'var(--sapHighlightColor)',
-                          background: 'var(--sapHighlightColor)',
-                          color: 'white',
-                        } : {}),
-                      } as React.CSSProperties}
-                    />
-                  </foreignObject>
-                )
-              })()}
               {(el.type as string) === 'pool' && (() => {
                 const x = el.cx - el.hw, y = el.cy - el.hh
                 const w = el.hw * 2, h = el.hh * 2
@@ -2627,14 +2585,10 @@ function BpmnCanvas({
       <div className={s.leftToolbar}>
         <Button design="Transparent" icon="ai" tooltip="AI Assistant" style={{ width: '2.25rem', height: '2.25rem', padding: 0 }} />
         <Button design="Transparent" icon="SAP-icons-v4/graph-unspecified" tooltip="Elements"
-          className={shapesOpen ? s.toolbarBtnActive : undefined}
           style={{ width: '2.25rem', height: '2.25rem', padding: 0 }}
-          onClick={onToggleShapes}
         />
         <Button design="Transparent" icon="course-book" tooltip="Dictionary"
-          className={dictOpen ? s.toolbarBtnActive : undefined}
           style={{ width: '2.25rem', height: '2.25rem', padding: 0 }}
-          onClick={onToggleDict}
         />
         <Button design="Transparent" icon="SAP-icons-v4/source-data" tooltip="Data"
           style={{ width: '2.25rem', height: '2.25rem', padding: 0 }}
@@ -3031,15 +2985,6 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         panelOffset={panelOffset}
       />
       {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} />}
-      {shapesOpen && !moreElementsOpen && (
-        <ElementsPanel
-          onClose={() => setShapesOpen(false)}
-          onMoreElements={() => { setMoreElementsOpen(true); setShapesOpen(false) }}
-        />
-      )}
-      {moreElementsOpen && (
-        <MoreElementsPanel onClose={() => { setMoreElementsOpen(false) }} />
-      )}
     </div>
   )
 }

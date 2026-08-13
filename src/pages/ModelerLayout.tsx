@@ -167,16 +167,6 @@ export default function ModelerLayout() {
           </>
         )}
       </div>
-      <SuiteContextRail
-        activePanel={activePanel}
-        onTogglePanel={(id) => {
-          if (id === 'element-detail' && selectedElementId) {
-            togglePanel('element-detail')
-          } else if (id !== 'element-detail') {
-            togglePanel(id)
-          }
-        }}
-      />
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Button, Icon, Input, Label, Select, Option, TabContainer, Tab, Text, Popover, List, ListItemStandard, ListItemCustom } from '@ui5/webcomponents-react'
-import { SigChipV2, SigInlineEdit } from '@signavio/sap-signavio-uixtension'
+import { createPortal } from 'react-dom'
+import { Button, Icon, Input, Label, Select, Option, Tab, Text, List, ListItemStandard } from '@ui5/webcomponents-react'
+import { SigChipV2, SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
 import type { LiShape } from '../pages/ModelerApp'
-import ConnectWidgetDialog from './ConnectWidgetDialog'
+import ConnectWidgetDialog, { CWD_DATA } from './ConnectWidgetDialog'
 import ConnectWidgetSearchDialog from './ConnectWidgetSearchDialog'
 import { RelationsTab } from '../pages/Repository/RelationsTab'
 
@@ -22,20 +23,27 @@ const WIDGET_MOCK: Record<string, { value: string; label: string; trend: string;
   'ext-005':     { value: '8,310', label: 'Total Count',      trend: '↑ 6.7%',  trendColor: '#27a65a', chartSvg: '<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="200" y="75" text-anchor="middle" font-size="52" font-weight="700" fill="#0064d9" font-family="72,Arial">8,310</text><text x="200" y="105" text-anchor="middle" font-size="13" fill="#556b82" font-family="72,Arial">Total Count</text><line x1="80" y1="130" x2="320" y2="130" stroke="#e8ecf0" stroke-width="1.5"/><rect x="148" y="148" width="12" height="12" rx="2" fill="#27a65a"/><text x="166" y="159" font-size="13" fill="#27a65a" font-family="72,Arial" font-weight="600">↑ 6.7%</text><text x="200" y="185" text-anchor="middle" font-size="11" fill="#8c9bab" font-family="72,Arial">vs. last period</text></svg>' },
 }
 
-const WIDGET_PATH: Record<string, string> = {
-  'value-D-001': 'Order to Cash / O2C Dashboard / Overview',
-  'value-D-002': 'SAP O2C Onboarding / Onboarding Dashboard / Overview',
-  'value-D-003': 'Record to Report / R2R Dashboard / Overview',
-  'value-D-004': 'Plan to Produce / Production Dashboard / Overview',
-  'value-D-005': 'Order to Cash / O2C Dashboard / Summary',
-  'value-D-006': 'Order to Cash / O2C Dashboard / Overview',
-  'value-I-001': 'Order to Cash / O2C Analysis / Overview',
-  'value-I-002': 'SAP O2C Onboarding / Onboarding Analysis / Main',
+const WIDGET_PATH_FALLBACK: Record<string, string> = {
   'ext-001': 'Order to Cash / O2C Analysis / Overview',
   'ext-002': 'Order to Cash / O2C Dashboard / Overview',
   'ext-003': 'SAP O2C Onboarding / Onboarding Dashboard / Overview',
   'ext-004': 'Plan to Produce / Production Dashboard / Overview',
   'ext-005': 'Order to Cash / O2C Analysis / Overview',
+}
+
+function getWidgetPath(widgetId: string): string | undefined {
+  for (const [process, data] of Object.entries(CWD_DATA)) {
+    for (const typeKey of ['Investigation', 'Dashboard'] as const) {
+      const sections = data[typeKey]
+      if (!sections) continue
+      for (const [section, sectionData] of Object.entries(sections)) {
+        for (const [page, ids] of Object.entries(sectionData.pages)) {
+          if (ids.includes(widgetId)) return `${process} / ${section} / ${page}`
+        }
+      }
+    }
+  }
+  return WIDGET_PATH_FALLBACK[widgetId]
 }
 
 type Props = {
@@ -102,27 +110,29 @@ const WIDGET_ID_TO_CHART_ICON: Record<string, string> = {
 }
 
 export default function LiShapeDetailPanel({ shape, onClose, onUpdate, onSelectLinkedElement }: Props) {
-  const [activeTab, setActiveTab] = useState('Attributes')
   const [manualValue, setManualValue] = useState(shape.manualValue ?? 'No data')
   const [shapeType, setShapeType] = useState(shape.shapeType)
   const [widgetId, setWidgetId] = useState(shape.widgetId)
-  const [additionalWidgets, setAdditionalWidgets] = useState<string[]>([])
-  const [previewOpen, setPreviewOpen] = useState(false)
+const [previewOpen, setPreviewOpen] = useState(false)
   const previewAnchorRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const [previewTop, setPreviewTop] = useState(0)
   const [shapeDropdownOpen, setShapeDropdownOpen] = useState(false)
+  const [shapeDropdownPos, setShapeDropdownPos] = useState<{ top: number; left: number } | null>(null)
   const shapeDropdownRef = useRef<HTMLDivElement>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [searchDialogOpen, setSearchDialogOpen] = useState(false)
 
+  const shapeDropdownPortalRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (!shapeDropdownOpen) return
     function handleClick(e: MouseEvent) {
-      if (shapeDropdownRef.current && !shapeDropdownRef.current.contains(e.target as Node)) {
-        setShapeDropdownOpen(false)
-      }
+      const target = e.target as Node
+      const inTrigger = shapeDropdownRef.current?.contains(target)
+      const inPortal = shapeDropdownPortalRef.current?.contains(target)
+      if (!inTrigger && !inPortal) setShapeDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -146,112 +156,41 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate, onSelectL
   const prefix = widgetId.split('-')[0]
   const chartIcon = WIDGET_ID_TO_CHART_ICON[prefix] ?? 'SAP-icons-v4/data-indicator'
 
-  return (
-    <div ref={panelRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--sapGroup_ContentBackground, white)', overflow: 'hidden', position: 'relative' }}>
 
-      {/* ── Header ── */}
-      <div style={{ flexShrink: 0, background: 'var(--sapBaseColor, white)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '1rem 1rem 0.5rem' }}>
-          <div style={{
-            width: '1.625rem', height: '1.625rem', borderRadius: '0.5rem', flexShrink: 0,
-            background: 'var(--sapAvatar_6_Background, #d1efff)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon name={currentShapeIcon} style={{ width: '0.875rem', height: '0.875rem', color: '#0064d9' } as React.CSSProperties} />
-          </div>
-          <div ref={shapeDropdownRef} style={{ position: 'relative', flex: 1 }}>
-            <button
-              onClick={() => setShapeDropdownOpen(v => !v)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--sapFontFamily)', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapPageHeader_TextColor)' }}
-            >
-              <span>{shapeType}</span>
-              <Icon name="slim-arrow-down" style={{ width: '0.75rem', height: '0.75rem', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties} />
-            </button>
-            {shapeDropdownOpen && (
-              <div style={{ position: 'absolute', top: 'calc(100% + 0.25rem)', left: '-2rem', zIndex: 300, background: '#fff', borderRadius: '0.5rem', boxShadow: '0 0 0 1px rgba(34,53,72,0.2), 0 4px 12px rgba(34,53,72,0.15)', minWidth: '10rem', width: 'max-content', overflow: 'hidden' }}>
-                <List selectionMode="Single" onSelectionChange={(e: any) => {
-                  const val = e.detail?.selectedItems?.[0]?.dataset?.value
-                  if (val) { setShapeType(val); onUpdate?.(shape.id, { shapeType: val }) }
-                  setShapeDropdownOpen(false)
-                }}>
-                  {SHAPE_OPTIONS.map(t => (
-                    <ListItemStandard key={t.value} data-value={t.value} icon={t.icon} selected={shapeType === t.value}>
-                      {t.label}
-                    </ListItemStandard>
-                  ))}
-                </List>
-              </div>
-            )}
-          </div>
-          <Button design="Transparent" icon="decline" onClick={onClose} />
-        </div>
-        <div style={{ padding: '0.25rem 1rem 1rem' }}>
-          <SigInlineEdit text={shape.widgetName} size="H3" level="H3" />
-        </div>
-        <div className="element-detail-panel" style={{ boxShadow: '0 2px 4px rgba(34,53,72,0.06)', borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)' }}>
-          <TabContainer
-            onTabSelect={(e: any) => setActiveTab(e.detail?.tab?.text ?? 'Attributes')}
+  const tabs = [
+    <Tab text="Attributes" key="attributes">
+      <div style={{ paddingBottom: '12px' }}>
+        <div style={{ marginBottom: 4 }}>
+          <Input
+            placeholder="Search for attributes"
+            type={'Search' as any}
             style={{ width: '100%' } as React.CSSProperties}
           >
-            <Tab text="Attributes" selected={activeTab === 'Attributes'} />
-            <Tab text="Relations"  selected={activeTab === 'Relations'}  />
-          </TabContainer>
+            <Icon slot="icon" name="search" />
+          </Input>
         </div>
-      </div>
 
-      {/* ── Attributes tab ── */}
-      {activeTab === 'Attributes' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 1rem 1rem' }}>
-          <div style={{ marginBottom: '0.25rem' }}>
-            <Input
-              placeholder="Search for attributes"
-              type={'Search' as any}
-              style={{ width: '100%' } as React.CSSProperties}
-            >
-              <Icon slot="icon" name="search" />
-            </Input>
+        {/* ── Main Attributes ── */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0' }}>
+            <Button
+              design="Transparent"
+              icon="slim-arrow-down"
+              style={{ '--_ui5_button_base_min_width': '1.5rem', '--_ui5_button_base_height': '1.5rem', padding: 0 } as React.CSSProperties}
+            />
+            <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapPageHeader_TextColor)' } as React.CSSProperties}>
+              Main Attributes (4)
+            </Text>
           </div>
 
-          {/* ── Main Attributes ── */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0' }}>
-              <Button
-                design="Transparent"
-                icon="slim-arrow-down"
-                style={{ '--_ui5_button_base_min_width': '1.5rem', '--_ui5_button_base_height': '1.5rem', padding: 0 } as React.CSSProperties}
-              />
-              <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontHeader6Size)', color: 'var(--sapPageHeader_TextColor)' } as React.CSSProperties}>
-                Main Attributes (4)
-              </Text>
-            </div>
+          {/* Documentation */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
+            <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Documentation</Label>
+            <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} />
+          </div>
 
-            {/* Connected shape card */}
-            {shape.linkedBpmnId && shape.linkedBpmnName && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
-                <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Connected to</Label>
-                <div
-                  onClick={() => shape.linkedBpmnId && onSelectLinkedElement?.(shape.linkedBpmnId)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', cursor: 'pointer' }}
-                >
-                  <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="SAP-icons-v4/task-activity" style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
-                  </div>
-                  <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>
-                    {shape.linkedBpmnName}
-                  </Text>
-                  <Icon name="slim-arrow-right" style={{ width: '1rem', height: '1rem', color: '#0064d9', flexShrink: 0 } as React.CSSProperties} />
-                </div>
-              </div>
-            )}
-
-            {/* Documentation */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
-              <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Documentation</Label>
-              <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} />
-            </div>
-
-            {/* Manual value — hidden for Value shape (driven by widget data) */}
-            {shapeType !== 'Value' && (
+          {/* Manual value */}
+          {shapeType !== 'Value' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
               <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Manual value</Label>
               <Select
@@ -267,81 +206,135 @@ export default function LiShapeDetailPanel({ shape, onClose, onUpdate, onSelectL
                 ))}
               </Select>
             </div>
-            )}
+          )}
 
-            {/* Driving widget */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
-              <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Driving widget</Label>
-              {widgetId ? (
-                <>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0' }}>
-                      <div style={{
-                        width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0,
-                        background: 'var(--sapAvatar_6_Background, #d1efff)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Icon name={chartIcon} style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', display: 'block' } as React.CSSProperties}>
-                          {shape.widgetName}
-                        </Text>
-                        {WIDGET_PATH[widgetId] && (
-                          <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>
-                            {WIDGET_PATH[widgetId]}
-                          </Text>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                        <Button design="Transparent" icon="hint" ref={previewAnchorRef} onClick={() => {
-                          if (!previewOpen && previewAnchorRef.current && panelRef.current) {
-                            const anchorRect = previewAnchorRef.current.getBoundingClientRect()
-                            const panelRect = panelRef.current.getBoundingClientRect()
-                            setPreviewTop(anchorRect.bottom - panelRect.top)
-                          }
-                          setPreviewOpen(v => !v)
-                        }} />
-                        <Button design="Transparent" icon="SAP-icons-v4/link" />
-                        <Button design="Transparent" icon="decline" onClick={() => {
-                          setWidgetId('')
-                          setManualValue('No data')
-                          setPreviewOpen(false)
-                          onUpdate?.(shape.id, { widgetId: '', manualValue: 'No data' })
-                        }} />
-                      </div>
+          {/* Driving widget */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
+            <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Driving widget</Label>
+            {widgetId ? (
+              <>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0' }}>
+                    <div style={{
+                      width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0,
+                      background: 'var(--sapAvatar_6_Background, #d1efff)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Icon name={chartIcon} style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
                     </div>
-
-                    {/* preview rendered at panel root level */}
-                    <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} onClick={() => setSearchDialogOpen(true)} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "var(--sapFontFamily,'72',sans-serif)" } as React.CSSProperties}>
+                        {shape.widgetName}
+                      </Text>
+                      {getWidgetPath(widgetId) && (
+                        <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor, #556b82)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "var(--sapFontFamily,'72',sans-serif)" } as React.CSSProperties}>
+                          {getWidgetPath(widgetId)}
+                        </Text>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      <Button design="Transparent" icon="hint" ref={previewAnchorRef} onClick={() => {
+                        if (!previewOpen && previewAnchorRef.current && panelRef.current) {
+                          const anchorRect = previewAnchorRef.current.getBoundingClientRect()
+                          const panelRect = panelRef.current.getBoundingClientRect()
+                          setPreviewTop(anchorRect.bottom - panelRect.top)
+                        }
+                        setPreviewOpen(v => !v)
+                      }} />
+                      <Button design="Transparent" icon="SAP-icons-v4/link" />
+                      <Button design="Transparent" icon="decline" onClick={() => {
+                        setWidgetId('')
+                        setManualValue('No data')
+                        setPreviewOpen(false)
+                        onUpdate?.(shape.id, { widgetId: '', manualValue: 'No data' })
+                      }} />
+                    </div>
                   </div>
-                </>
-              ) : (
-                <Button design="Default" icon="add" style={{ alignSelf: 'flex-start' } as React.CSSProperties} onClick={() => setSearchDialogOpen(true)} />
-              )}
-            </div>
-
-            {/* Additional widgets */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', padding: '0.5rem 0' }}>
-              <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>Additional widgets</Label>
-              {additionalWidgets.map((w, i) => (
-                <SigChipV2 key={i} value={w} endActionIcon="decline"
-                  onEndActionClick={() => setAdditionalWidgets(prev => prev.filter((_, vi) => vi !== i))}
-                  style={{ width: 'fit-content' } as React.CSSProperties}
-                />
-              ))}
-              <Button design="Default" icon="add" style={{ alignSelf: 'flex-start' } as React.CSSProperties} />
-            </div>
-
+                  <Button design="Default" icon="edit" style={{ alignSelf: 'flex-start' } as React.CSSProperties} onClick={() => setSearchDialogOpen(true)} />
+                </div>
+              </>
+            ) : (
+              <Button design="Default" icon="add" style={{ alignSelf: 'flex-start' } as React.CSSProperties} onClick={() => setSearchDialogOpen(true)} />
+            )}
           </div>
         </div>
-      )}
+      </div>
+    </Tab>,
+    <Tab text="Relations" key="relations">
+      <div style={{ paddingBottom: '12px' }}>
+        <RelationsTab />
+      </div>
+    </Tab>,
+  ]
 
-      {activeTab === 'Relations' && (
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          <RelationsTab />
-        </div>
-      )}
+  return (
+    <div ref={panelRef} style={{ position: 'relative', height: '100%' }}>
+      <SigRightSidePanel
+        headerTitle={shape.widgetName}
+        editable
+        editableTitlePlaceholder={shape.widgetName}
+        isOpen
+        toggleRightSidePanel={onClose}
+        navigationSlot={[() => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name={currentShapeIcon} style={{ width: 14, height: 14, color: '#0064d9' } as React.CSSProperties} />
+            </div>
+            <div ref={shapeDropdownRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => {
+                  if (!shapeDropdownOpen && shapeDropdownRef.current) {
+                    const rect = shapeDropdownRef.current.getBoundingClientRect()
+                    setShapeDropdownPos({ top: rect.bottom + 4, left: rect.left - 32 })
+                  }
+                  setShapeDropdownOpen(v => !v)
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--sapFontFamily)', fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapPageHeader_TextColor)' }}
+              >
+                <span>{shapeType}</span>
+                <Icon name="slim-arrow-down" style={{ width: '0.75rem', height: '0.75rem', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties} />
+              </button>
+              {shapeDropdownOpen && shapeDropdownPos && createPortal(
+                <div ref={shapeDropdownPortalRef} style={{ position: 'fixed', top: shapeDropdownPos.top, left: shapeDropdownPos.left, zIndex: 9999, background: '#fff', borderRadius: '0.5rem', boxShadow: '0 0 0 1px rgba(34,53,72,0.2), 0 4px 12px rgba(34,53,72,0.15)', minWidth: '10rem', width: 'max-content', overflow: 'hidden' }}>
+                  <List selectionMode="Single" onSelectionChange={(e: any) => {
+                    const val = e.detail?.selectedItems?.[0]?.dataset?.value
+                    if (val) { setShapeType(val); onUpdate?.(shape.id, { shapeType: val }) }
+                    setShapeDropdownOpen(false)
+                  }}>
+                    {SHAPE_OPTIONS.map(t => (
+                      <ListItemStandard key={t.value} data-value={t.value} icon={t.icon} selected={shapeType === t.value}>
+                        {t.label}
+                      </ListItemStandard>
+                    ))}
+                  </List>
+                </div>,
+                document.body
+              )}
+            </div>
+          </div>
+        )]}
+        contentActionsSlot={[]}
+        subHeaderSlot={shape.linkedBpmnId && shape.linkedBpmnName ? (
+          <div onClick={() => onSelectLinkedElement?.(shape.linkedBpmnId!)}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', cursor: 'pointer' }}
+          >
+            <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="SAP-icons-v4/task-activity" style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontSize)', color: 'var(--sapList_TextColor, #1d2d3e)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "var(--sapFontFamily,'72',sans-serif)" } as React.CSSProperties}>
+                {shape.linkedBpmnName}
+              </Text>
+              <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor, #556b82)', display: 'block', fontFamily: "var(--sapFontFamily,'72',sans-serif)" } as React.CSSProperties}>Linked Elements</Text>
+            </div>
+            <Button icon="slim-arrow-right" design="Transparent" style={{ flexShrink: 0 }} />
+          </div>
+        ) : undefined}
+        tabSlot={tabs}
+        style={{ width: '100%', maxWidth: 'none', height: '100%', overflow: 'hidden', background: 'var(--sapList_Background)', position: 'relative' }}
+      >
+        {''}
+      </SigRightSidePanel>
 
       {/* Widget preview overlay */}
       {previewOpen && widgetId && (() => {
