@@ -54,6 +54,16 @@ const CWD_WIDGETS: Record<string, { name: string; type: string; path: string }> 
   'sankey-I-002':    { name: 'Variant Flow Analysis',     type: 'Sankey Chart',   path: 'Order to Cash / O2C Analysis / Variants' },
   'hist-I-001':      { name: 'Case Duration Distribution',type: 'Histogram',      path: 'SAP O2C Onboarding / Onboarding Analysis / Funnel' },
   'hist-I-002':      { name: 'Case Duration Spread',      type: 'Histogram',      path: 'Order to Cash / O2C Analysis / Detail' },
+  'rec-val-001':     { name: 'Open Positions',            type: 'Value',          path: 'Recruit to Hire / TA Dashboard / Overview' },
+  'rec-val-002':     { name: 'Candidates in Pipeline',    type: 'Value',          path: 'Recruit to Hire / TA Dashboard / Overview' },
+  'rec-val-003':     { name: 'Screening Pass Rate',       type: 'Value',          path: 'Recruit to Hire / TA KPIs / Summary' },
+  'rec-val-004':     { name: 'Time to Hire',              type: 'Value',          path: 'Recruit to Hire / TA KPIs / Summary' },
+  'rec-val-005':     { name: 'Offer Acceptance Rate',     type: 'Value',          path: 'Recruit to Hire / TA KPIs / Summary' },
+  'rec-bar-001':     { name: 'Candidates by Stage',       type: 'Bar Chart',      path: 'Recruit to Hire / TA Dashboard / Pipeline' },
+  'rec-bar-002':     { name: 'Applications by Source',   type: 'Bar Chart',      path: 'Recruit to Hire / TA Investigation / Analysis' },
+  'rec-bar-003':     { name: 'Interviewer Workload',      type: 'Bar Chart',      path: 'Recruit to Hire / TA Analysis / Overview' },
+  'rec-line-001':    { name: 'Interview Completion Rate', type: 'Line Chart',     path: 'Recruit to Hire / TA Analysis / Overview' },
+  'rec-pie-001':     { name: 'Candidate Source Breakdown',type: 'Pie Chart',      path: 'Recruit to Hire / TA Dashboard / Overview' },
 }
 
 type PageMap = Record<string, string[]>
@@ -67,6 +77,7 @@ const CWD_DATA: Record<string, CwdProcess> = {
   'Plan to Produce':    { cases: '215k', events: '10m', lastEdited: '08/20/2025', Investigation: { 'Production Analysis': { pages: { Overview: ['bar-chart-D-004','value-D-004','treemap-I-002'], Comparisons: ['dual-D-002'] } } }, Dashboard: { 'Production Dashboard': { pages: { Overview: ['value-D-004','ring-D-001','bar-chart-D-004'], Comparisons: ['dual-D-002'] } } } },
   'Procure to Pay':     { cases: '183k', events: '9m',  lastEdited: '07/15/2025', Investigation: { 'P2P Analysis': { pages: { Overview: ['bar-chart-I-001','value-I-001'], Detail: ['hist-I-002'] } } }, Dashboard: { 'Procurement Dashboard': { pages: { Overview: ['value-D-001','pie-D-001'], Trends: ['line-D-001'] } } } },
   'Hire to Retire':     { cases: '47k',  events: '3m',  lastEdited: '06/10/2025', Investigation: { 'HR Analysis': { pages: { Overview: ['ring-I-001','value-I-002'] } } }, Dashboard: { 'HR Dashboard': { pages: { Overview: ['value-D-002','bar-chart-D-002'] } }, 'Recruitment KPIs': { pages: { Summary: ['value-I-002'] } } } },
+  'Recruit to Hire':    { cases: '62k',  events: '4m',  lastEdited: '08/05/2025', Investigation: { 'TA Investigation': { pages: { Overview: ['rec-val-002','rec-bar-001'], Analysis: ['rec-bar-002','rec-line-001'] } }, 'Screening Analysis': { pages: { Overview: ['rec-val-003'] } } }, Dashboard: { 'TA Dashboard': { pages: { Overview: ['rec-val-001','rec-val-002','rec-pie-001'], Pipeline: ['rec-bar-001'] } }, 'TA KPIs': { pages: { Summary: ['rec-val-004','rec-val-005'] } }, 'TA Analysis': { pages: { Overview: ['rec-bar-003','rec-line-001'] } } } },
 }
 
 const WIDGET_META: Record<string, { name: string; type: string }> = Object.fromEntries(

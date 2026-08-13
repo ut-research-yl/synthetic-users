@@ -16,6 +16,7 @@ export const CWD_DATA: Record<string, CwdProcess> = {
   'Plan to Produce':    { cases: '215k', events: '10m', investigations: 6, dashboards: 20, lastEdited: '08/20/2025', Investigation: { 'P2P Analysis': { pages: { Overview: ['bar-chart-D-004','value-D-004'], Performance: ['dual-D-002'] } } }, Dashboard: { 'P2P Dashboard': { pages: { Overview: ['pie-D-002','heat-D-002','value-D-004'], Trends: ['area-D-002'], Performance: ['treemap-I-002'] } }, 'Production KPIs': { pages: { Summary: ['value-D-004'], Trends: ['dual-D-002'] } }, 'Supply Chain Overview': { pages: { Overview: ['pie-D-002'] } } } },
   'Procure to Pay':     { cases: '183k', events: '9m', investigations: 9, dashboards: 9, lastEdited: '07/15/2025', Investigation: { 'P2P Analysis': { pages: { Overview: ['bar-chart-I-001','value-I-001'], Detail: ['hist-I-002'] } }, 'Supplier Analysis': { pages: { Overview: ['treemap-I-001'] } } }, Dashboard: { 'Procurement Dashboard': { pages: { Overview: ['value-D-001','pie-D-001'], Trends: ['line-D-001'] } }, 'Supplier Dashboard': { pages: { Overview: ['heat-D-001'] } } } },
   'Hire to Retire':     { cases: '47k', events: '3m', investigations: 9, dashboards: 10, lastEdited: '06/10/2025', Investigation: { 'HR Analysis': { pages: { Overview: ['ring-I-001','value-I-002'], Flow: ['sankey-I-001'] } }, 'Headcount Analysis': { pages: { Overview: ['treemap-I-003'] } } }, Dashboard: { 'HR Dashboard': { pages: { Overview: ['value-D-002','bar-chart-D-002'], Trends: ['line-I-002'] } }, 'Recruitment KPIs': { pages: { Summary: ['value-I-002'] } } } },
+  'Recruit to Hire':    { cases: '62k', events: '4m', investigations: 5, dashboards: 8, lastEdited: '08/05/2025', Investigation: { 'TA Investigation': { pages: { Overview: ['rec-val-002','rec-bar-001'], Analysis: ['rec-bar-002','rec-line-001'] } }, 'Screening Analysis': { pages: { Overview: ['rec-val-003'] } } }, Dashboard: { 'TA Dashboard': { pages: { Overview: ['rec-val-001','rec-val-002','rec-pie-001'], Pipeline: ['rec-bar-001'] } }, 'TA KPIs': { pages: { Summary: ['rec-val-004','rec-val-005'] } }, 'TA Analysis': { pages: { Overview: ['rec-bar-003','rec-line-001'] } } } },
 }
 
 export const WIDGET_META: Record<string, { name: string; type: string }> = {
@@ -49,6 +50,16 @@ export const WIDGET_META: Record<string, { name: string; type: string }> = {
   'hist-I-002': { name: 'Lead Time Distribution', type: 'Histogram' },
   'ring-I-001': { name: 'SLA Compliance', type: 'Ring Chart' },
   'ring-I-002': { name: 'Completion Rate', type: 'Ring Chart' },
+  'rec-val-001': { name: 'Open Positions', type: 'Value' },
+  'rec-val-002': { name: 'Candidates in Pipeline', type: 'Value' },
+  'rec-val-003': { name: 'Screening Pass Rate', type: 'Value' },
+  'rec-val-004': { name: 'Time to Hire', type: 'Value' },
+  'rec-val-005': { name: 'Offer Acceptance Rate', type: 'Value' },
+  'rec-bar-001': { name: 'Candidates by Stage', type: 'Bar Chart' },
+  'rec-bar-002': { name: 'Applications by Source', type: 'Bar Chart' },
+  'rec-bar-003': { name: 'Interviewer Workload', type: 'Bar Chart' },
+  'rec-line-001': { name: 'Interview Completion Rate', type: 'Line Chart' },
+  'rec-pie-001': { name: 'Candidate Source Breakdown', type: 'Pie Chart' },
 }
 
 type Props = { open: boolean; onClose: () => void; onAdd?: (widgetId: string, widgetName: string, widgetType: string) => void }

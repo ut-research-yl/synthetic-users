@@ -819,6 +819,8 @@ function LiShapeComp({ shape, editing = false }: { shape: LiShape; editing?: boo
       'value-I-001': '2,847', 'value-I-002': '28.5d',
       'ext-001': '92.4%', 'ext-002': '€1.2M', 'ext-003': '74.1%',
       'ext-004': '1,540',  'ext-005': '8,310',
+      'rec-val-001': '24', 'rec-val-002': '138', 'rec-val-003': '62.4%',
+      'rec-val-004': '34.2d', 'rec-val-005': '78.9%',
     }
     const numLabel = MOCK[shape.widgetId] ?? '—'
     const STATUS_COLOR: Record<string, string> = {
@@ -1684,8 +1686,13 @@ function BpmnCanvas({
           'sentiment-I-001': 'Green', 'sentiment-I-002': 'Yellow', 'sentiment-D-001': 'Red',
           'ext-001': 'Green',  'ext-002': 'Yellow', 'ext-003': 'Yellow',
           'ext-004': 'Red',    'ext-005': 'Green',
+          'rec-val-001': 'Green',  'rec-val-002': 'Yellow', 'rec-val-003': 'Green',
+          'rec-val-004': 'Red',    'rec-val-005': 'Green',
+          'rec-bar-001': 'Green',  'rec-bar-002': 'Yellow', 'rec-bar-003': 'Green',
+          'rec-line-001': 'Yellow', 'rec-pie-001': 'Green',
+          'dup-bar-001': 'Green',  'dup-bar-002': 'Yellow', 'dup-bar-003': 'Red',
         }
-        const prefix2 = diWidgetId.split('-')[0]
+        const prefix2 = (['rec', 'dup'].includes(diWidgetId.split('-')[0]) ? diWidgetId.split('-')[1] : diWidgetId.split('-')[0])
         const widgetType2 = ID_TO_TYPE2[prefix2] ?? 'Value'
         const shapeType2 = diWidgetShape || (EXT_SHAPE_OVERRIDE2[diWidgetId] ?? WIDGET_TYPE_TO_LI_SHAPE2[widgetType2] ?? 'Indicator')
         const pos = findLiShapePosition(hit, elements, liShapesRef.current, shapeType2)
@@ -1726,8 +1733,7 @@ function BpmnCanvas({
           'ext-004': 'Traffic Light',
           'ext-005': 'Indicator',
         }
-        const prefix = diWidgetId.split('-')[0]
-        const widgetType = ID_TO_TYPE[prefix] ?? 'Value'
+        const widgetType = ID_TO_TYPE[diWidgetId.split('-')[0]] ?? 'Value'
         const shapeType = diWidgetShape || (EXT_SHAPE_OVERRIDE[diWidgetId] ?? WIDGET_TYPE_TO_LI_SHAPE[widgetType] ?? 'Indicator')
         const WIDGET_STATUS: Record<string, string> = {
           'value-I-001': 'Green',  'value-I-002': 'Yellow',
@@ -1758,7 +1764,13 @@ function BpmnCanvas({
           'sentiment-I-001': 'Green', 'sentiment-I-002': 'Yellow', 'sentiment-D-001': 'Red',
           'ext-001': 'Green',  'ext-002': 'Yellow', 'ext-003': 'Yellow',
           'ext-004': 'Red',    'ext-005': 'Green',
+          'rec-val-001': 'Green',  'rec-val-002': 'Yellow', 'rec-val-003': 'Green',
+          'rec-val-004': 'Red',    'rec-val-005': 'Green',
+          'rec-bar-001': 'Green',  'rec-bar-002': 'Yellow', 'rec-bar-003': 'Green',
+          'rec-line-001': 'Yellow', 'rec-pie-001': 'Green',
+          'dup-bar-001': 'Green',  'dup-bar-002': 'Yellow', 'dup-bar-003': 'Red',
         }
+        const prefix = (['rec', 'dup'].includes(diWidgetId.split('-')[0]) ? diWidgetId.split('-')[1] : diWidgetId.split('-')[0])
         const newShape: LiShape = {
           id: `li-${Date.now()}`,
           cx: svgPt.x,
