@@ -106,7 +106,7 @@ export default function ModelerLayout() {
               id: `li-${Date.now()}`,
               cx: 400, cy: 300,
               shapeType, widgetId, widgetName,
-              manualValue: 'No data',
+              manualValue: 'Green',
             }
             addLiShapeRef.current?.(newShape)
           }}

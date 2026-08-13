@@ -194,6 +194,31 @@ function findLiShapePosition(
   return { cx: bpmnEl.cx - (bpmnEl.hw + liR + gap), cy: bpmnEl.cy + bpmnEl.hh + liR + gap * 2 }
 }
 
+function findEmptySpotNearViewportCenter(
+  vcx: number, vcy: number,
+  elements: CanvasElement[],
+  liShapes: LiShape[],
+  shapeType: string
+): { cx: number; cy: number } {
+  const r = shapeType === 'Value' ? 14 : 30
+  const step = 100
+  for (let ring = 0; ring <= 12; ring++) {
+    const angles = ring === 0 ? [0] : Array.from({ length: 8 }, (_, i) => i * 45)
+    for (const deg of angles) {
+      const rad = deg * Math.PI / 180
+      const cx = vcx + Math.cos(rad) * ring * step
+      const cy = vcy + Math.sin(rad) * ring * step
+      const hit = elements.some(e =>
+        Math.abs(e.cx - cx) < Math.max(e.hw, 24) + r + 20 && Math.abs(e.cy - cy) < Math.max(e.hh, 24) + r + 20
+      ) || liShapes.some(ls =>
+        Math.abs(ls.cx - cx) < r * 2 + 20 && Math.abs(ls.cy - cy) < r * 2 + 20
+      )
+      if (!hit) return { cx, cy }
+    }
+  }
+  return { cx: vcx, cy: vcy + 300 }
+}
+
 // ── SVG shape renderers ───────────────────────────────────────────────────────
 
 function TaskShape({ el, selected, hovered, ringW, editing }: { el: CanvasElement; selected: boolean; hovered: boolean; ringW: number; editing?: boolean }) {
@@ -1176,8 +1201,21 @@ function BpmnCanvas({
 
   useEffect(() => {
     onRegisterAddLiShape?.((shape: LiShape) => {
-      setLiShapes(ls => [...ls, shape])
+      const s = 100 / zoomRef.current
+      const vbW = canvasSizeRef.current.w * s
+      const vbH = canvasSizeRef.current.h * s
+      const vcx = panXRef.current + vbW / 2
+      const vcy = panYRef.current + vbH / 2
+      const bpmnMaxY = elementsRef.current.length > 0
+        ? Math.max(...elementsRef.current.map(e => e.cy + e.hh)) + 150
+        : vcy
+      const startY = Math.max(vcy, bpmnMaxY)
+      const pos = findEmptySpotNearViewportCenter(vcx, startY, elementsRef.current, liShapesRef.current, shape.shapeType)
+      const placed = { ...shape, cx: pos.cx, cy: pos.cy }
+      setLiShapes(ls => [...ls, placed])
       setToastMsg(`"${shape.widgetName}" added to canvas`)
+      setPanX(pos.cx - vbW / 2)
+      setPanY(pos.cy - vbH / 2)
     })
   }, [onRegisterAddLiShape])
 
@@ -1240,8 +1278,10 @@ function BpmnCanvas({
   const panState = useRef<{ startX: number; startY: number; origPanX: number; origPanY: number } | null>(null)
   const panXRef = useRef(panX)
   const panYRef = useRef(panY)
+  const zoomRef = useRef(zoom)
   useEffect(() => { panXRef.current = panX }, [panX])
   useEffect(() => { panYRef.current = panY }, [panY])
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
   useEffect(() => { if (dictPopup) setDictPopup(null) }, [panX, panY])
 
   const overflowMenuRef = useRef<any>(null)
@@ -1356,6 +1396,8 @@ function BpmnCanvas({
   }, [selectedIds, elements, liShapes])
 
   const [canvasSize, setCanvasSize] = useState({ w: 1200, h: 800 })
+  const canvasSizeRef = useRef(canvasSize)
+  useEffect(() => { canvasSizeRef.current = canvasSize }, [canvasSize])
 
   useEffect(() => {
     const measure = () => {

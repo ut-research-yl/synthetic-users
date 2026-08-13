@@ -308,7 +308,7 @@ export default function ConnectWidgetDialog({ open, onClose, onAdd }: Props) {
           {step === 2 && selectedProcess && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ marginBottom: '-0.75rem' }}>
-                <Breadcrumb parts={['Analysis Configuration', selectedProcess]} style={{ marginBottom: 0 } as React.CSSProperties} />
+                <Breadcrumb parts={[selectedProcess, 'Source']} style={{ marginBottom: 0 } as React.CSSProperties} />
               </div>
               <div>
                 <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Widget Source</Text>
@@ -345,7 +345,7 @@ export default function ConnectWidgetDialog({ open, onClose, onAdd }: Props) {
               {/* Left: selectors + widget list */}
               <div style={{ flex: '0 0 45%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div style={{ marginBottom: '-0.75rem' }}>
-                  <Breadcrumb parts={['Analysis Configuration', selectedProcess, selectedType + 's']} style={{ marginBottom: 0 } as React.CSSProperties} />
+                  <Breadcrumb parts={[selectedProcess, selectedType + 's']} style={{ marginBottom: 0 } as React.CSSProperties} />
                 </div>
 
                 <div>
