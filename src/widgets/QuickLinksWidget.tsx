@@ -35,11 +35,11 @@ export interface QuickLinkItem {
 }
 
 const PREVIEW_ITEMS: QuickLinkItem[] = [
-  { icon: 'study-leave',                  title: 'Onboarding Training',               description: 'Learn how to work with the Signavio Process Transformation Suite',    url: 'https://example.com' },
+  { icon: 'study-leave',                  title: 'Onboarding Training',               description: 'Learn how to work with the Process Manager Suite',    url: 'https://example.com' },
   { icon: 'learning-assistant',           title: 'Process Transformation Initiative', description: 'Find related documents for our process transformation initiative',    url: 'https://example.com' },
-  { icon: 'discussion-2',                 title: 'Process Transformation Wiki',       description: 'Share ideas about our Signavio process transformation initiative',    url: 'https://example.com' },
+  { icon: 'discussion-2',                 title: 'Process Transformation Wiki',       description: 'Share ideas about our process transformation initiative',    url: 'https://example.com' },
   { icon: 'world',                        title: 'Company Website',                   description: 'Quick access to our company website',                                url: 'https://example.com' },
-  { icon: 'group',                        title: 'Signavio Expert Group',             description: 'Signavio user forum',                                                url: 'https://example.com' },
+  { icon: 'group',                        title: 'Process Expert Group',             description: 'Process Manager user forum',                                                url: 'https://example.com' },
   { icon: 'SAP-icons-v4/link',            title: 'Link without description text',                                                                                        url: 'https://example.com' },
 ]
 

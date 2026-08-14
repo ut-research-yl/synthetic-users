@@ -38,7 +38,7 @@ const REPORT_HISTORY = [
 ]
 
 const TEMPLATES = [
-  { id: 't1', name: 'SAP Standard Process Documentation', type: 'All Notations', scope: 'Standard', lastModified: '—', modifiedBy: '—', builtin: true },
+  { id: 't1', name: 'Standard Process Documentation', type: 'All Notations', scope: 'Standard', lastModified: '—', modifiedBy: '—', builtin: true },
   { id: 't2', name: 'BPMN Process Description Template', type: 'BPMN 2.0', scope: 'Standard', lastModified: '—', modifiedBy: '—', builtin: true },
   { id: 't3', name: 'Value Chain Summary', type: 'Value Chain', scope: 'Standard', lastModified: '—', modifiedBy: '—', builtin: true },
   { id: 't4', name: 'Acme Custom Process Report', type: 'All Notations', scope: 'Custom', lastModified: 'Apr 10, 2026', modifiedBy: 'Sebastian Kaim', builtin: false },
@@ -199,7 +199,7 @@ export default function Reporting() {
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
             <Text style={{ color: 'var(--sapContent_LabelColor)', maxWidth: '48rem' }}>
-              Documentation templates define the layout and content of generated reports. You can use SAP standard templates
+              Documentation templates define the layout and content of generated reports. You can use standard templates
               or upload custom Word templates (.docx) tailored to your organization's branding.
             </Text>
             <Button icon="upload" design="Default" style={{ flexShrink: 0 }}>Upload Template</Button>
@@ -250,13 +250,13 @@ export default function Reporting() {
         </div>
       </ObjectPageSection>
 
-      <ObjectPageSection id="cloud-alm" titleText="SAP Cloud ALM Synchronizations">
+      <ObjectPageSection id="cloud-alm" titleText="ALM Platform Synchronizations">
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
             <Text style={{ color: 'var(--sapContent_LabelColor)', maxWidth: '48rem' }}>
-              Configure which process content is synchronized with SAP Cloud ALM. Synchronizations run automatically
+              Configure which process content is synchronized with ALM Platform. Synchronizations run automatically
               on a daily schedule. You can also trigger a manual sync at any time.{' '}
-              <Link href="#">Learn more about SAP Cloud ALM integration</Link>
+              <Link href="#">Learn more about ALM Platform integration</Link>
             </Text>
             <Button icon="add" design="Emphasized" style={{ flexShrink: 0 }}>Add Synchronization</Button>
           </div>

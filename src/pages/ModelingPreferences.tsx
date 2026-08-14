@@ -63,7 +63,7 @@ export default function ModelingPreferences() {
       <SettingsPageLayout gap="1.5rem">
         <SettingsSection
           title="Color Palette"
-          subtitle="Define your own color palette for the color selector in the SAP Signavio Process Manager."
+          subtitle="Define your own color palette for the color selector in the Process Manager."
         >
           <div className={s.rowWide}>
             <Text className={s.fieldDesc}>

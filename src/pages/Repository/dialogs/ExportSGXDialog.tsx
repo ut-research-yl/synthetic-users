@@ -46,7 +46,7 @@ export default function ExportSGXDialog({ open, onClose, smartFolders }: ExportS
   return (
     <Dialog
       open
-      headerText="Export SAP Signavio archive (SGX)"
+      headerText="Export Process Manager archive (SGX)"
       onClose={onClose}
       footer={
         <Bar design="Footer" endContent={

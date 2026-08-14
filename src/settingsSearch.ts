@@ -178,7 +178,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   {
     path: '/process-insights',
     keywords: [
-      'process insights', 'sap signavio process insights', 'system connections',
+      'process insights', 'process insights', 'system connections',
       'integration', 'pi integration', 'connect systems',
     ],
   },

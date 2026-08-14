@@ -120,7 +120,7 @@ export default function Theme() {
                 <InfoPopover id="logo-link-info-btn" header="Logo Link">
                   <Text>Redirects users when they click the logo.</Text><br />
                   <ul style={{ paddingLeft: '1.25rem', margin: '0.25rem 0 0' }}>
-                    <li><Text>Links within Signavio start with '/', like /model/model-id</Text></li>
+                    <li><Text>Links within Process Manager start with '/', like /model/model-id</Text></li>
                     <li><Text>External links start with 'https://', like https://example.com</Text></li>
                   </ul>
                 </InfoPopover>

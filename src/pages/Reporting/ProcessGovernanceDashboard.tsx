@@ -195,7 +195,7 @@ function AnalysisReportsContent() {
         </div>
       </GovSection>
 
-      <GovSection title="SAP Signavio Process Collaboration Hub" count={724} expanded={hubOpen} onToggle={() => setHubOpen(!hubOpen)}>
+      <GovSection title="Process Collaboration Hub" count={724} expanded={hubOpen} onToggle={() => setHubOpen(!hubOpen)}>
         <GovSubLabel>Model page visits (since May 15, 2023)</GovSubLabel>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
           <div style={cardStyle}>

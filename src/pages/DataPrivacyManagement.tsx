@@ -14,7 +14,7 @@ const DATA_TYPES = [
 const SYSTEMS = ['QE4:006', 'QE6:002', 'QE8:004', 'QIA:001', 'QIA:002', 'QNA:007', 'QND:005', 'QLS:002']
 
 const IDENTIFIER_TYPES = [
-  'Bill-to Party in SAP Ariba',
+  'Bill-to Party in ProcureNet',
   'Employee ID',
   'User Email Address',
   'Customer Account Number',

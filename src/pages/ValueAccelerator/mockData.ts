@@ -22,22 +22,22 @@ export interface CreatedPackage {
 export const PUBLISHED_PACKAGES: AcceleratorPackage[] = [
   {
     id: 'pkg-001',
-    name: 'SAP Best Practices for SAP S/4HANA Cloud',
-    publisher: 'SAP',
+    name: 'Best Practices for CoreERP Cloud',
+    publisher: 'GlobalCorp',
     industry: 'Cross Industry',
     lob: 'Finance, Procurement',
-    system: 'SAP S/4HANA Cloud',
+    system: 'CoreERP Cloud',
     type: 'Best Practice',
     status: 'RELEASED',
     publishedDate: '2024-09-12',
   },
   {
     id: 'pkg-002',
-    name: 'SAP Activate Accelerator for S/4HANA Migration',
-    publisher: 'SAP',
+    name: 'Migration Accelerator for CoreERP',
+    publisher: 'GlobalCorp',
     industry: 'Cross Industry',
     lob: 'IT',
-    system: 'SAP S/4HANA',
+    system: 'CoreERP',
     type: 'Methodology',
     status: 'RELEASED',
     publishedDate: '2024-07-03',
@@ -45,10 +45,10 @@ export const PUBLISHED_PACKAGES: AcceleratorPackage[] = [
   {
     id: 'pkg-003',
     name: 'Automotive Process Reference Framework',
-    publisher: 'SAP',
+    publisher: 'GlobalCorp',
     industry: 'Automotive',
     lob: 'Manufacturing, Supply Chain',
-    system: 'SAP S/4HANA Cloud',
+    system: 'CoreERP Cloud',
     type: 'Reference Model',
     status: 'RELEASED',
     publishedDate: '2024-05-20',
@@ -81,7 +81,7 @@ export const PUBLISHED_PACKAGES: AcceleratorPackage[] = [
     publisher: 'Deloitte',
     industry: 'Financial Services',
     lob: 'Finance, Risk & Compliance',
-    system: 'SAP S/4HANA Cloud',
+    system: 'CoreERP Cloud',
     type: 'Best Practice',
     status: 'RELEASED',
     publishedDate: '2024-02-22',
@@ -89,10 +89,10 @@ export const PUBLISHED_PACKAGES: AcceleratorPackage[] = [
   {
     id: 'pkg-007',
     name: 'Retail & Consumer Products Process Suite',
-    publisher: 'SAP',
+    publisher: 'GlobalCorp',
     industry: 'Retail',
     lob: 'Sales, Supply Chain',
-    system: 'SAP S/4HANA Cloud',
+    system: 'CoreERP Cloud',
     type: 'Reference Model',
     status: 'RELEASED',
     publishedDate: '2023-12-11',
@@ -100,10 +100,10 @@ export const PUBLISHED_PACKAGES: AcceleratorPackage[] = [
   {
     id: 'pkg-008',
     name: 'Healthcare Process Standards Framework',
-    publisher: 'SAP',
+    publisher: 'GlobalCorp',
     industry: 'Healthcare',
     lob: 'Operations',
-    system: 'SAP S/4HANA Cloud',
+    system: 'CoreERP Cloud',
     type: 'Reference Model',
     status: 'RELEASED',
     publishedDate: '2023-11-05',
@@ -139,4 +139,4 @@ export const CREATED_PACKAGES: CreatedPackage[] = [
 
 export const INDUSTRIES = ['Cross Industry', 'Automotive', 'Financial Services', 'Healthcare', 'Multiple Industries', 'Retail']
 export const TYPES = ['Best Practice', 'Methodology', 'Reference Model']
-export const SYSTEMS = ['SAP S/4HANA Cloud', 'SAP S/4HANA', 'Salesforce']
+export const SYSTEMS = ['CoreERP Cloud', 'CoreERP', 'Salesforce']

@@ -20,7 +20,7 @@ export const INITIAL_PROCESS_ATOMS: ResultItem[] = [
     version: '3.1',
     folder: 'Finance',
     chips: [{ value: 'Published', design: 'positive' }],
-    tags: ['Finance', 'Accounts Payable', 'SAP S/4HANA'],
+    tags: ['Finance', 'Accounts Payable', 'CoreERP'],
     owner: { id: 'u-claire', name: 'Claire Westfield', email: 'claire.westfield@example.com', avatarInitials: 'CW', avatarColorScheme: '6' },
     canEdit: true,
     extensions: [
@@ -79,7 +79,7 @@ export const INITIAL_PROCESS_ATOMS: ResultItem[] = [
     version: '1.0',
     folder: 'Warehouse',
     chips: [{ value: 'Published', design: 'positive' }],
-    tags: ['Warehouse', 'Inventory', 'SAP WM'],
+    tags: ['Warehouse', 'Inventory', 'ERP WM'],
     owner: { id: 'u-ian', name: 'Ian Webster', email: 'ian.webster@example.com', avatarInitials: 'IW', avatarColorScheme: '4' },
     canEdit: false,
   },

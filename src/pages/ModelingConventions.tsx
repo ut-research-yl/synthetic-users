@@ -140,7 +140,7 @@ const BPMN_RULES: RuleSection[] = [
           { id: 'r2-1c', label: 'BPMN (Analytic Elements)' }, { id: 'r2-1d', label: 'BPMN (Common Executable Elements)' },
           { id: 'r2-1e', label: 'BPMN (Complete)' }, { id: 'r2-1f', label: 'BPMN (Complete) + Basic Shapes' },
           { id: 'r2-1g', label: 'eCH-0158 Elements' }, { id: 'r2-1h', label: 'BPMN Method and Style Elements' },
-          { id: 'r2-1i', label: 'BPMN 2.0 for SAP Signavio Process Governance' }, { id: 'r2-1j', label: 'BPMN (Complete) + Live Insights' },
+          { id: 'r2-1i', label: 'BPMN 2.0 for Process Governance' }, { id: 'r2-1j', label: 'BPMN (Complete) + Live Insights' },
         ],
       },
       {
@@ -219,7 +219,7 @@ const BPMN_RULES: RuleSection[] = [
       { id: 's4-7',  num: '4.7',  label: 'Consistent usage of signals', description: 'Checks if throwing and catching signal events are used consistently.', items: [{ id: 'r4-7', label: 'Consistent usage of signals' }] },
       { id: 's4-8',  num: '4.8',  label: 'Consistent usage of start and end events', description: 'Checks if start and end events are used in consistent combinations.', items: [{ id: 'r4-8', label: 'Consistent usage of start and end events' }] },
       { id: 's4-9',  num: '4.9',  label: 'Usage of correct syntax', description: 'Checks if all diagrams are modeled using correct syntax.', items: [{ id: 'r4-9', label: 'Usage of correct syntax' }] },
-      { id: 's4-10', num: '4.10', label: 'SAP Signavio Process Governance conventions', description: 'Checks if the diagram follows the conventions required for interchange with SAP Signavio Process Governance.', items: [{ id: 'r4-10a', label: 'Usage of supported task types' }] },
+      { id: 's4-10', num: '4.10', label: 'Process Governance conventions', description: 'Checks if the diagram follows the conventions required for interchange with Process Governance.', items: [{ id: 'r4-10a', label: 'Usage of supported task types' }] },
       { id: 's4-11', num: '4.11', label: 'Usage of a restricted number of expanded pools', description: 'Checks if diagrams are modeled not using more than a maximum number of expanded pools.', items: [{ id: 'r4-11', label: 'Usage of a restricted number of expanded pools', paramType: 'number', paramPlaceholder: 'Max' }] },
       { id: 's4-12', num: '4.12', label: 'Consistent usage of pools', description: 'Checks if all events, activities and gateways reside within a pool.', items: [{ id: 'r4-12', label: 'Consistent usage of pools' }] },
       { id: 's4-13', num: '4.13', label: 'Correct usage of OR gateways', description: 'Checks that an OR gateway does not merge exclusive alternative paths.', items: [{ id: 'r4-13', label: 'Correct usage of OR gateways' }] },
@@ -313,7 +313,7 @@ function s(severity: NonNullable<Severity>, paramValue?: string): RuleState {
   return { enabled: true, severity, paramValue }
 }
 
-const SAP_BP: Record<string, RuleState> = {
+const BEST_PRACTICES: Record<string, RuleState> = {
   'r1-1': s('warning'), 'r1-2': s('warning'), 'r1-3': s('warning', '1 .. 4.3.5'),
   'r2-1a': s('warning'), 'r2-1b': s('warning'), 'r2-1c': s('warning'), 'r2-1d': s('warning'),
   'r2-1e': s('warning'), 'r2-1f': s('warning'), 'r2-2d': s('info'),
@@ -351,7 +351,7 @@ const TEST_INIT: Record<string, RuleState> = {
 }
 
 const INITIAL_CONVENTIONS: Convention[] = [
-  { id: 'sap-bp',      name: 'SAP Signavio Best Practices',   isBuiltin: true,  modelType: 'BPMN 2.0', enabled: true,  checkInEditorPerButton: true,  checkInEditorSaveDialog: true,  lastModified: '12 Mar 2025', ruleStates: SAP_BP },
+  { id: 'sap-bp',      name: 'Best Practices',   isBuiltin: true,  modelType: 'BPMN 2.0', enabled: true,  checkInEditorPerButton: true,  checkInEditorSaveDialog: true,  lastModified: '12 Mar 2025', ruleStates: BEST_PRACTICES },
   { id: 'ech-0158',    name: 'eCH-0158 1.1 BPMN conventions', isBuiltin: true,  modelType: 'BPMN 2.0', enabled: true,  checkInEditorPerButton: false, checkInEditorSaveDialog: false, lastModified: '5 Jan 2025',  ruleStates: ECH },
   { id: 'test',        name: 'Test',                          isBuiltin: false, modelType: 'BPMN 2.0', enabled: true,  checkInEditorPerButton: true,  checkInEditorSaveDialog: false, lastModified: '3 Nov 2025',  ruleStates: TEST_INIT },
   { id: 'dmn-default', name: 'DMN Default',                   isBuiltin: true,  modelType: 'DMN',      enabled: true,  checkInEditorPerButton: false, checkInEditorSaveDialog: false, lastModified: '1 Feb 2025',  ruleStates: {} },

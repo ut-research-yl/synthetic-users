@@ -12,39 +12,39 @@ import {
 
 const CWD_WIDGETS: Record<string, { name: string; type: string; path: string }> = {
   'value-I-001':     { name: 'Active Cases',              type: 'Value',          path: 'Order to Cash / O2C Analysis / Overview' },
-  'value-I-002':     { name: 'Avg Onboarding Days',       type: 'Value',          path: 'SAP O2C Onboarding / Onboarding Analysis / Main' },
+  'value-I-002':     { name: 'Avg Onboarding Days',       type: 'Value',          path: 'O2C Onboarding / Onboarding Analysis / Main' },
   'value-D-001':     { name: 'Total Orders',              type: 'Value',          path: 'Order to Cash / O2C Dashboard / Overview' },
-  'value-D-002':     { name: 'Active Cases',              type: 'Value',          path: 'SAP O2C Onboarding / Onboarding Dashboard / Overview' },
+  'value-D-002':     { name: 'Active Cases',              type: 'Value',          path: 'O2C Onboarding / Onboarding Dashboard / Overview' },
   'value-D-003':     { name: 'Closed Items',              type: 'Value',          path: 'Record to Report / R2R Dashboard / Overview' },
   'value-D-004':     { name: 'On-Time Delivery Rate',     type: 'Value',          path: 'Plan to Produce / Production Dashboard / Overview' },
   'value-D-005':     { name: 'Open Orders',               type: 'Value',          path: 'Order to Cash / O2C Dashboard / Summary' },
   'bar-chart-I-001': { name: 'Case Volume by Region',     type: 'Bar Chart',      path: 'Order to Cash / O2C Analysis / Overview' },
-  'bar-chart-I-002': { name: 'Onboarding Duration',       type: 'Bar Chart',      path: 'SAP O2C Onboarding / Onboarding Analysis / Detail' },
+  'bar-chart-I-002': { name: 'Onboarding Duration',       type: 'Bar Chart',      path: 'O2C Onboarding / Onboarding Analysis / Detail' },
   'bar-chart-D-001': { name: 'Customer Count by Country', type: 'Bar Chart',      path: 'Order to Cash / O2C Dashboard / Overview' },
   'bar-chart-D-002': { name: 'Throughput by Team',        type: 'Bar Chart',      path: 'Record to Report / R2R Analysis / Overview' },
   'bar-chart-D-003': { name: 'Posting Volume by Period',  type: 'Bar Chart',      path: 'Record to Report / R2R Analysis / Trends' },
   'bar-chart-D-004': { name: 'Production Volume',         type: 'Bar Chart',      path: 'Plan to Produce / Production Dashboard / Overview' },
   'line-I-001':      { name: 'Throughput Time Trend',     type: 'Line Chart',     path: 'Order to Cash / O2C Analysis / Trends' },
   'line-I-002':      { name: 'Period Comparison',         type: 'Line Chart',     path: 'Record to Report / R2R Analysis / Overview' },
-  'line-I-003':      { name: 'Step Duration Trend',       type: 'Line Chart',     path: 'SAP O2C Onboarding / Onboarding Analysis / Detail' },
+  'line-I-003':      { name: 'Step Duration Trend',       type: 'Line Chart',     path: 'O2C Onboarding / Onboarding Analysis / Detail' },
   'line-D-001':      { name: 'Revenue Trend',             type: 'Line Chart',     path: 'Order to Cash / O2C Dashboard / Trends' },
   'line-D-002':      { name: 'Trend Overview',            type: 'Line Chart',     path: 'Record to Report / R2R Dashboard / Trends' },
   'area-I-001':      { name: 'Volume over Time',          type: 'Area Chart',     path: 'Order to Cash / O2C Analysis / Overview' },
   'area-D-001':      { name: 'Monthly Volume',            type: 'Area Chart',     path: 'Order to Cash / O2C Dashboard / Overview' },
   'area-D-002':      { name: 'Monthly Events',            type: 'Area Chart',     path: 'Record to Report / R2R Dashboard / Overview' },
-  'area-D-003':      { name: 'Weekly Trends',             type: 'Area Chart',     path: 'SAP O2C Onboarding / Onboarding Dashboard / Trends' },
+  'area-D-003':      { name: 'Weekly Trends',             type: 'Area Chart',     path: 'O2C Onboarding / Onboarding Dashboard / Trends' },
   'dual-I-001':      { name: 'Cycle Time vs Volume',      type: 'Dual Axis Chart',path: 'Order to Cash / O2C Analysis / Comparisons' },
   'dual-I-002':      { name: 'Ledger Balance vs Entries', type: 'Dual Axis Chart',path: 'Record to Report / R2R Analysis / Comparisons' },
   'dual-D-001':      { name: 'Revenue vs Cost',           type: 'Dual Axis Chart',path: 'Order to Cash / O2C Dashboard / Comparisons' },
   'dual-D-002':      { name: 'Plan vs Actual',            type: 'Dual Axis Chart',path: 'Plan to Produce / Production Dashboard / Comparisons' },
   'pie-D-001':       { name: 'Order Distribution',        type: 'Pie Chart',      path: 'Order to Cash / O2C Dashboard / Overview' },
-  'pie-D-002':       { name: 'Case Distribution',         type: 'Pie Chart',      path: 'SAP O2C Onboarding / Onboarding Dashboard / Overview' },
+  'pie-D-002':       { name: 'Case Distribution',         type: 'Pie Chart',      path: 'O2C Onboarding / Onboarding Dashboard / Overview' },
   'pie-D-003':       { name: 'Status Breakdown',          type: 'Pie Chart',      path: 'Record to Report / R2R Dashboard / Overview' },
   'treemap-I-001':   { name: 'Process Variants',          type: 'Treemap',        path: 'Order to Cash / O2C Analysis / Variants' },
   'treemap-I-002':   { name: 'Production Category Mix',   type: 'Treemap',        path: 'Plan to Produce / Production Analysis / Overview' },
   'treemap-I-003':   { name: 'Account Category Mix',      type: 'Treemap',        path: 'Record to Report / R2R Investigation / Main' },
   'heat-D-001':      { name: 'Bottleneck Heatmap',        type: 'Heat Map',       path: 'Order to Cash / O2C Dashboard / Comparisons' },
-  'heat-D-002':      { name: 'Delay Heatmap',             type: 'Heat Map',       path: 'SAP O2C Onboarding / Onboarding Dashboard / Comparisons' },
+  'heat-D-002':      { name: 'Delay Heatmap',             type: 'Heat Map',       path: 'O2C Onboarding / Onboarding Dashboard / Comparisons' },
   'heat-D-003':      { name: 'Period Heatmap',            type: 'Heat Map',       path: 'Record to Report / R2R Dashboard / Comparisons' },
   'ring-I-001':      { name: 'Completion Rate',           type: 'Ring Chart',     path: 'Order to Cash / O2C Analysis / Overview' },
   'ring-I-002':      { name: 'Compliance Rate',           type: 'Ring Chart',     path: 'Record to Report / R2R Analysis / Overview' },
@@ -52,7 +52,7 @@ const CWD_WIDGETS: Record<string, { name: string; type: string; path: string }> 
   'ring-D-001':      { name: 'Fill Rate',                 type: 'Ring Chart',     path: 'Plan to Produce / Production Dashboard / Overview' },
   'sankey-I-001':    { name: 'Process Flow Sankey',       type: 'Sankey Chart',   path: 'Order to Cash / O2C Analysis / Flow' },
   'sankey-I-002':    { name: 'Variant Flow Analysis',     type: 'Sankey Chart',   path: 'Order to Cash / O2C Analysis / Variants' },
-  'hist-I-001':      { name: 'Case Duration Distribution',type: 'Histogram',      path: 'SAP O2C Onboarding / Onboarding Analysis / Funnel' },
+  'hist-I-001':      { name: 'Case Duration Distribution',type: 'Histogram',      path: 'O2C Onboarding / Onboarding Analysis / Funnel' },
   'hist-I-002':      { name: 'Case Duration Spread',      type: 'Histogram',      path: 'Order to Cash / O2C Analysis / Detail' },
   'rec-val-001':     { name: 'Open Positions',            type: 'Value',          path: 'Recruit to Hire / TA Dashboard / Overview' },
   'rec-val-002':     { name: 'Candidates in Pipeline',    type: 'Value',          path: 'Recruit to Hire / TA Dashboard / Overview' },
@@ -72,7 +72,7 @@ type CwdProcess = { cases: string; events: string; lastEdited: string; Investiga
 
 const CWD_DATA: Record<string, CwdProcess> = {
   'Order to Cash':      { cases: '306k', events: '12m', lastEdited: '08/20/2025', Investigation: { 'O2C Analysis': { pages: { Overview: ['value-I-001','bar-chart-I-001'], Detail: ['treemap-I-001'], Variants: ['sankey-I-002'], Trends: ['line-I-001'], Comparisons: ['dual-I-001'], Flow: ['sankey-I-001'] } } }, Dashboard: { 'O2C Dashboard': { pages: { Overview: ['value-D-001','pie-D-001','area-D-001'], Comparisons: ['bar-chart-D-001','heat-D-001','dual-D-001'], Trends: ['line-D-001'], Summary: ['value-D-005'] } } } },
-  'SAP O2C Onboarding': { cases: '128k', events: '8m',  lastEdited: '08/20/2025', Investigation: { 'Onboarding Analysis': { pages: { Main: ['bar-chart-I-002','value-I-002'], Funnel: ['hist-I-001'], Detail: ['line-I-003'] } } }, Dashboard: { 'Onboarding Dashboard': { pages: { Overview: ['bar-chart-D-002','value-D-002','pie-D-002'], Comparisons: ['heat-D-002'], Trends: ['area-D-003'] } } } },
+  'O2C Onboarding': { cases: '128k', events: '8m',  lastEdited: '08/20/2025', Investigation: { 'Onboarding Analysis': { pages: { Main: ['bar-chart-I-002','value-I-002'], Funnel: ['hist-I-001'], Detail: ['line-I-003'] } } }, Dashboard: { 'Onboarding Dashboard': { pages: { Overview: ['bar-chart-D-002','value-D-002','pie-D-002'], Comparisons: ['heat-D-002'], Trends: ['area-D-003'] } } } },
   'Record to Report':   { cases: '94k',  events: '5m',  lastEdited: '08/20/2025', Investigation: { 'R2R Analysis': { pages: { Overview: ['ring-I-002','line-I-002','bar-chart-D-002'], Comparisons: ['dual-I-002'], Trends: ['bar-chart-D-003'], Main: ['ring-I-002','line-I-002'] } } }, Dashboard: { 'R2R Dashboard': { pages: { Overview: ['value-D-003','area-D-002','pie-D-003'], Comparisons: ['heat-D-003'], Trends: ['line-D-002'] } } } },
   'Plan to Produce':    { cases: '215k', events: '10m', lastEdited: '08/20/2025', Investigation: { 'Production Analysis': { pages: { Overview: ['bar-chart-D-004','value-D-004','treemap-I-002'], Comparisons: ['dual-D-002'] } } }, Dashboard: { 'Production Dashboard': { pages: { Overview: ['value-D-004','ring-D-001','bar-chart-D-004'], Comparisons: ['dual-D-002'] } } } },
   'Procure to Pay':     { cases: '183k', events: '9m',  lastEdited: '07/15/2025', Investigation: { 'P2P Analysis': { pages: { Overview: ['bar-chart-I-001','value-I-001'], Detail: ['hist-I-002'] } } }, Dashboard: { 'Procurement Dashboard': { pages: { Overview: ['value-D-001','pie-D-001'], Trends: ['line-D-001'] } } } },
@@ -243,7 +243,7 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
                       ? <span>Recommended widget type for <strong>{shapeType}</strong>: {suggested.map((t, i) => (
                           <span key={t}>{i > 0 && ' · '}<span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setTypeFilter(t)}>{t}</span></span>
                         ))}</span>
-                      : <span>Search SAP Process Intelligence widgets by name or ID.</span>
+                      : <span>Search Process Intelligence widgets by name or ID.</span>
                   }
                 </MessageStrip>
               </div>
@@ -326,7 +326,7 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ overflow: 'hidden', height: '3.875rem', flexShrink: 0, borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', boxShadow: '0 2px 4px rgba(34,53,72,0.06)' }}>
               <Wizard ref={wizardRef} contentLayout={'SingleStep' as any} style={{ width: '100%' } as React.CSSProperties}>
-                <WizardStep titleText="Select Analysis Configuration" selected={browseStep === 1} icon={browseStep > 1 ? 'accept' : undefined}>{' '}</WizardStep>
+                <WizardStep titleText="Select Internal Analysis" selected={browseStep === 1} icon={browseStep > 1 ? 'accept' : undefined}>{' '}</WizardStep>
                 <WizardStep titleText="Choose Type" selected={browseStep === 2} disabled={browseStep < 2} icon={browseStep > 2 ? 'accept' : undefined}>{' '}</WizardStep>
                 <WizardStep titleText="Select Widget" selected={browseStep === 3} disabled={browseStep < 3}>{' '}</WizardStep>
               </Wizard>
@@ -335,7 +335,7 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
               {browseStep === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <div>
-                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Analysis Configuration</Text>
+                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Internal Analysis</Text>
                     <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the analysis configuration you want to add a widget from</Text>
                   </div>
                   <Input placeholder="Search by analysis configuration name" type={'Search' as any} value={processSearch}

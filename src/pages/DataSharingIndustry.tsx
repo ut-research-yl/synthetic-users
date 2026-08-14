@@ -77,10 +77,10 @@ export default function DataSharingIndustry() {
             By enabling this option, you allow the Digital Discovery Assessment to automatically preselect solution process flows (scope items) based on the solution process flows shown on your Cloud Transformation page.
           </Text>
           <Text>
-            The Digital Discovery Assessment helps you to identify the right SAP Cloud ERP solution during your discussion with SAP and/or an SAP partner, by taking into consideration your current solution process usage mapping to solution process flows. Data for object counts is not moved to the Digital Discovery Assessment.
+            The Digital Discovery Assessment helps you to identify the right Cloud ERP solution during your discussion with the vendor and/or a partner, by taking into consideration your current solution process usage mapping to solution process flows. Data for object counts is not moved to the Digital Discovery Assessment.
           </Text>
           <Text>
-            Enabling this setting also allows you to automatically select these solution process flows (scope items) in SAP Cloud ALM.
+            Enabling this setting also allows you to automatically select these solution process flows (scope items) in ALM Platform.
           </Text>
           <div style={{ borderTop: '1px solid var(--sapList_BorderColor)', paddingTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={{ fontWeight: '600' }}>Enable data sharing with the Digital Discovery Assessment</Text>
@@ -134,7 +134,7 @@ export default function DataSharingIndustry() {
           <div className={s.rowWide}>
             <Text className={s.fieldDesc}>
               Enable data sharing with the Digital Discovery Assessment. When data sharing is enabled, the Digital
-              Discovery Assessment uses data from the cloud transformation feature to help you with your SAP Cloud ERP
+              Discovery Assessment uses data from the cloud transformation feature to help you with your Cloud ERP
               transformation strategy.
             </Text>
           </div>

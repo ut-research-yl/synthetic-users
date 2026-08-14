@@ -91,6 +91,9 @@ ui5-card {
   overflow-y: auto;
 }
 
+ui5-shellbar::part(logo) { display: none; }
+ui5-shellbar .ui5-shellbar-separator-start { display: none !important; }
+
 /* Transparent chip variant — no background, shell text color, no visible border */
 .shellbar-chip--transparent {
   background: transparent !important;

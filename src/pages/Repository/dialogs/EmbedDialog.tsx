@@ -13,8 +13,8 @@ export default function EmbedDialog({ file, onClose }: EmbedDialogProps) {
 
   const fakeId = '9a51553a08444896b9cb3bcfd2d03b14'
   const fakeToken = '33edf276ab9ee0cdc6eea029ef97ca9cd71e41e8708cd6d9394c5e8714d5be30'
-  const embedHtml = `<h3 class="signavio-title"><a href="https://www.signavio.com">${file.name}</a></h3>\n<script type="text/javascript"\n  src="https://editor.signavio.com/mashup/signavio.js"></script>\n<script type="text/plain">\n{\n  "url": "https://editor.signavio.com/p/model/${fakeId}",\n  "authToken": "${fakeToken}"\n}\n</script>`
-  const pngUrl = `https://editor.signavio.com/p/model/${fakeId}/png?inline&authkey=${fakeToken}`
+  const embedHtml = `<h3 class="signavio-title"><a href="https://www.processmanager.com">${file.name}</a></h3>\n<script type="text/javascript"\n  src="https://editor.processmanager.com/mashup/signavio.js"></script>\n<script type="text/plain">\n{\n  "url": "https://editor.processmanager.com/p/model/${fakeId}",\n  "authToken": "${fakeToken}"\n}\n</script>`
+  const pngUrl = `https://editor.processmanager.com/p/model/${fakeId}/png?inline&authkey=${fakeToken}`
 
   return (
     <Dialog
@@ -29,7 +29,7 @@ export default function EmbedDialog({ file, onClose }: EmbedDialogProps) {
         <Text>
           Click on 'Share read access' and use the displayed HTML code for your wiki or blog.
           Follow the link 'Preview' to view the result. Attention: At the same time you grant
-          read access to the diagram '{file.name}' beyond your SAP Signavio workspace.
+          read access to the diagram '{file.name}' beyond your Process Manager workspace.
         </Text>
         <Link onClick={() => setEmbedShared(v => !v)}>
           {embedShared ? 'Stop sharing the diagram for read-only access' : 'Share diagram for read-only access'}

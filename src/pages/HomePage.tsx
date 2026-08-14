@@ -22,7 +22,7 @@ const INITIAL_HEADER: Widget = {
 }
 
 const INITIAL_WIDGETS: Widget[] = [
-  { id: 'monitoring', label: 'Monitoring Widgets from SAP Signavio Process Intelligence', draggable: true, showable: true, expandable: true, shown: false, expanded: false },
+  { id: 'monitoring', label: 'Monitoring Widgets from Process Intelligence', draggable: true, showable: true, expandable: true, shown: false, expanded: false },
   { id: 'recent', label: 'Recently Viewed', draggable: true, showable: true, expandable: false, shown: false, expanded: false },
   { id: 'favorites', label: 'Favorites', draggable: true, showable: true, expandable: false, shown: false, expanded: false },
   { id: 'entry', label: 'Entry Model', draggable: true, showable: true, expandable: true, shown: true, expanded: false },
@@ -47,10 +47,10 @@ function MonitoringContent({ widgetIds, onWidgetIdChange }: {
   return (
     <div style={{ padding: '0 1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div>
-        <Text>Show SAP Signavio Process Intelligence widgets on Home.</Text>
+        <Text>Show Process Intelligence widgets on Home.</Text>
         <br />
         <Text>
-          Enter the widget ID from SAP Signavio Process Intelligence.{' '}
+          Enter the widget ID from Process Intelligence.{' '}
           <Link href="#">More about Widget IDs</Link>
         </Text>
       </div>
@@ -107,7 +107,7 @@ function HomePageHeaderContent({ showCreate, onShowCreateChange, translations, o
             fontWeight: 700,
             color: 'var(--sapObjectHeader_Title_TextColor)',
           }}>
-            {translations[0].title || 'Welcome to SAP Signavio'}
+            {translations[0].title || 'Welcome to Process Manager'}
           </h3>
           <span style={{ fontSize: 'var(--sapFontSize)', fontFamily: '"72", Arial, Helvetica, sans-serif', color: 'var(--sapContent_NonInteractiveIconColor)' }}>
             {translations[0].welcomeMessage || 'Your starting point for everything process'}
@@ -171,7 +171,7 @@ function HomePageHeaderContent({ showCreate, onShowCreateChange, translations, o
 function EntryDiagramContent() {
   return (
     <div style={{ padding: '0 1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <Text>Select a diagram to display on the SAP Signavio Process Collaboration Hub home page.</Text>
+      <Text>Select a diagram to display on the Process Collaboration Hub home page.</Text>
       <div style={{ position: 'relative', width: '200px', border: '1px solid var(--sapField_BorderColor)', borderRadius: '0.5rem', overflow: 'hidden' }}>
         <div style={{ background: 'linear-gradient(135deg, #f4c2d0 0%, #d9879e 100%)', height: '120px', position: 'relative' }}>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', justifyContent: 'center' }}>

@@ -74,7 +74,7 @@ const MAIN_GROUPS: AttrGroup[] = [
         id: 'channels',
         label: 'Hiring Channels',
         required: true,
-        value: { type: 'chips', values: ['LinkedIn', 'SAP SuccessFactors'] },
+        value: { type: 'chips', values: ['LinkedIn', 'PeopleCore'] },
       },
       {
         id: 'maturity',

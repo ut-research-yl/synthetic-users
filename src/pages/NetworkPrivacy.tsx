@@ -142,7 +142,7 @@ export default function NetworkPrivacy() {
 
         <SettingsSection
           title="Domain Policies"
-          subtitle="Allow embedding SAP Signavio in following domains."
+          subtitle="Allow embedding Process Manager in following domains."
         >
           <div className={s.rowWide}>
             <Text className={s.fieldDesc}>
@@ -165,13 +165,13 @@ export default function NetworkPrivacy() {
           <div className={s.rowWide}>
             <CheckBox
               checked={embeddedModeEnabled}
-              text="Enable SAP Signavio content to be embedded in third-party applications"
+              text="Enable Process Manager content to be embedded in third-party applications"
               onChange={() => { setEmbeddedModeEnabled(v => !v); setIsDirty(true) }}
               style={{ marginLeft: '-0.5rem' }}
             />
             <div className={s.checkboxIndent}>
               <Text className={s.fieldDesc}>
-                Allow SAP Signavio content to be embedded in another system (for example Microsoft SharePoint)
+                Allow Process Manager content to be embedded in another system (for example Microsoft SharePoint)
                 and hide the header and navigation panel when embedded.{' '}
                 <Link href="#">Read more about embedded mode</Link>
               </Text>

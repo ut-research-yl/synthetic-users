@@ -16,19 +16,19 @@ const LU_LICENSES = [
 ]
 
 const LU_USERS = [
-  { name: 'Abdiel Smid', email: 'abed.el-fatah.smid@sap.com', licenses: ['Enterprise Plus Edition'] },
-  { name: 'Ahmed Ashraf Mohamed', email: 'ahmed.ashraf.saleh.mohamed@sap.com', licenses: ['Enterprise Plus Edition', 'Collaboration Hub', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
-  { name: 'Aleksandra Gogloza', email: 'aleksandra.gogloza@sap.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
-  { name: 'Alexander Cramer', email: 'alexander.cramer@sap.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
-  { name: 'Alvaro Laura Garcia', email: 'alvaro.laura.garcia@sap.com', licenses: ['Enterprise Plus Edition', 'Collaboration Hub', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
-  { name: 'Amanda Tichenor', email: 'amanda.tichenor@sap.com', licenses: ['Enterprise Plus Edition'] },
-  { name: 'Angela Di Fiore', email: 'angela.di.fiore@sap.com', licenses: ['Enterprise Plus Edition'] },
-  { name: 'Anirban Lahiri', email: 'anirban.lahiri@sap.com', licenses: ['Enterprise Plus Edition', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
-  { name: 'Anna Guseva', email: 'anna.guseva@signavio.com', licenses: ['Enterprise Plus Edition', 'Collaboration Hub', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
-  { name: 'Anna Reid', email: 'anna.reid@sap.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
-  { name: 'Aziza Halder', email: 'aziza.halder@sap.com', licenses: ['Enterprise Plus Edition', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
-  { name: 'Barbara Paul', email: 'barbara.paul@sap.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
-  { name: 'Bassma Ahmed', email: 'bassma.ahmed@sap.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
+  { name: 'Abdiel Smid', email: 'abed.el-fatah.smid@globalcorp.com', licenses: ['Enterprise Plus Edition'] },
+  { name: 'Ahmed Ashraf Mohamed', email: 'ahmed.ashraf.saleh.mohamed@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Collaboration Hub', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
+  { name: 'Aleksandra Gogloza', email: 'aleksandra.gogloza@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
+  { name: 'Alexander Cramer', email: 'alexander.cramer@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
+  { name: 'Alvaro Laura Garcia', email: 'alvaro.laura.garcia@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Collaboration Hub', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
+  { name: 'Amanda Tichenor', email: 'amanda.tichenor@globalcorp.com', licenses: ['Enterprise Plus Edition'] },
+  { name: 'Angela Di Fiore', email: 'angela.di.fiore@globalcorp.com', licenses: ['Enterprise Plus Edition'] },
+  { name: 'Anirban Lahiri', email: 'anirban.lahiri@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
+  { name: 'Anna Guseva', email: 'anna.guseva@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Collaboration Hub', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
+  { name: 'Anna Reid', email: 'anna.reid@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
+  { name: 'Aziza Halder', email: 'aziza.halder@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Journey Modeling Advanced', 'Process Transformation Manager'] },
+  { name: 'Barbara Paul', email: 'barbara.paul@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
+  { name: 'Bassma Ahmed', email: 'bassma.ahmed@globalcorp.com', licenses: ['Enterprise Plus Edition', 'Process Transformation Manager'] },
 ]
 
 export default function LicenseUsageDashboard({ onBack }: { onBack: () => void }) {

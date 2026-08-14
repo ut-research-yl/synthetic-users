@@ -12,9 +12,9 @@ import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 
 const PROPERTIES = [
   'Critical Application', 'Priority', 'Status', 'accountable',
-  'APQC Metric', 'APQC Metrics', 'Business Requirements', 'SAP Executable',
+  'APQC Metric', 'APQC Metrics', 'Business Requirements', 'ERP Executable',
   'KPI Definition', 'linkedGlossary', 'Owner', 'Process owner',
-  'Related SAP S/4HANA Best Practices', 'informed', 'consulted',
+  'Related CoreERP Best Practices', 'informed', 'consulted',
 ]
 
 const RELATIONS = ['is', 'is not', 'is empty', 'is not empty']
@@ -24,7 +24,7 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   Priority: ['High', 'Medium', 'Low'],
   'Critical Application': ['Yes', 'No'],
   'KPI Definition': ['Yes', 'No'],
-  'SAP Executable': ['Yes', 'No'],
+  'ERP Executable': ['Yes', 'No'],
 }
 
 const PALETTE_COLORS = [
@@ -71,7 +71,7 @@ const INITIAL_LAYERS: Layer[] = [
   { id: '2', active: true, name: 'Requirements fulfilled', rules: [{ id: 'r2', name: '', color: '#99CC00', icon: 'sys-enter', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c2', property: 'Status', relation: 'is', value: 'Build Phase' }] }] },
   { id: '3', active: true, name: 'Requirements open', rules: [{ id: 'r3', name: '', color: '#CCCC00', icon: 'circle-task', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c3', property: 'Status', relation: 'is', value: 'Design Phase' }] }] },
   { id: '4', active: true, name: 'Is critical component', rules: [{ id: 'r4', name: '', color: '#FF9933', icon: 'high-priority', showIcon: true, showValue: false, logic: 'and', conditions: [{ id: 'c4', property: 'Critical Application', relation: 'is', value: 'Yes' }] }] },
-  { id: '5', active: true, name: 'SAP Transactions', rules: [{ id: 'r5', name: '', color: '#0066FF', icon: 'sys-monitor', showIcon: true, showValue: true, logic: 'and', conditions: [{ id: 'c5', property: 'SAP Executable', relation: 'is', value: 'Yes' }] }] },
+  { id: '5', active: true, name: 'ERP Transactions', rules: [{ id: 'r5', name: '', color: '#0066FF', icon: 'sys-monitor', showIcon: true, showValue: true, logic: 'and', conditions: [{ id: 'c5', property: 'ERP Executable', relation: 'is', value: 'Yes' }] }] },
 ]
 
 const AUDIENCES = ['General audience', 'Administrators', 'Acme Italy', 'Acme France']

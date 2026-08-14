@@ -273,12 +273,12 @@ export default function WorkspaceDetails() {
               </div>
             </div>
             <div className={s.rowWide}>
-              <Label className={s.fieldLabel}>Customer Portal SAP for Me</Label>
+              <Label className={s.fieldLabel}>Customer Portal</Label>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
                 <Text className={s.fieldDesc} style={{ flex: 1 }}>
-                  Access usage statistics, audit logs, license consumption, and other workspace insights in SAP for Me.
+                  Access usage statistics, audit logs, license consumption, and other workspace insights in the customer portal.
                 </Text>
-                <Button icon="action" style={{ flexShrink: 0 }} onClick={() => window.open('https://me.sap.com', '_blank')}>Open SAP for Me</Button>
+                <Button icon="action" style={{ flexShrink: 0 }} onClick={() => window.open('https://portal.globalcorp.com', '_blank')}>Open Customer Portal</Button>
               </div>
             </div>
             <div className={s.rowWide}>
@@ -663,7 +663,7 @@ export default function WorkspaceDetails() {
                 style={{ marginLeft: '-8px' }}
               />
               <Text className={s.fieldDesc}>
-                If enabled, users can upload documents and pictures into your SAP Signavio file storage. Your file storage can contain up to 10240 MB.
+                If enabled, users can upload documents and pictures into your Process Manager file storage. Your file storage can contain up to 10240 MB.
               </Text>
             </div>
           </SettingsSection>
@@ -755,8 +755,8 @@ export default function WorkspaceDetails() {
             all items will be re-indexed for search, which may take several hours.
           </Text>
           <Text>
-            To get an execution code, contact SAP Signavio Support via the{' '}
-            <a href="https://support.sap.com/en/index.html" target="_blank" rel="noreferrer">SAP ONE Support Launchpad</a>.
+            To get an execution code, contact Support via the{' '}
+            <a href="#" target="_blank" rel="noreferrer">Support Portal</a>.
           </Text>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <Label for="exec-code" showColon>Execution code</Label>

@@ -31,7 +31,7 @@ export default function WalkMe() {
       <SettingsPageLayout>
         <SettingsSection
           title="WalkMe Digital Adoption Platform"
-          subtitle="WalkMe is a digital adoption platform that guides users through processes in real time, helping them quickly adopt and efficiently use SAP Signavio. Choose between prebuilt guided tours for common workflows or a fully customizable experience you build and manage yourself."
+          subtitle="WalkMe is a digital adoption platform that guides users through processes in real time, helping them quickly adopt and efficiently use Process Manager. Choose between prebuilt guided tours for common workflows or a fully customizable experience you build and manage yourself."
         >
           <div className={s.rowWide}>
             <Text className={s.fieldDesc}>Select how you want to use WalkMe:</Text>
@@ -40,11 +40,11 @@ export default function WalkMe() {
                 name="walkme-mode"
                 checked={walkmeMode === 'sap'}
                 onChange={() => handleWalkemeModeChange('sap')}
-                text="SAP Signavio managed"
+                text="Process Manager managed"
               />
               <div className={s.checkboxIndent}>
                 <Text className={s.fieldDesc}>
-                  Access prebuilt WalkMe content, maintained by SAP Signavio. No additional fee or license required.
+                  Access prebuilt WalkMe content, maintained by Process Manager. No additional fee or license required.
                 </Text>
               </div>
             </div>
@@ -63,7 +63,7 @@ export default function WalkMe() {
               {walkmeMode === 'customer' && (
                 <div className={s.checkboxIndent} style={{ paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <Text className={s.fieldDesc}>
-                    Purchase WalkMe for SAP Signavio to create customized, WalkMe guidance across your SAP Signavio environment.
+                    Purchase WalkMe for Process Manager to create customized, WalkMe guidance across your Process Manager environment.
                     When you purchase a license, you can build custom WalkMe content, you can download prebuilt content from the
                     Solution Gallery, and you have access to advanced usage analytics.
                   </Text>

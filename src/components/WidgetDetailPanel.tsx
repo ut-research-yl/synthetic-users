@@ -159,7 +159,7 @@ const WIDGET_RELATIONS: Record<string, Relation[]> = {
   'ext-001':         [{ type: 'Data Source', name: 'Tableau',                   icon: 'database' }, { type: 'Dashboard', name: 'Sales Overview',              icon: 'performance' }],
   'ext-002':         [{ type: 'Data Source', name: 'Looker Studio',             icon: 'database' }, { type: 'Dashboard', name: 'Marketing Performance',        icon: 'performance' }],
   'ext-003':         [{ type: 'Data Source', name: 'Power BI',                  icon: 'database' }, { type: 'KPI',       name: 'Revenue Target',               icon: 'kpi-managing-my-area' }],
-  'ext-004':         [{ type: 'Data Source', name: 'SAP Analytics Cloud',       icon: 'database' }, { type: 'Process',   name: 'Finance Close',                icon: 'business-objects-experience' }, { type: 'Dashboard', name: 'Cost Center Overview', icon: 'performance' }],
+  'ext-004':         [{ type: 'Data Source', name: 'Analytics Cloud',       icon: 'database' }, { type: 'Process',   name: 'Finance Close',                icon: 'business-objects-experience' }, { type: 'Dashboard', name: 'Cost Center Overview', icon: 'performance' }],
   'ext-005':         [{ type: 'Data Source', name: 'Grafana',                   icon: 'database' }, { type: 'Process',   name: 'HR Onboarding',                icon: 'business-objects-experience' }],
 }
 

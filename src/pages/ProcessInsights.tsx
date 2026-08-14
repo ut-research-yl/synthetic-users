@@ -33,7 +33,7 @@ const INITIAL_CONNECTIONS: Connection[] = [
     id: '1',
     name: 'Process Insights',
     tenantId: 'a137a632-1973-42bf-bea0-b2ca53a9e77e',
-    targetUrl: 'https://signavio-next-prod.eu10.process-insights.cloud.sap',
+    targetUrl: 'https://process-insights.globalcorp.com',
     createdOn: 'Jan 22, 2025, 3:08 PM',
   },
 ]
@@ -90,7 +90,7 @@ function ConnectDialog({ open, onClose, onConnect }: { open: boolean; onClose: (
         </div>
         <MessageStrip design="Critical" hideCloseButton={false}>
           If security settings are not properly configured when connecting tenants, users may not be able to view
-          process flows in SAP Signavio Process Insights. The browser may block the connected SAP Signavio Process
+          process flows in Process Insights. The browser may block the connected Process Manager Process
           Manager tenant, making page unusable.{' '}
           <a href="#" style={{ color: 'inherit' }}>Learn More</a>
         </MessageStrip>
@@ -127,7 +127,7 @@ export default function ProcessInsights() {
   }
 
   return (
-    <PageHeader title="SAP Signavio Process Insights" subtitle="Connect and configure the Process Insights integration for your workspace.">
+    <PageHeader title="Process Insights" subtitle="Connect and configure the Process Insights integration for your workspace.">
       <SigTableWrapper
         titleSlot={
           <ToolbarItem>
@@ -222,7 +222,7 @@ export default function ProcessInsights() {
         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <Text>
             Do you want to disconnect <strong>{disconnectTarget?.name}</strong>? Users will no longer be able
-            to view process flows from the connected SAP Signavio Process Insights tenant.
+            to view process flows from the connected Process Insights tenant.
           </Text>
           <Text style={{ color: 'var(--sapCriticalColor)', fontSize: 'var(--sapFontSmallSize)' }}>
             This action cannot be undone.

@@ -103,7 +103,7 @@ export function BpmnDiagramSvg({ width = 900, height = 340 }: { width?: number |
 
       {/* ── SAP FICO system annotation ── */}
       <rect x="354" y="262" width="202" height="36" rx="3" fill="#dde9f7" stroke="#6a9fd8" strokeWidth="1" strokeDasharray="5,3" />
-      <text x="455" y="279" textAnchor="middle" fontSize="7.5" fill="#3d6a9a" fontFamily="Arial,sans-serif">SAP FICO</text>
+      <text x="455" y="279" textAnchor="middle" fontSize="7.5" fill="#3d6a9a" fontFamily="Arial,sans-serif">ERP FICO</text>
       <line x1="399" y1="255" x2="399" y2="262" stroke="#6a9fd8" strokeWidth="1" strokeDasharray="3,3" />
       <line x1="511" y1="255" x2="511" y2="262" stroke="#6a9fd8" strokeWidth="1" strokeDasharray="3,3" />
 

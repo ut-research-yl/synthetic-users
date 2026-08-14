@@ -77,8 +77,8 @@ export const DICT_ENTRIES: DictEntry[] = [
         { id: 'status',label: 'Status:',      type: 'chips',     values: ['Published'] },
       ]},
       { id: 'details', name: 'Details', attrs: [
-        { id: 'sap-obj',  label: 'SAP Object:',      type: 'chips', values: ['Sales Order (SD)'] },
-        { id: 'systems',  label: 'Related Systems:',  type: 'chips', values: ['SAP S/4HANA', 'SAP Order Management'] },
+        { id: 'sap-obj',  label: 'ERP Object:',      type: 'chips', values: ['Sales Order (SD)'] },
+        { id: 'systems',  label: 'Related Systems:',  type: 'chips', values: ['CoreERP', 'Order Manager'] },
         { id: 'category', label: 'Category:',         type: 'chips', values: ['Order-to-Cash'] },
       ]},
     ],
@@ -106,8 +106,8 @@ export const DICT_ENTRIES: DictEntry[] = [
         { id: 'status',label: 'Status:',      type: 'chips',     values: ['Published'] },
       ]},
       { id: 'details', name: 'Details', attrs: [
-        { id: 'sap-obj', label: 'SAP Object:',    type: 'chips', values: ['Purchase Requisition (MM)'] },
-        { id: 'systems', label: 'Related Systems:', type: 'chips', values: ['SAP S/4HANA MM', 'SAP Ariba'] },
+        { id: 'sap-obj', label: 'ERP Object:',    type: 'chips', values: ['Purchase Requisition (MM)'] },
+        { id: 'systems', label: 'Related Systems:', type: 'chips', values: ['CoreERP MM', 'ProcureNet'] },
         { id: 'category',label: 'Category:',      type: 'chips', values: ['Procure-to-Pay'] },
       ]},
     ],
@@ -155,17 +155,17 @@ export const DICT_ENTRIES: DictEntry[] = [
   { id: 'de-092', categoryId: 'c30', name: 'Data Protection Policy', status: 'Draft', description: 'Policy outlining obligations around handling, storing and sharing personal data.', created: 'Jun 10, 2024', changed: 'May 25, 2026' },
 
   // ── Process Guideline (c31) ──────────────────────────────────────────────
-  { id: 'de-100', categoryId: 'c31', name: 'BPMN Modeling Guideline', status: 'Published', description: 'Best-practice rules for creating BPMN process diagrams in SAP Signavio.', created: 'Feb 12, 2024', changed: 'Nov 14, 2024' },
+  { id: 'de-100', categoryId: 'c31', name: 'BPMN Modeling Guideline', status: 'Published', description: 'Best-practice rules for creating BPMN process diagrams in Process Manager.', created: 'Feb 12, 2024', changed: 'Nov 14, 2024' },
   { id: 'de-101', categoryId: 'c31', name: 'Naming Convention Guideline', status: 'Published', description: 'Standard for naming processes, activities, events and swimlanes consistently.', created: 'Feb 12, 2024', changed: 'Nov 14, 2024' },
 
-  // ── SAP S/4HANA (c35) ────────────────────────────────────────────────────
-  { id: 'de-110', categoryId: 'c35', name: 'SAP S/4HANA Finance', status: 'Published', description: 'Core financial accounting and controlling module within SAP S/4HANA.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
-  { id: 'de-111', categoryId: 'c35', name: 'SAP S/4HANA Procurement', status: 'Published', description: 'Materials management and procurement module within SAP S/4HANA.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
-  { id: 'de-112', categoryId: 'c35', name: 'SAP S/4HANA Sales', status: 'Published', description: 'Sales and distribution module for order management within SAP S/4HANA.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
+  // ── CoreERP (c35) ────────────────────────────────────────────────────
+  { id: 'de-110', categoryId: 'c35', name: 'CoreERP Finance', status: 'Published', description: 'Core financial accounting and controlling module within CoreERP.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
+  { id: 'de-111', categoryId: 'c35', name: 'CoreERP Procurement', status: 'Published', description: 'Materials management and procurement module within CoreERP.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
+  { id: 'de-112', categoryId: 'c35', name: 'CoreERP Sales', status: 'Published', description: 'Sales and distribution module for order management within CoreERP.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
 
   // ── CRM (c37) ────────────────────────────────────────────────────────────
-  { id: 'de-120', categoryId: 'c37', name: 'SAP Sales Cloud', status: 'Published', description: 'Cloud CRM solution for managing opportunities, leads, and customer interactions.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
-  { id: 'de-121', categoryId: 'c37', name: 'SAP Service Cloud', status: 'Draft', description: 'Cloud solution for customer service ticket management and field service.', created: 'May 1, 2024', changed: 'May 1, 2024' },
+  { id: 'de-120', categoryId: 'c37', name: 'SalesCRM', status: 'Published', description: 'Cloud CRM solution for managing opportunities, leads, and customer interactions.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
+  { id: 'de-121', categoryId: 'c37', name: 'ServiceDesk', status: 'Draft', description: 'Cloud solution for customer service ticket management and field service.', created: 'May 1, 2024', changed: 'May 1, 2024' },
 
   // ── Enterprise Architecture (c27) ────────────────────────────────────────
   { id: 'de-130', categoryId: 'c27', name: 'Application Landscape', status: 'Published', description: 'A structured overview of all enterprise applications and their interdependencies.', created: 'Feb 12, 2024', changed: 'Dec 3, 2024' },
@@ -223,14 +223,14 @@ export const DICT_ENTRIES: DictEntry[] = [
   { id: 'de-251', categoryId: 'c32', name: 'API Specification', status: 'Published', description: 'Formal description of the endpoints, request/response formats, and authentication of an API.', created: 'Feb 12, 2024', changed: 'Nov 14, 2024' },
 
   // ── ERP (c34) ────────────────────────────────────────────────────────────
-  { id: 'de-260', categoryId: 'c34', name: 'SAP ECC', status: 'Published', description: 'Legacy SAP ERP Central Component, predecessor to SAP S/4HANA.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
-  { id: 'de-261', categoryId: 'c34', name: 'SAP BTP', status: 'Published', description: 'SAP Business Technology Platform providing integration, analytics, and extension capabilities.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
+  { id: 'de-260', categoryId: 'c34', name: 'LegacyERP', status: 'Published', description: 'Legacy ERP system.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
+  { id: 'de-261', categoryId: 'c34', name: 'CloudPlatform', status: 'Published', description: 'Cloud Technology Platform providing integration, analytics, and extension capabilities.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
 
   // ── Legacy ERP (c36) ─────────────────────────────────────────────────────
   { id: 'de-270', categoryId: 'c36', name: 'JD Edwards EnterpriseOne', status: 'Draft', description: 'Oracle legacy ERP system used prior to S/4HANA migration for finance and logistics.', created: 'May 1, 2024', changed: 'May 1, 2024' },
 
   // ── Middleware (c38) ─────────────────────────────────────────────────────
-  { id: 'de-280', categoryId: 'c38', name: 'SAP Integration Suite', status: 'Published', description: 'Cloud integration platform for connecting SAP and non-SAP systems via APIs and events.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
+  { id: 'de-280', categoryId: 'c38', name: 'Integration Suite', status: 'Published', description: 'Cloud integration platform for connecting internal and external systems via APIs and events.', created: 'Feb 12, 2024', changed: 'Oct 22, 2024' },
   { id: 'de-281', categoryId: 'c38', name: 'MuleSoft Anypoint Platform', status: 'Published', description: 'Enterprise integration platform for building APIs and connecting applications across cloud and on-premise.', created: 'Mar 1, 2024', changed: 'Jan 15, 2025' },
 
   // ── Finance Operations (c41) ─────────────────────────────────────────────

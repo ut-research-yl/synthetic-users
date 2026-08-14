@@ -214,7 +214,7 @@ export default function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               {/* Legal */}
               <div className={s.legal}>
                 <Text className={s.legalText}>
-                  SAP will use the data provided hereunder in accordance with the{' '}
+                  GlobalCorp will use the data provided hereunder in accordance with the{' '}
                   <a href="#" className={s.link}>Privacy Statement</a>.
                 </Text>
                 <div className={s.termsRow}>
@@ -225,7 +225,7 @@ export default function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                     text=""
                   />
                   <Text className={s.termsText}>
-                    I have read the <a href="#" className={s.link}>terms &amp; conditions</a> and hereby confirm that it will govern my use of this SAP Signavio software.
+                    I have read the <a href="#" className={s.link}>terms &amp; conditions</a> and hereby confirm that it will govern my use of this software.
                   </Text>
                 </div>
               </div>

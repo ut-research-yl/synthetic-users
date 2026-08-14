@@ -146,7 +146,7 @@ export default function Authentication() {
     <>
     <PageHeader title="Authentication" subtitle="Configure single sign-on (SSO) and password policy for your workspace." isDirty={isDirty} onSave={handleSave} onReset={handleReset}>
       <SettingsPageLayout gap="1.5rem">
-        <SettingsSection title="SAML 2.0 Setup" subtitle="Security Assertion Markup Language (SAML) is a standard to exchange authentication and authorization data between a service provider (SP) and an identity provider (IdP). SAP Signavio acts as a service provider (SP) and agrees to trust an identity provider (IdP) to authenticate users.">
+        <SettingsSection title="SAML 2.0 Setup" subtitle="Security Assertion Markup Language (SAML) is a standard to exchange authentication and authorization data between a service provider (SP) and an identity provider (IdP). Process Manager acts as a service provider (SP) and agrees to trust an identity provider (IdP) to authenticate users.">
           <div className={s.rowWide}>
             <CheckBox
               checked={samlEnabled}
@@ -229,7 +229,7 @@ export default function Authentication() {
         ) : (
           <SettingsSection
             title="Password Policies"
-            subtitle="SAP Cloud Identity Services (SCI) manages password policies."
+            subtitle="Identity Services manages password policies."
             action={<Button endIcon="SAP-icons-v4/link" onClick={() => window.open('https://as5u4itfg.accounts400.ondemand.com/saml2/idp/sso?sp=oac.accounts.sap.com&RelayState=https%3A%2F%2Fas5u4itfg.accounts400.ondemand.com%2Fadmin%2F', '_blank')}>Manage in SCI</Button>}
           >
             <></>

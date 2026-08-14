@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button, Icon, Text, Menu, MenuItem, MenuSeparator, SplitButton, Dialog, Bar, Input, ToggleButton, Toast } from '@ui5/webcomponents-react'
 import { createPortal } from 'react-dom'
 import { SigChipV2, SigDomainObject, SigInlineEdit } from '@signavio/sap-signavio-uixtension'
@@ -1401,13 +1401,12 @@ function BpmnCanvas({
   const canvasSizeRef = useRef(canvasSize)
   useEffect(() => { canvasSizeRef.current = canvasSize }, [canvasSize])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const measure = () => {
       if (!svgRef.current?.parentElement) return
       const { clientWidth: w, clientHeight: h } = svgRef.current.parentElement
       if (w === 0 || h === 0) return
       setCanvasSize({ w, h })
-      // Fit after measuring
       const els = buildInitialElements()
       const PAD = 60
       const PAD_RIGHT = 140
@@ -1426,16 +1425,24 @@ function BpmnCanvas({
       const vbH = h * s
       const cx = (minX + maxX) / 2
       const cy = (minY + maxY) / 2
-      // toolbar is ~90px wide at left — shift diagram right by that amount in SVG coords
       const toolbarOffsetSvg = 90 * s
       setZoom(z)
       setPanX(cx - vbW / 2 - toolbarOffsetSvg / 2)
       setPanY(cy - vbH / 2)
     }
-    // Use setTimeout to ensure DOM is fully laid out before measuring
-    const timer = setTimeout(() => measure(), 50)
+    const parent = svgRef.current?.parentElement
+    // Watch for the parent getting non-zero dimensions (UI5 NavigationLayout initializes async)
+    let ro: ResizeObserver | null = new ResizeObserver(() => {
+      const p = svgRef.current?.parentElement
+      if (p && p.clientWidth > 0 && p.clientHeight > 0) {
+        measure()
+        ro?.disconnect()
+        ro = null
+      }
+    })
+    if (parent) ro.observe(parent)
     window.addEventListener('resize', measure)
-    return () => { clearTimeout(timer); window.removeEventListener('resize', measure) }
+    return () => { ro?.disconnect(); ro = null; window.removeEventListener('resize', measure) }
   }, [])
 
   // ── Mouse handlers for element dragging ──────────────────────────────────────
@@ -2967,7 +2974,7 @@ function BpmnCanvas({
           <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)' }}>Copy &amp; share this model link</Text>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <Input
-              value="https://signavio.com/model/xyz..."
+              value="https://processmanager.com/model/xyz..."
               readonly
               style={{ flex: 1 }}
             />
@@ -2975,7 +2982,7 @@ function BpmnCanvas({
               design="Emphasized"
               icon="chain-link"
               onClick={() => {
-                navigator.clipboard?.writeText('https://signavio.com/model/xyz...')
+                navigator.clipboard?.writeText('https://processmanager.com/model/xyz...')
                 setShareOpen(false)
                 setToastOpen(true)
               }}

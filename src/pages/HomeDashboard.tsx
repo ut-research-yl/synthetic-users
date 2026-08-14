@@ -312,7 +312,7 @@ function HomepageContent() {
         </div>
 
         <PCAHero
-          title={homeTitle || 'Welcome to SAP Signavio'}
+          title={homeTitle || 'Welcome to Process Manager'}
           subtitle={homeWelcomeMessage || 'Your starting point for everything process'}
         />
       </div>

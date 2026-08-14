@@ -93,7 +93,7 @@ export default function GovernanceDashboard({ onBack }: { onBack: () => void }) 
           </SigFilter>
         </SigFilterBar>
 
-        <GovSection title="SAP Signavio Process Collaboration Hub" count={9080} expanded={hubOpen} onToggle={() => setHubOpen(!hubOpen)}>
+        <GovSection title="Process Collaboration Hub" count={9080} expanded={hubOpen} onToggle={() => setHubOpen(!hubOpen)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div>
               <GovSubLabel>Page visits (since January 13, 2021)</GovSubLabel>

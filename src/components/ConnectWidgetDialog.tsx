@@ -11,7 +11,7 @@ type CwdProcess = {
 
 export const CWD_DATA: Record<string, CwdProcess> = {
   'Order to Cash':      { cases: '306k', events: '12m', investigations: 17, dashboards: 14, lastEdited: '08/20/2025', Investigation: { 'O2C Analysis': { pages: { Overview: ['value-I-001','bar-chart-I-001'], Detail: ['treemap-I-001'], Variants: ['sankey-I-002'] } }, 'O2C Performance': { pages: { KPIs: ['value-I-001'], Trends: ['line-I-001'] } } }, Dashboard: { 'O2C Dashboard': { pages: { Overview: ['value-D-001','pie-D-001'], Comparisons: ['bar-chart-D-001'], Trends: ['line-D-001'] } }, 'O2C Executive Summary': { pages: { Overview: ['value-D-001'] } } } },
-  'SAP O2C Onboarding': { cases: '128k', events: '8m', investigations: 7, dashboards: 7, lastEdited: '08/20/2025', Investigation: { 'Onboarding Analysis': { pages: { Main: ['bar-chart-I-002','value-I-002'], Funnel: ['hist-I-001'] } } }, Dashboard: { 'Onboarding Dashboard': { pages: { Overview: ['bar-chart-D-002','value-D-002'] } }, 'Onboarding KPIs': { pages: { Summary: ['value-I-002'] } } } },
+  'O2C Onboarding': { cases: '128k', events: '8m', investigations: 7, dashboards: 7, lastEdited: '08/20/2025', Investigation: { 'Onboarding Analysis': { pages: { Main: ['bar-chart-I-002','value-I-002'], Funnel: ['hist-I-001'] } } }, Dashboard: { 'Onboarding Dashboard': { pages: { Overview: ['bar-chart-D-002','value-D-002'] } }, 'Onboarding KPIs': { pages: { Summary: ['value-I-002'] } } } },
   'Record to Report':   { cases: '94k', events: '5m', investigations: 7, dashboards: 10, lastEdited: '08/20/2025', Investigation: { 'R2R Investigation': { pages: { Main: ['ring-I-002','line-I-002'], Flow: ['sankey-I-001'] } } }, Dashboard: { 'R2R Dashboard': { pages: { Summary: ['value-D-003','bar-chart-D-003'] } }, 'R2R Period Analysis': { pages: { Overview: ['line-I-002'], Details: ['treemap-I-003'] } } } },
   'Plan to Produce':    { cases: '215k', events: '10m', investigations: 6, dashboards: 20, lastEdited: '08/20/2025', Investigation: { 'P2P Analysis': { pages: { Overview: ['bar-chart-D-004','value-D-004'], Performance: ['dual-D-002'] } } }, Dashboard: { 'P2P Dashboard': { pages: { Overview: ['pie-D-002','heat-D-002','value-D-004'], Trends: ['area-D-002'], Performance: ['treemap-I-002'] } }, 'Production KPIs': { pages: { Summary: ['value-D-004'], Trends: ['dual-D-002'] } }, 'Supply Chain Overview': { pages: { Overview: ['pie-D-002'] } } } },
   'Procure to Pay':     { cases: '183k', events: '9m', investigations: 9, dashboards: 9, lastEdited: '07/15/2025', Investigation: { 'P2P Analysis': { pages: { Overview: ['bar-chart-I-001','value-I-001'], Detail: ['hist-I-002'] } }, 'Supplier Analysis': { pages: { Overview: ['treemap-I-001'] } } }, Dashboard: { 'Procurement Dashboard': { pages: { Overview: ['value-D-001','pie-D-001'], Trends: ['line-D-001'] } }, 'Supplier Dashboard': { pages: { Overview: ['heat-D-001'] } } } },
@@ -261,7 +261,7 @@ export default function ConnectWidgetDialog({ open, onClose, onAdd }: Props) {
               if (idx) setStep(Number(idx))
             }}
           >
-            <WizardStep data-step-index="1" titleText="Select Analysis Configuration" selected={step === 1} disabled={false} icon={step > 1 ? 'accept' : undefined}>{' '}</WizardStep>
+            <WizardStep data-step-index="1" titleText="Select Internal Analysis" selected={step === 1} disabled={false} icon={step > 1 ? 'accept' : undefined}>{' '}</WizardStep>
             <WizardStep data-step-index="2" titleText="Choose Type" selected={step === 2} disabled={step < 2} icon={step > 2 ? 'accept' : undefined}>{' '}</WizardStep>
             <WizardStep data-step-index="3" titleText="Select Widget" selected={step === 3} disabled={step < 3}>{' '}</WizardStep>
           </Wizard>
@@ -273,7 +273,7 @@ export default function ConnectWidgetDialog({ open, onClose, onAdd }: Props) {
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div>
-                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Analysis Configuration</Text>
+                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Internal Analysis</Text>
                 <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the analysis configuration you want to add a widget from</Text>
               </div>
               <Input placeholder="Search by analysis configuration name" type={'Search' as any} value={search}

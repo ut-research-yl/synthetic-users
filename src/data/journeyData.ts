@@ -90,7 +90,7 @@ export const INITIAL_STEPS: JourneyStep[] = [
   { id: 'st-c1', phaseId: 'ph-1', laneId: 'ln-content', content: 'Brand overview deck',
     contentItem: { icon: 'figma', title: 'Brand Overview Deck', subtitle: 'Updated 12 Jul 2026' } },
   { id: 'st-c2', phaseId: 'ph-1', laneId: 'ln-content', content: 'Intro video',
-    contentItem: { icon: 'youtube', title: 'What is SAP Signavio?', subtitle: 'Added 3 Jun 2026' } },
+    contentItem: { icon: 'youtube', title: 'What is Process Manager?', subtitle: 'Added 3 Jun 2026' } },
   { id: 'st-c3', phaseId: 'ph-2', laneId: 'ln-content', content: 'Product tour',
     contentItem: { icon: 'figma', title: 'Product Tour Prototype', subtitle: 'Updated 8 Jul 2026' } },
   { id: 'st-c4', phaseId: 'ph-2', laneId: 'ln-content', content: 'Demo recording',
@@ -103,7 +103,7 @@ export const INITIAL_STEPS: JourneyStep[] = [
     contentItem: { icon: 'figma', title: 'Champion Program Kit', subtitle: 'Added 20 Jun 2026' } },
 
   // ── Customer Actions ───────────────────────────────────────────────────────
-  { id: 'st-a1', phaseId: 'ph-1', laneId: 'ln-actions', content: 'Sees LinkedIn ad for SAP Signavio', status: 'done', tags: ['paid-media'] },
+  { id: 'st-a1', phaseId: 'ph-1', laneId: 'ln-actions', content: 'Sees LinkedIn ad for Process Manager', status: 'done', tags: ['paid-media'] },
   { id: 'st-a2', phaseId: 'ph-1', laneId: 'ln-actions', content: 'Searches "BPM software" on Google', status: 'done', tags: ['organic'] },
   { id: 'st-a3', phaseId: 'ph-2', laneId: 'ln-actions', content: 'Browses product tour page', status: 'done', tags: ['self-serve'] },
   { id: 'st-a4', phaseId: 'ph-2', laneId: 'ln-actions', content: 'Downloads "State of Process Excellence" report', status: 'done', tags: ['content'] },
@@ -118,14 +118,14 @@ export const INITIAL_STEPS: JourneyStep[] = [
 
   // ── Touchpoints ────────────────────────────────────────────────────────────
   { id: 'st-t1', phaseId: 'ph-1', laneId: 'ln-touchpoints', content: 'LinkedIn Campaign Manager', tags: ['digital', 'paid'] },
-  { id: 'st-t2', phaseId: 'ph-1', laneId: 'ln-touchpoints', content: 'SAP.com / Signavio landing page', tags: ['digital'] },
-  { id: 'st-t3', phaseId: 'ph-2', laneId: 'ln-touchpoints', content: 'signavio.com product pages', tags: ['digital'] },
+  { id: 'st-t2', phaseId: 'ph-1', laneId: 'ln-touchpoints', content: 'Vendor website / product landing page', tags: ['digital'] },
+  { id: 'st-t3', phaseId: 'ph-2', laneId: 'ln-touchpoints', content: 'processmanager.com product pages', tags: ['digital'] },
   { id: 'st-t4', phaseId: 'ph-2', laneId: 'ln-touchpoints', content: 'Gated content hub & resource center', tags: ['digital', 'content'] },
   { id: 'st-t5', phaseId: 'ph-2', laneId: 'ln-touchpoints', content: 'Live demo (Account Executive)', tags: ['human', 'video'] },
   { id: 'st-t6', phaseId: 'ph-3', laneId: 'ln-touchpoints', content: 'AE — solution call + scoping doc', tags: ['human'] },
   { id: 'st-t7', phaseId: 'ph-3', laneId: 'ln-touchpoints', content: 'CRM (Salesforce) — proposal PDF', tags: ['digital'] },
   { id: 'st-t8', phaseId: 'ph-4', laneId: 'ln-touchpoints', content: 'CSM kick-off deck + Zoom call', tags: ['human', 'video'] },
-  { id: 'st-t9', phaseId: 'ph-4', laneId: 'ln-touchpoints', content: 'SAP Learning Hub — onboarding path', tags: ['digital', 'self-serve'] },
+  { id: 'st-t9', phaseId: 'ph-4', laneId: 'ln-touchpoints', content: 'Learning Hub — onboarding path', tags: ['digital', 'self-serve'] },
   { id: 'st-t10', phaseId: 'ph-5', laneId: 'ln-touchpoints', content: 'Monthly Business Review (MBR)', tags: ['human'] },
   { id: 'st-t11', phaseId: 'ph-5', laneId: 'ln-touchpoints', content: 'In-app NPS + feature announcements', tags: ['digital', 'in-app'] },
 

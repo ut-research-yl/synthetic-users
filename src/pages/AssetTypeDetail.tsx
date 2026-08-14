@@ -395,12 +395,12 @@ export default function AssetTypeDetail() {
               header={<Title level="H3">{assetType.name}</Title>}
               expandedContent={
                 <MessageStrip design="Information" hideCloseButton style={{ marginTop: '0.5rem' }}>
-                  In the <strong>Editing</strong> tab, configure attributes at the model and element level. In the <strong>Viewing</strong> tab, manage how attributes are grouped and control their visibility per audience — these settings only apply to the SAP Signavio Process Collaboration Hub.
+                  In the <strong>Editing</strong> tab, configure attributes at the model and element level. In the <strong>Viewing</strong> tab, manage how attributes are grouped and control their visibility per audience — these settings only apply to the Process Collaboration Hub.
                 </MessageStrip>
               }
               snappedContent={
                 <MessageStrip design="Information" hideCloseButton style={{ marginTop: '0.5rem' }}>
-                  In the <strong>Editing</strong> tab, configure attributes at the model and element level. In the <strong>Viewing</strong> tab, manage how attributes are grouped and control their visibility per audience — these settings only apply to the SAP Signavio Process Collaboration Hub.
+                  In the <strong>Editing</strong> tab, configure attributes at the model and element level. In the <strong>Viewing</strong> tab, manage how attributes are grouped and control their visibility per audience — these settings only apply to the Process Collaboration Hub.
                 </MessageStrip>
               }
             />

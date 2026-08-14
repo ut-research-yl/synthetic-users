@@ -104,8 +104,8 @@ const TREE_DATA: ResourceNode[] = [
       {
         id: 'connections', name: 'Connections', objectType: 'Folder' as never, typeName: 'Folder',
         subRows: sortSubRows([
-          { id: 'conn-s4', name: 'SAP S/4HANA Cloud', objectType: 'Folder' as never, typeName: 'Folder' },
-          { id: 'conn-ariba', name: 'SAP Ariba', objectType: 'Folder' as never, typeName: 'Folder' },
+          { id: 'conn-s4', name: 'CoreERP Cloud', objectType: 'Folder' as never, typeName: 'Folder' },
+          { id: 'conn-ariba', name: 'ProcureNet', objectType: 'Folder' as never, typeName: 'Folder' },
           { id: 'conn-jdbc1', name: 'JDBC Connection Finance', objectType: 'Connection' as never, typeName: 'Connection' },
           { id: 'conn-jdbc2', name: 'JDBC Connection HR', objectType: 'Connection' as never, typeName: 'Connection' },
           { id: 'conn-odata', name: 'OData Service Procurement', objectType: 'Connection' as never, typeName: 'Connection' },
@@ -135,7 +135,7 @@ const TREE_DATA: ResourceNode[] = [
         ]),
       },
       { id: 'repo-invoice', name: 'Invoice-to-Pay (Cross Mining)', objectType: 'Process Data Pipeline' as never, typeName: 'Process Data Pipeline' },
-      { id: 'repo-proc2pay', name: 'Procure-to-Pay (SAP S/4HANA)', objectType: 'Process Data Pipeline' as never, typeName: 'Process Data Pipeline' },
+      { id: 'repo-proc2pay', name: 'Procure-to-Pay (CoreERP)', objectType: 'Process Data Pipeline' as never, typeName: 'Process Data Pipeline' },
       { id: 'repo-operate-mfg', name: 'Operate Manufacturing', objectType: 'Process Data Pipeline' as never, typeName: 'Process Data Pipeline' },
       { id: 'repo-plan-fulfill', name: 'Plan-to-Fulfill', objectType: 'Process Data Pipeline' as never, typeName: 'Process Data Pipeline' },
       { id: 'repo-ext-billing', name: 'External Billing', objectType: 'Process Data Pipeline' as never, typeName: 'Process Data Pipeline' },

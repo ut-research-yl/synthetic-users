@@ -17,8 +17,6 @@ export default function TopBar() {
 
       {/* Logo + title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '16px' }}>
-        <SapLogo />
-        <span style={{ color: 'var(--sapShell_TextColor)', fontWeight: 500, fontSize: 'var(--sapFontLargeSize)', letterSpacing: '0.3px' }}>Signavio</span>
       </div>
 
       <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.4)' }} />

@@ -319,7 +319,7 @@ export default function ApprovalWorkflows() {
               <div>
                 <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)', display: 'block' }}>Synchronize configuration</Text>
                 <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)' }}>
-                  Push the workflow configuration from this workspace to SAP Signavio Process Governance.
+                  Push the workflow configuration from this workspace to Process Governance.
                 </Text>
               </div>
               <Button design="Default" icon="synchronize" style={{ flexShrink: 0 }}>Synchronize</Button>
@@ -340,7 +340,7 @@ export default function ApprovalWorkflows() {
               </div>
               <div style={{ paddingLeft: '1.75rem' }}>
                 <Text style={{ color: 'var(--sapLinkColor)', fontSize: 'var(--sapFontSize)' }}>
-                  Apply or disable access restrictions to workflows. Prerequisite: An SAP Signavio Process Governance account.
+                  Apply or disable access restrictions to workflows. Prerequisite: An Process Governance account.
                 </Text>
               </div>
             </div>
@@ -353,7 +353,7 @@ export default function ApprovalWorkflows() {
         >
             {/* Column headers */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.5rem 1rem', gap: '0.5rem 1rem' }}>
-              <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>Role in SAP Signavio Process Governance</Text>
+              <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>Role in Process Governance</Text>
               <Text style={{ fontWeight: '600', fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>Diagram attribute</Text>
             </div>
             {participants.map((p, i) => (
@@ -382,7 +382,7 @@ export default function ApprovalWorkflows() {
         {/* ── Approval Expiration ── */}
         <SettingsSection
           title="Approval Expiration"
-          subtitle="Configure approvals to expire after a set period. When expired, a reapproval workflow is triggered in SAP Signavio Process Governance."
+          subtitle="Configure approvals to expire after a set period. When expired, a reapproval workflow is triggered in Process Governance."
         >
           <div className={s.rowWide} style={{ gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>

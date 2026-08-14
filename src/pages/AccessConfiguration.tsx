@@ -7,14 +7,14 @@ import { SigTableWrapper } from '@signavio/sap-signavio-uixtension'
 import PageHeader from '../components/PageHeader'
 
 const INITIAL_SYSTEMS = [
-  { id: 'QE6:002', type: 'SAP ECC', grantAll: true, policies: 0 },
-  { id: 'QE8:004', type: 'SAP ECC', grantAll: true, policies: 0 },
-  { id: 'QIA:001', type: 'SAP ECC', grantAll: true, policies: 0 },
-  { id: 'QND:005', type: 'SAP ECC', grantAll: true, policies: 0 },
-  { id: 'QIA:002', type: 'SAP ECC', grantAll: true, policies: 0 },
-  { id: 'QNA:007', type: 'SAP ECC', grantAll: true, policies: 0 },
-  { id: 'QLS:002', type: 'SAP ECC', grantAll: true, policies: 0 },
-  { id: 'QE4:006', type: 'SAP ECC', grantAll: true, policies: 0 },
+  { id: 'QE6:002', type: 'LegacyERP', grantAll: true, policies: 0 },
+  { id: 'QE8:004', type: 'LegacyERP', grantAll: true, policies: 0 },
+  { id: 'QIA:001', type: 'LegacyERP', grantAll: true, policies: 0 },
+  { id: 'QND:005', type: 'LegacyERP', grantAll: true, policies: 0 },
+  { id: 'QIA:002', type: 'LegacyERP', grantAll: true, policies: 0 },
+  { id: 'QNA:007', type: 'LegacyERP', grantAll: true, policies: 0 },
+  { id: 'QLS:002', type: 'LegacyERP', grantAll: true, policies: 0 },
+  { id: 'QE4:006', type: 'LegacyERP', grantAll: true, policies: 0 },
 ]
 
 export default function AccessConfiguration() {

@@ -165,9 +165,9 @@ function OwnerField({ initial, canEdit }: { initial?: ProcessAtomOwner; canEdit:
 // ── Tags field ────────────────────────────────────────────────────────────────
 
 const ALL_TAG_OPTIONS = [
-  'Finance', 'Accounts Payable', 'SAP S/4HANA', 'Procurement', 'Approval',
+  'Finance', 'Accounts Payable', 'CoreERP', 'Procurement', 'Approval',
   'Logistics', 'Notifications', 'Customer Facing', 'Warehouse', 'Inventory',
-  'SAP WM', 'Dispute Management', 'Sales', 'Human Resources', 'IT Operations',
+  'ERP WM', 'Dispute Management', 'Sales', 'Human Resources', 'IT Operations',
 ]
 
 function TagsField({ initial, canEdit }: { initial?: string[]; canEdit: boolean }) {

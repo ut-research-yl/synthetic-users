@@ -153,7 +153,7 @@ function VisioPreview() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', fontFamily: '"72", Arial, sans-serif' }}>
           <thead>
             <tr style={{ background: 'var(--sapList_HeaderBackground)', position: 'sticky', top: 0 }}>
-              {['Shape ID', 'Label', 'Shape Type (Visio)', 'Maps to (Signavio)', 'Page'].map(h => (
+              {['Shape ID', 'Label', 'Shape Type (Visio)', 'Maps to (Process Manager)', 'Page'].map(h => (
                 <th key={h} style={{ padding: '6px 12px', textAlign: 'left', color: 'var(--sapList_HeaderTextColor)', fontWeight: 600, borderBottom: '1px solid var(--sapList_BorderColor)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
@@ -313,7 +313,7 @@ export default function ImportFileDialog({ open, onClose, onSuccess }: Props) {
             <Text style={{ fontSize: '0.75rem', color: 'var(--sapContent_NonInteractiveIconColor)' }}>
               {fileType === 'bpmn'
                 ? 'BPMN XML diagrams will be imported to your shared workspace.'
-                : 'Visio shapes will be mapped to Signavio elements. Some manual adjustments may be needed after import.'}
+                : 'Visio shapes will be mapped to Process Manager elements. Some manual adjustments may be needed after import.'}
             </Text>
           </div>
         )}

@@ -65,10 +65,10 @@ import { useDirtyState } from '../contexts/DirtyStateContext'
 
 
 const STANDARD_HELP_ITEMS = [
-  { text: 'SAP Help Portal' },
+  { text: 'Help Portal' },
   { text: "What's New", separatorAfter: true },
   { text: 'Onboarding Resource Center' },
-  { text: 'SAP Signavio Community', separatorAfter: true },
+  { text: 'Community Forum', separatorAfter: true },
   { text: 'Get Support' },
   { text: 'Provide Feedback' },
 ]
@@ -122,7 +122,7 @@ const SETTINGS_NAV = [
     ],
   },
   {
-    title: 'SAP-Defined Business Content',
+    title: 'Standard Business Content',
     items: [
       { text: 'Data Sharing and Industry', path: '/data-sharing-industry' },
       { text: 'Data Collection Configuration', path: '/data-collection-config' },
@@ -133,8 +133,8 @@ const SETTINGS_NAV = [
   {
     title: 'Integrations',
     items: [
-      { text: 'SAP Signavio Process Insights', path: '/process-insights' },
-      { text: 'SAP Cloud ALM', path: '/cloud-alm' },
+      { text: 'Process Insights', path: '/process-insights' },
+      { text: 'ALM Platform', path: '/cloud-alm' },
       { text: 'WalkMe Digital Adoption Platform', path: '/walkme' },
     ],
   },
@@ -229,10 +229,10 @@ export default function Shell() {
   const [lastName, setLastName] = useState('Westfield')
   const [profileEmail, setProfileEmail] = useState('claire@acme.com')
   const [phone, setPhone] = useState('017623707105')
-  const [company, setCompany] = useState('SAP SE')
+  const [company, setCompany] = useState('GlobalCorp')
 
   // Track initial profile values for cancel/reset
-  const [savedProfile, setSavedProfile] = useState({ profileTitle: '', firstName: 'Claire', lastName: 'Westfield', profileEmail: 'claire@acme.com', phone: '017623707105', company: 'SAP SE' })
+  const [savedProfile, setSavedProfile] = useState({ profileTitle: '', firstName: 'Claire', lastName: 'Westfield', profileEmail: 'claire@acme.com', phone: '017623707105', company: 'GlobalCorp' })
   const [profileDirty, setProfileDirty] = useState(false)
   const { saveState: profileSaveState, triggerSave: triggerProfileSave } = useMockSave()
 
@@ -382,7 +382,7 @@ export default function Shell() {
     const sr = (sb as Element & { shadowRoot: ShadowRoot | null })?.shadowRoot
     if (!sr) return
     const style = document.createElement('style')
-    style.textContent = '.ui5-shellbar-logo-area { padding-inline-end: 20px !important; }'
+    style.textContent = '.ui5-shellbar-logo-area { padding-inline-end: 4px !important; } .ui5-shellbar-separator-start { display: none !important; }'
     sr.appendChild(style)
     return () => { sr.removeChild(style) }
   }, [])
@@ -449,7 +449,7 @@ export default function Shell() {
           </div>
         )}
       <ShellBar
-        primaryTitle="Signavio"
+        primaryTitle=""
         style={{ paddingInlineStart: '14px', paddingInlineEnd: '14px' } as React.CSSProperties}
       >
         <Button
@@ -458,7 +458,7 @@ export default function Shell() {
           design="Transparent"
           tooltip="Toggle navigation"
         />
-        <img slot="logo" src="https://www.sap.com/content/dam/application/shared/logos/sap-logo-svg.svg" alt="SAP" style={{ height: 32 }} />
+        <img slot="logo" src="" alt="" style={{ display: 'none' }} />
         <div slot="content" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SigChipV2
             value={workspaceName}
@@ -723,7 +723,7 @@ export default function Shell() {
           <UserSettingsView text="Cookies">
             <div style={{ padding: '0 0 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <Text>
-                Allow or prevent SAP Signavio from using functional cookies to analyze application usage so we can measure and improve this software.
+                Allow or prevent Process Manager from using functional cookies to analyze application usage so we can measure and improve this software.
               </Text>
               <Text>
                 Find more details on our cookie policy in our <Link href="#">Cookie Statement</Link>.

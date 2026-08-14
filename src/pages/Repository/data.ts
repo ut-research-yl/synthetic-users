@@ -195,7 +195,7 @@ export const ASSET_DETAILS: Record<string, AssetDetail> = {
     { label: 'Process Owner', value: 'Lina Davis' },
     { label: 'Department', value: 'Finance & Accounting' },
     { label: 'Process Scope', value: 'Cross-functional — covers Order Management, Fulfillment, Invoicing, Accounts Receivable' },
-    { label: 'SAP Solution', value: 'SAP S/4HANA, SAP Order Management' },
+    { label: 'ERP Solution', value: 'CoreERP, Order Manager' },
     { label: 'System Landscape', value: 'Production: S4P — Quality: S4Q — Dev: S4D' },
     { label: 'Regulatory Relevance', value: 'SOX Section 302/404, IFRS 15 revenue recognition' },
     { label: 'Review Frequency', value: 'Annually, triggered by major system changes' },
@@ -214,7 +214,7 @@ export const ASSET_DETAILS: Record<string, AssetDetail> = {
     { id: 'details', name: 'Value Chain Details', attrs: [
       { id: 'dept',     label: 'Department:',       type: 'chips', values: ['Finance & Accounting'] },
       { id: 'scope',    label: 'Process Scope:',    type: 'text',  value: 'Order Management → Fulfillment → Invoicing → Accounts Receivable' },
-      { id: 'sap',      label: 'SAP Solution:',     type: 'chips', values: ['SAP S/4HANA', 'SAP Order Management'] },
+      { id: 'sap',      label: 'ERP Solution:',     type: 'chips', values: ['CoreERP', 'Order Manager'] },
       { id: 'kpis',     label: 'KPIs:',             type: 'text',  value: 'Days Sales Outstanding (DSO), Invoice Accuracy Rate, O2C Cycle Time' },
       { id: 'reg',      label: 'Regulatory:',       type: 'text',  value: 'SOX Section 302/404, IFRS 15 revenue recognition' },
       { id: 'conf',     label: 'Confidentiality:',  type: 'chips', values: ['Internal'] },
@@ -231,7 +231,7 @@ export const ASSET_DETAILS: Record<string, AssetDetail> = {
     { label: 'Persona', value: 'B2B Buyer — Enterprise Segment' },
     { label: 'Journey Phases', value: 'Awareness → Evaluation → Engagement → Proposal → Signature' },
     { label: 'Pain Points', value: 'Long quote turnaround time; lack of pricing transparency in configurator; manual CPQ hand-off to legal' },
-    { label: 'SAP Solution', value: 'SAP Sales Cloud (CRM), SAP CPQ' },
+    { label: 'ERP Solution', value: 'SalesCRM, CPQ Platform' },
     { label: 'NPS Impact', value: 'High — quote phase scores 34 NPS vs. 61 post-signature' },
     { label: 'Improvement Initiative', value: 'CPQ Automation Project (Q3 2026)' },
     { label: 'Approved By', value: 'VP Sales — Tom Richter, May 5, 2026' },
@@ -249,7 +249,7 @@ export const ASSET_DETAILS: Record<string, AssetDetail> = {
       { id: 'persona',  label: 'Persona:',        type: 'chips', values: ['B2B Buyer — Enterprise'] },
       { id: 'phases',   label: 'Journey Phases:', type: 'text',  value: 'Awareness → Evaluation → Engagement → Proposal → Signature' },
       { id: 'pain',     label: 'Pain Points:',    type: 'multiline', value: 'Long quote turnaround time; lack of pricing transparency in configurator; manual CPQ hand-off to legal' },
-      { id: 'sap',      label: 'SAP Solution:',   type: 'chips', values: ['SAP Sales Cloud', 'SAP CPQ'] },
+      { id: 'sap',      label: 'ERP Solution:',   type: 'chips', values: ['SalesCRM', 'CPQ Platform'] },
       { id: 'nps',      label: 'NPS Impact:',     type: 'text',  value: 'Quote phase: 34 NPS vs. 61 post-signature' },
       { id: 'conf',     label: 'Confidentiality:', type: 'chips', values: ['Internal'] },
       { id: 'language', label: 'Language:',       type: 'chips', values: ['English (US)'] },
@@ -301,7 +301,7 @@ export const ASSET_DETAILS: Record<string, AssetDetail> = {
     { label: 'Process Owner', value: 'Paul Gray' },
     { label: 'Department', value: 'Procurement' },
     { label: 'Process Scope', value: 'Requisitioning → Sourcing → Purchase Order → Goods Receipt → Invoice Verification → Payment' },
-    { label: 'SAP Solution', value: 'SAP S/4HANA MM, SAP Ariba Buying' },
+    { label: 'ERP Solution', value: 'CoreERP MM, ProcureNet' },
     { label: 'Approval Thresholds', value: '< €5,000: Manager; €5,000–50,000: Director; > €50,000: VP + Finance' },
     { label: 'Payment Terms', value: 'Net 30 standard; early-payment discount available via dynamic discounting' },
     { label: 'Regulatory Relevance', value: 'EU Directive 2011/7/EU (Late Payments), SOX controls SC-P01 to SC-P08' },
@@ -325,7 +325,7 @@ export const ASSET_DETAILS: Record<string, AssetDetail> = {
       id: 'process-details', name: 'Process Details',
       attrs: [
         { id: 'dept',         label: 'Department:',         type: 'chips',  values: ['Procurement'] },
-        { id: 'sap-solution', label: 'SAP Solution:',       type: 'chips',  values: ['SAP S/4HANA MM', 'SAP Ariba Buying'] },
+        { id: 'sap-solution', label: 'ERP Solution:',       type: 'chips',  values: ['CoreERP MM', 'ProcureNet'] },
         { id: 'scope',        label: 'Process Scope:',      type: 'text',   value: 'Requisitioning → Sourcing → PO → Goods Receipt → Invoice Verification → Payment' },
         { id: 'reg',          label: 'Regulatory:',         type: 'text',   value: 'EU Directive 2011/7/EU (Late Payments), SOX SC-P01 to SC-P08' },
         { id: 'kpis',         label: 'KPIs:',               type: 'text',   value: 'PO Cycle Time, Invoice Exception Rate, Supplier On-Time Delivery' },
@@ -341,9 +341,9 @@ export const ASSET_DETAILS: Record<string, AssetDetail> = {
     { label: 'Process Type', value: 'Governance / Control' },
     { label: 'Trigger Events', value: 'Annual planning cycle (Oct–Nov); ad-hoc capex > €25,000; headcount additions' },
     { label: 'Delegation of Authority', value: 'Cost Centre Manager → VP (> €50k) → CFO (> €500k) → Board (> €2M)' },
-    { label: 'SAP Solution', value: 'SAP S/4HANA CO, SAP BPC (Budget Planning)' },
+    { label: 'ERP Solution', value: 'CoreERP CO, BudgetPlanner' },
     { label: 'SLA', value: 'Standard requests: 5 business days; urgent: 2 business days with escalation flag' },
-    { label: 'Audit Trail', value: 'All approvals logged in SAP workflow engine with digital signature' },
+    { label: 'Audit Trail', value: 'All approvals logged in workflow engine with digital signature' },
     { label: 'Related Policies', value: 'Corporate Authority Matrix (FIN-001), CAPEX Policy (FIN-009)' },
     { label: 'Approved By', value: 'CFO — Elena Marchetti, Mar 15, 2026' },
     { label: 'Confidentiality', value: 'Restricted — Finance & Controlling only' },
@@ -533,7 +533,7 @@ export const FOLDER_FILES: Record<string, FileItem[]> = {
   'performance-mgmt': [
     { id: 'annual-review', name: 'Annual Performance Review', type: 'Process Model', description: 'Year-end review cycle including self-assessment, manager calibration and rating distribution', created: 'Mar 5, 2023', changed: 'Apr 28, 2026', changedBy: 'Sarah Kim', version: '3.0', status: 'Published', hasPublished: true },
     { id: 'pip-process', name: 'Performance Improvement Plan (PIP)', type: 'Process Model', description: 'Structured PIP flow from trigger through closure with HR Business Partner involvement', created: 'Jun 20, 2023', changed: 'Apr 15, 2026', changedBy: 'Sarah Kim', version: '1.0', status: 'Published', hasPublished: true },
-    { id: 'continuous-feedback', name: 'Continuous Feedback Journey', type: 'Customer Journey', description: 'Employee experience of giving and receiving feedback via SAP SuccessFactors Continuous Performance', created: 'Nov 5, 2023', changed: 'Apr 28, 2026', changedBy: 'Ludwig Grohe', version: '1.0', status: 'Draft' },
+    { id: 'continuous-feedback', name: 'Continuous Feedback Journey', type: 'Customer Journey', description: 'Employee experience of giving and receiving feedback via PeopleCore Continuous Performance', created: 'Nov 5, 2023', changed: 'Apr 28, 2026', changedBy: 'Ludwig Grohe', version: '1.0', status: 'Draft' },
   ],
   'learning-dev': [
     { id: 'learning-needs', name: 'Learning Needs Analysis', type: 'Process Model', description: 'Identification and prioritization of L&D needs from performance data and manager input', created: 'Apr 1, 2023', changed: 'Apr 10, 2026', changedBy: 'Sarah Kim', version: '2.0', status: 'Published', hasPublished: true },
@@ -561,7 +561,7 @@ export const FOLDER_FILES: Record<string, FileItem[]> = {
     { id: 'contract-compliance', name: 'Contract Compliance Monitoring', type: 'Process Model', description: 'Periodic compliance checks against contract terms and SLA tracking', created: 'Jan 5, 2024', changed: 'Apr 10, 2026', changedBy: 'Ludwig Grohe', version: '1.0', status: 'Draft', canExecute: true },
   ],
   'supplier-mgmt': [
-    { id: 'supplier-onboarding', name: 'Supplier Onboarding', type: 'Process Model', description: 'New supplier registration, risk assessment and master data setup in SAP Ariba', created: 'Apr 8, 2023', changed: 'Apr 22, 2026', changedBy: 'Paul Gray', version: '2.0', status: 'Published', hasPublished: true },
+    { id: 'supplier-onboarding', name: 'Supplier Onboarding', type: 'Process Model', description: 'New supplier registration, risk assessment and master data setup in ProcureNet', created: 'Apr 8, 2023', changed: 'Apr 22, 2026', changedBy: 'Paul Gray', version: '2.0', status: 'Published', hasPublished: true },
     { id: 'supplier-performance', name: 'Supplier Performance Review', type: 'Process Model', description: 'Quarterly scorecard review with KPI data from S/4HANA and stakeholder input', created: 'Oct 1, 2023', changed: 'Apr 15, 2026', changedBy: 'Paul Gray', version: '1.0', status: 'Published', hasPublished: true },
     { id: 'supplier-offboarding', name: 'Supplier Offboarding', type: 'Process Model', description: 'Controlled deactivation of suppliers including open PO resolution and system cleanup', created: 'Feb 10, 2024', changed: 'Apr 5, 2026', changedBy: 'Ludwig Grohe', version: '1.0', status: 'Draft' },
   ],
@@ -585,7 +585,7 @@ export const FOLDER_FILES: Record<string, FileItem[]> = {
     { id: 'onboarding-journey', name: 'New Customer Experience Journey', type: 'Customer Journey', description: 'Customer-facing journey map from signature through go-live and 90-day check-in', created: 'Sep 15, 2023', changed: 'Apr 28, 2026', changedBy: 'Sarah Kim', version: '1.0', status: 'Published', hasPublished: true },
   ],
   'service-request-mgmt': [
-    { id: 'ticket-to-resolve', name: 'Ticket-to-Resolve Process', type: 'Process Model', description: 'Customer service ticket lifecycle from creation to closure via SAP Service Cloud', created: 'Mar 12, 2023', changed: 'Apr 25, 2026', changedBy: 'Ludwig Grohe', version: '2.0', status: 'Published', hasPublished: true },
+    { id: 'ticket-to-resolve', name: 'Ticket-to-Resolve Process', type: 'Process Model', description: 'Customer service ticket lifecycle from creation to closure via ServiceDesk', created: 'Mar 12, 2023', changed: 'Apr 25, 2026', changedBy: 'Ludwig Grohe', version: '2.0', status: 'Published', hasPublished: true },
     { id: 'escalation-process', name: 'Service Escalation Process', type: 'Process Model', description: 'L1 to L3 escalation paths for complex customer issues with SLA breach alerts', created: 'Aug 5, 2023', changed: 'Apr 20, 2026', changedBy: 'Ludwig Grohe', version: '1.0', status: 'Published', hasPublished: true },
     { id: 'cs-journey', name: 'Customer Support Experience Journey', type: 'Customer Journey', description: 'Customer journey through self-service, chat and phone channels for issue resolution', created: 'Jan 18, 2024', changed: 'Apr 18, 2026', changedBy: 'Sarah Kim', version: '1.0', status: 'Draft' },
   ],
@@ -635,7 +635,7 @@ export type ViewVariant = {
 }
 
 export const INITIAL_VARIANTS: ViewVariant[] = [
-  { name: 'Standard', isDefault: true, global: true, author: 'SAP', labelReadOnly: true, hideDelete: true },
+  { name: 'Standard', isDefault: true, global: true, author: 'GlobalCorp', labelReadOnly: true, hideDelete: true },
   { name: 'Published Only', global: false, author: 'Sebastian Kaim' },
 ]
 

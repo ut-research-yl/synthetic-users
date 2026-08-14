@@ -68,7 +68,7 @@ function NavPreview({ type }: { type: NavDefaultState }) {
 const VIEW_SWITCH_ITEM = {
   id: 'view_switch',
   label: 'Enable view switch for Hub license users',
-  desc: 'Allows SAP Signavio Process Collaboration Hub license users to switch between Preview, Published view, and SAP Signavio Process Manager from the user menu. Users with a modeler license always have this option enabled.',
+  desc: 'Allows Process Collaboration Hub license users to switch between Preview, Published view, and Process Manager from the user menu. Users with a modeler license always have this option enabled.',
   checked: true,
 }
 
@@ -111,7 +111,7 @@ const NAV_PANEL_GROUPS: NavPanelGroup[] = [
     group: 'Mine and Analyze',
     items: [
       { id: 'data_management', label: 'Data Management', checked: true },
-      { id: 'analysis_configuration', label: 'Analysis Configuration', checked: true },
+      { id: 'analysis_configuration', label: 'Internal Analysis', checked: true },
       { id: 'process_analysis', label: 'Process Analysis', checked: true },
       { id: 'analysis_workflows', label: 'Analysis Workflows', checked: true },
     ],

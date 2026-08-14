@@ -138,7 +138,7 @@ const CUSTOM_ATTRS: Record<string, { label: string; type?: 'chip' | 'asset'; val
     { label: 'Related Assets', type: 'asset', values: [], assets: [
       { name: 'Candidate Evaluation Guide', subtype: 'BPMN', object: 'Process Model' },
     ]},
-    { label: 'IT Systems', values: ['SAP SuccessFactors'] },
+    { label: 'IT Systems', values: ['PeopleCore'] },
   ],
   'el-plan': [
     { label: 'Related Assets', type: 'asset', values: [], assets: [
@@ -156,7 +156,7 @@ const CUSTOM_ATTRS: Record<string, { label: string; type?: 'chip' | 'asset'; val
     { label: 'Related Assets', type: 'asset', values: [], assets: [
       { name: 'Offer Letter Template', subtype: 'BPMN', object: 'Process Model' },
     ]},
-    { label: 'IT Systems', values: ['SAP SuccessFactors'] },
+    { label: 'IT Systems', values: ['PeopleCore'] },
   ],
   'el-onboard': [
     { label: 'Related Assets', type: 'asset', values: [], assets: [
@@ -402,7 +402,7 @@ export default function ElementDetailPanel({ elementId, onClose, linkedShapes, o
         <div style={{ padding: '0.375rem 0 0.5rem' }}>
           <button
             onClick={() => setLiExpanded(v => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 0.375rem', width: '100%' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 0.375rem', width: '100%', userSelect: 'none' }}
           >
             <Icon name={liExpanded ? 'slim-arrow-down' : 'navigation-right-arrow'} style={{ width: '0.75rem', height: '0.75rem', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties} />
             <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', fontWeight: 700 } as React.CSSProperties}>

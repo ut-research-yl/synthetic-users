@@ -417,7 +417,7 @@ export default function Repository() {
         <MenuItem text="Add to Favorites" icon="unfavorite" />
         {REPORTING_ITEMS}
         <MenuItem text="Export as" icon="SAP-icons-v4/export">
-          <MenuItem text="SAP Signavio Archive (SGX)" />
+          <MenuItem text="Process Manager Archive (SGX)" />
           <MenuItem text="PDF" />
           <MenuItem text="Drools" />
           <MenuSeparator />
@@ -436,7 +436,7 @@ export default function Repository() {
         <MenuItem text="Publish Revision" icon="SAP-icons-v4/published" />
         <MenuItem text="Unpublish" icon="SAP-icons-v4/published-changed" disabled />
         <MenuItem text="Export as" icon="SAP-icons-v4/export">
-          <MenuItem text="SAP Signavio Archive (SGX)" />
+          <MenuItem text="Process Manager Archive (SGX)" />
           <MenuItem text="BPMN 2.0 XML" />
           <MenuItem text="XML" />
           <MenuItem text="PNG" />
@@ -459,7 +459,7 @@ export default function Repository() {
         <MenuItem text="Add to Favorites" icon="unfavorite" />
         {REPORTING_ITEMS}
         <MenuItem text="Export as" icon="SAP-icons-v4/export">
-          <MenuItem text="SAP Signavio Archive (SGX)" />
+          <MenuItem text="Process Manager Archive (SGX)" />
           <MenuItem text="PDF" />
           <MenuSeparator />
           <MenuItem text="Export Diagram Translations" />
@@ -1638,7 +1638,7 @@ export default function Repository() {
             </MenuItem>
             <MenuSeparator />
             <MenuItem text="Export as" icon="SAP-icons-v4/export">
-              <MenuItem text="SAP Signavio Archive (SGX)" />
+              <MenuItem text="Process Manager Archive (SGX)" />
               <MenuItem text="PDF" /><MenuItem text="Drools" />
               <MenuSeparator />
               <MenuItem text="Export Diagram Translations" />
@@ -1714,7 +1714,7 @@ export default function Repository() {
             {selectedRoot !== 'my-modeling' && <MenuSeparator />}
             {selectedRoot !== 'my-modeling' && <MenuItem text="Embed" icon="source-code" />}
             <MenuItem text="Export as" icon="SAP-icons-v4/export">
-              <MenuItem text="SAP Signavio Archive (SGX)" />
+              <MenuItem text="Process Manager Archive (SGX)" />
               <MenuItem text="BPMN 2.0 XML" />
               <MenuItem text="XML" />
               <MenuItem text="PNG" />
@@ -1726,7 +1726,7 @@ export default function Repository() {
               <MenuItem text="Export Diagram Translations" />
             </MenuItem>
             <MenuItem text="Import Diagram Translations" icon="SAP-icons-v4/import" />
-            {selectedRoot !== 'my-modeling' && <MenuItem text="Sync with SAP Cloud ALM" icon="synchronize" />}
+            {selectedRoot !== 'my-modeling' && <MenuItem text="Sync with ALM Platform" icon="synchronize" />}
             <MenuSeparator />
             <MenuItem text="Rename" icon="edit" /><MenuItem text="Move to" icon="SAP-icons-v4/file-move" /><MenuItem text="Copy to" icon="copy" /><MenuItem text="Move to Trash" icon="delete" />
           </>
@@ -2122,7 +2122,7 @@ export default function Repository() {
                               {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Embed</Button></ToolbarItem>}
                               <ToolbarItem><Button id="sel-export-btn" design="Transparent" endIcon="slim-arrow-down" onClick={() => setSelExportOpen(v => !v)}>Export as</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Import Diagram Translations</Button></ToolbarItem>
-                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Sync with SAP Cloud ALM</Button></ToolbarItem>}
+                              {selectedRoot !== 'my-modeling' && <ToolbarItem><Button design="Transparent">Sync with ALM Platform</Button></ToolbarItem>}
                               <ToolbarItem><Button design="Transparent" onClick={() => { const f = selectedFilesList[0]; if (f) { setRenamingFile(f); setEditFolderOpen(true) } }}>Rename</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Move to</Button></ToolbarItem>
                               <ToolbarItem><Button design="Transparent">Copy to</Button></ToolbarItem>
@@ -2384,7 +2384,7 @@ export default function Repository() {
                   <Menu opener="sel-export-btn" open={selExportOpen} onClose={() => setSelExportOpen(false)} onItemClick={() => setSelExportOpen(false)}>
                     {selAllNonFolders ? (
                       <>
-                        <MenuItem text="SAP Signavio Archive (SGX)" />
+                        <MenuItem text="Process Manager Archive (SGX)" />
                         <MenuItem text="BPMN 2.0 XML" />
                         <MenuItem text="XML" />
                         <MenuItem text="PNG" />
@@ -2397,7 +2397,7 @@ export default function Repository() {
                       </>
                     ) : selAllFolders ? (
                       <>
-                        <MenuItem text="SAP Signavio Archive (SGX)" />
+                        <MenuItem text="Process Manager Archive (SGX)" />
                         <MenuItem text="PDF" />
                         <MenuItem text="Drools" />
                         <MenuSeparator />
@@ -2405,7 +2405,7 @@ export default function Repository() {
                       </>
                     ) : (
                       <>
-                        <MenuItem text="SAP Signavio Archive (SGX)" />
+                        <MenuItem text="Process Manager Archive (SGX)" />
                         <MenuItem text="PDF" />
                         <MenuSeparator />
                         <MenuItem text="Export Diagram Translations" />
@@ -2442,7 +2442,7 @@ export default function Repository() {
                     <MenuItem text="Embed" icon="source-code" />
                     <MenuItem text="Import Diagram Translations" icon="SAP-icons-v4/import" />
                     <MenuSeparator />
-                    <MenuItem text="Sync with SAP Cloud ALM" icon="synchronize" />
+                    <MenuItem text="Sync with ALM Platform" icon="synchronize" />
                     <MenuSeparator />
                     <MenuItem text="Rename" icon="edit" />
                     <MenuItem text="Copy to" icon="copy" />
@@ -2512,7 +2512,7 @@ export default function Repository() {
                         <MenuSeparator />
                         <MenuItem text="Generate with AI" icon="ai" />
                         <MenuItem text="Import" icon="SAP-icons-v4/import">
-                          <MenuItem text="SAP Signavio Archive (SGX)" />
+                          <MenuItem text="Process Manager Archive (SGX)" />
                           <MenuItem text="Import BPMN 2.0 XML" />
                           <MenuItem text="Import DMN 1.2 XML" />
                           <MenuItem text="Import ARIS® Markup Language" />
@@ -2636,7 +2636,7 @@ export default function Repository() {
                       ) : (
                         <>
                           <MenuItem text="Export as" icon="SAP-icons-v4/export">
-                            <MenuItem text="SAP Signavio Archive (SGX)" />
+                            <MenuItem text="Process Manager Archive (SGX)" />
                             <MenuItem text="PDF" /><MenuItem text="Drools" />
                             <MenuSeparator />
                             <MenuItem text="Export Diagram Translations" />

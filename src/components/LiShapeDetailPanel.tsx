@@ -26,7 +26,7 @@ const WIDGET_MOCK: Record<string, { value: string; label: string; trend: string;
 const WIDGET_PATH_FALLBACK: Record<string, string> = {
   'ext-001': 'Order to Cash / O2C Analysis / Overview',
   'ext-002': 'Order to Cash / O2C Dashboard / Overview',
-  'ext-003': 'SAP O2C Onboarding / Onboarding Dashboard / Overview',
+  'ext-003': 'O2C Onboarding / Onboarding Dashboard / Overview',
   'ext-004': 'Plan to Produce / Production Dashboard / Overview',
   'ext-005': 'Order to Cash / O2C Analysis / Overview',
 }
@@ -316,7 +316,7 @@ const [previewOpen, setPreviewOpen] = useState(false)
         contentActionsSlot={[]}
         subHeaderSlot={shape.linkedBpmnId && shape.linkedBpmnName ? (
           <div onClick={() => onSelectLinkedElement?.(shape.linkedBpmnId!)}
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', cursor: 'pointer', userSelect: 'none' }}
           >
             <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', flexShrink: 0, background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="SAP-icons-v4/task-activity" style={{ width: '1rem', height: '1rem', color: '#0064d9' } as React.CSSProperties} />

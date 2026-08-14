@@ -203,7 +203,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       groupLabel: 'BPMN',
       domainObjectType: 'Process Model', assetType: 'BPMN',
       name: 'Accounts Payable Invoice Processing', version: '4.2', status: 'Published', processId: '3301',
-      description: 'End-to-end process for receiving, matching, and approving supplier invoices in SAP.',
+      description: 'End-to-end process for receiving, matching, and approving supplier invoices in the system.',
       createdAt: 'Jan 10, 2024', changedAt: 'Mar 05, 2025', folder: 'Finance / Accounts Payable',
       project: 'Finance Transformation 2026',
     },
@@ -217,7 +217,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
     {
       domainObjectType: 'Process Model', assetType: 'BPMN',
       name: 'Budget Planning & Forecasting', version: '2.8', status: 'Published', processId: '3303',
-      description: 'Annual budget cycle from cost center input to executive approval and SAP upload.',
+      description: 'Annual budget cycle from cost center input to executive approval and ERP upload.',
       createdAt: 'Mar 01, 2023', changedAt: 'Feb 18, 2025', folder: 'Finance / Controlling',
       project: 'Finance Transformation 2026',
     },
@@ -285,7 +285,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Executive dashboard showing DSO, DPO, working capital ratio and close cycle time.',
       createdAt: 'Feb 01, 2024', changedAt: 'Apr 15, 2025', folder: 'Finance / Reporting',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Finance KPIs Q1' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Finance KPIs Q1' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -293,7 +293,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Live view of overdue payables, blocked invoices, and exception queues by entity.',
       createdAt: 'May 12, 2024', changedAt: 'Mar 20, 2025', folder: 'Finance / Accounts Payable',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'AP Aging 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'AP Aging 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -301,7 +301,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Tracks close task completion status, bottlenecks and variance against SLA.',
       createdAt: 'Mar 08, 2023', changedAt: 'Apr 28, 2025', folder: 'Finance / Record to Report',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Close Cycle 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Close Cycle 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -309,7 +309,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Monthly comparison of planned vs actual spend by cost center and GL account.',
       createdAt: 'Jan 20, 2024', changedAt: 'Feb 14, 2025', folder: 'Finance / Controlling',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Budget FY2025' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Budget FY2025' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -317,7 +317,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Highlights unmatched IC transactions across entities ahead of close.',
       createdAt: 'Jun 15, 2024', changedAt: 'Jan 31, 2025', folder: 'Finance / Record to Report',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'IC Recon 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'IC Recon 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -325,7 +325,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Real-time cash position and 30-day liquidity forecast across all bank accounts.',
       createdAt: 'Aug 10, 2024', changedAt: 'Apr 05, 2025', folder: 'Finance / Treasury',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Treasury Q2 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Treasury Q2 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
     },
     // Initiative group — 3 items
     {
@@ -422,7 +422,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       groupLabel: 'BPMN',
       domainObjectType: 'Process Model', assetType: 'BPMN',
       name: 'Purchase Requisition to Order', version: '3.5', status: 'Published', processId: '5211',
-      description: 'Covers creation, approval and conversion of purchase requisitions to purchase orders in SAP.',
+      description: 'Covers creation, approval and conversion of purchase requisitions to purchase orders in the system.',
       createdAt: 'Jan 20, 2023', changedAt: 'Feb 10, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
@@ -476,7 +476,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Mar 01, 2024', changedAt: 'Apr 20, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Procurement KPIs Q1' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Procurement KPIs Q1' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -485,7 +485,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Jun 10, 2024', changedAt: 'Mar 15, 2025', folder: 'Procurement / Supplier Management',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Supplier OTD 2025' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Supplier OTD 2025' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -494,7 +494,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Jan 15, 2024', changedAt: 'Feb 28, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Spend DE 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Spend DE 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -503,7 +503,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Apr 22, 2024', changedAt: 'Apr 05, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Contract KPIs Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Contract KPIs Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -512,7 +512,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Jul 08, 2024', changedAt: 'Mar 30, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'PO Cycle 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'PO Cycle 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -521,7 +521,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Sep 12, 2024', changedAt: 'Jan 22, 2025', folder: 'Procurement / Accounts Payable',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Invoice Exceptions' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Invoice Exceptions' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -530,7 +530,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Nov 01, 2024', changedAt: 'Apr 12, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Spot Buy 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Spot Buy 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -539,7 +539,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Feb 20, 2024', changedAt: 'Mar 10, 2025', folder: 'Procurement / Supplier Management',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Supplier Risk Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Supplier Risk Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     // Initiative group — 2 items
     {
@@ -607,14 +607,14 @@ const P2P_QUARTERLY_RESPONSE: FakeResponse = {
       name: 'P2P Process Health Monitor', version: '2.4', status: 'Published', processId: 'DASH-601',
       description: 'Live dashboard showing PO cycle time, invoice exception rate, on-time delivery and contract compliance KPIs.',
       createdAt: 'Mar 05, 2024', changedAt: 'Apr 15, 2025', folder: 'Purchase-to-Pay',
-      customChips: [{ label: 'Analysis Configuration:', value: 'P2P Health Q2 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'P2P Health Q2 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     // Dictionary Entries — 6 items
     {
       groupLabel: 'Dictionary Entries',
       domainObjectType: 'Dictionary Entry', assetType: 'Dictionary Entry',
       displayAssetType: 'IT System',
-      name: 'SAP Ariba', version: '2.0', status: 'Published', processId: 'DE-701',
+      name: 'ProcureNet', version: '2.0', status: 'Published', processId: 'DE-701',
       description: 'Procurement platform used for supplier management, contract negotiation and purchase order processing across Purchase-to-Pay.',
       createdAt: 'Jun 10, 2023', changedAt: 'Jan 08, 2025', folder: 'IT Systems',
       avatarColorScheme: 'Accent1',
@@ -669,7 +669,7 @@ const P2P_QUARTERLY_RESPONSE: FakeResponse = {
     {
       domainObjectType: 'Dictionary Entry', assetType: 'Dictionary Entry',
       displayAssetType: 'IT System',
-      name: 'SAP S/4HANA Procurement', version: '3.0', status: 'Published', processId: 'DE-706',
+      name: 'CoreERP Procurement', version: '3.0', status: 'Published', processId: 'DE-706',
       description: 'Core ERP system used for purchase requisitions, purchase orders, goods receipts and invoice verification.',
       createdAt: 'Jan 10, 2022', changedAt: 'Feb 28, 2025', folder: 'IT Systems',
       avatarColorScheme: 'Accent1',
@@ -717,8 +717,8 @@ const OTC_DOWNSTREAM_RESPONSE: FakeResponse = {
     {
       domainObjectType: 'Dictionary Entry', assetType: 'Dictionary Entry',
       displayAssetType: 'IT System',
-      name: 'SAP Order Management', version: '2.0', status: 'Published', processId: 'DE-801',
-      description: 'Core system for sales order creation, scheduling, pricing and order confirmation in SAP S/4HANA.',
+      name: 'Order Manager', version: '2.0', status: 'Published', processId: 'DE-801',
+      description: 'Core system for sales order creation, scheduling, pricing and order confirmation in CoreERP.',
       createdAt: 'Jan 08, 2022', changedAt: 'Mar 01, 2025', folder: 'IT Systems',
       avatarColorScheme: 'Accent2', avatarIcon: 'computer', avatarShape: 'Square', customChips: [],
       parentId: 'center',
@@ -931,7 +931,7 @@ const S2P_INITIATIVES_RESPONSE: FakeResponse = {
     {
       domainObjectType: 'Dictionary Entry', assetType: 'Dictionary Entry',
       displayAssetType: 'IT System',
-      name: 'SAP Ariba', version: '2.0', status: 'Published', processId: 'DE-S2P-01',
+      name: 'ProcureNet', version: '2.0', status: 'Published', processId: 'DE-S2P-01',
       description: 'Procurement platform for supplier management, sourcing and purchase order processing.',
       createdAt: 'Jan 08, 2022', changedAt: 'Jan 08, 2025', folder: 'IT Systems',
       avatarColorScheme: 'Accent1', avatarIcon: 'computer', avatarShape: 'Square', customChips: [],
@@ -1072,7 +1072,7 @@ const LENA_T1_RESPONSE: FakeResponse = {
     {
       domainObjectType: 'Process Model', assetType: 'BPMN',
       name: 'Purchase Order Creation', version: '3.1', status: 'Published', processId: 'PROC-102',
-      description: 'Covers the creation, approval and conversion of purchase requisitions into purchase orders in SAP, including multi-level approval workflows and preferred vendor assignment.',
+      description: 'Covers the creation, approval and conversion of purchase requisitions into purchase orders in the system, including multi-level approval workflows and preferred vendor assignment.',
       createdAt: 'Feb 10, 2023', changedAt: 'Mar 15, 2025', folder: 'Procurement EMEA / Purchase-to-Pay',
       flagIcon: true,
       customChips: [
@@ -1138,7 +1138,7 @@ const LENA_IDR_PEOPLE_RESPONSE: FakeResponse = {
     'Checking process owner, responsible roles, dashboard owners, and initiative owners in SR.',
     'Found 5 people connected across SPM, PINT, and TM.',
   ],
-  content: 'Here are all the people connected to **Invoice Dispute Resolution** across Signavio:\n\n**Process ownership (SPM)**\n- **Laure Chen** — Process Owner. Responsible for the design and maintenance of the process model.\n- **Marcus Holt** — Process Responsible. Accountable for day-to-day execution and exception handling.\n\n**Performance monitoring (PINT)**\n- **Sophie Wagner** — Owner of the *AP Efficiency* dashboard, which includes the metric that tracks the invoice dispute resolution time.\n\n**No active initiative** is currently targeting this process. No programme owner is assigned.\n\n**Related dictionary entries**\n- **Jan Holt** — Owner of the *Invoice* dictionary entry, which is referenced by this process.\n\nIn total: 4 people are connected to this process via SR today. The gap — no programme owner — is why the performance issue has no one assigned to close it.',
+  content: 'Here are all the people connected to **Invoice Dispute Resolution** across the platform:\n\n**Process ownership (SPM)**\n- **Laure Chen** — Process Owner. Responsible for the design and maintenance of the process model.\n- **Marcus Holt** — Process Responsible. Accountable for day-to-day execution and exception handling.\n\n**Performance monitoring (PINT)**\n- **Sophie Wagner** — Owner of the *AP Efficiency* dashboard, which includes the metric that tracks the invoice dispute resolution time.\n\n**No active initiative** is currently targeting this process. No programme owner is assigned.\n\n**Related dictionary entries**\n- **Jan Holt** — Owner of the *Invoice* dictionary entry, which is referenced by this process.\n\nIn total: 4 people are connected to this process via SR today. The gap — no programme owner — is why the performance issue has no one assigned to close it.',
   followUpPrompts: [
     'Walk me through what\'s actually happening between those two initiatives.',
     'What needs my attention next?',

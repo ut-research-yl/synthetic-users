@@ -3,7 +3,7 @@ import { Button, Dialog, Bar, Title, Label, Input, Select, Option, TextArea, Ill
 
 type Props = { open: boolean; onClose: () => void; onSave?: (widget: { id: string; name: string; source: string; url: string; shapeType: string }) => void }
 
-const SOURCES = ['Looker Studio', 'Tableau', 'Power BI', 'SAP Analytics Cloud', 'Grafana', 'Custom URL']
+const SOURCES = ['Looker Studio', 'Tableau', 'Power BI', 'Analytics Cloud', 'Grafana', 'Custom URL']
 
 const SHAPE_TYPES = [
   { value: 'Indicator',     label: 'Indicator',     icon: 'SAP-icons-v4/data-indicator' },

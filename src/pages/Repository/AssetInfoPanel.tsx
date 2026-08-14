@@ -409,7 +409,7 @@ function ModelAttributesTab({ description }: { description?: string }) {
   const boldText: React.CSSProperties = { fontSize: 'var(--sapFontSize)', fontWeight: '700', color: 'var(--sapList_TextColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }
   const subText: React.CSSProperties = { fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)', fontFamily: "var(--sapFontFamily,'72',sans-serif)" }
 
-  const tags = ['Finance', 'Procurement', 'SAP S/4HANA', 'P2P', 'Core Process']
+  const tags = ['Finance', 'Procurement', 'CoreERP', 'P2P', 'Core Process']
   const users = [
     { initials: 'LF', color: 'Accent6' as const, name: 'Leadership Forum', sub: 'User Group' },
     { initials: 'CW', color: 'Accent1' as const, name: 'Claire Westfield', sub: 'claire.westfield@globalcorp.com' },
@@ -422,7 +422,7 @@ function ModelAttributesTab({ description }: { description?: string }) {
     { object: 'Risk' as never, name: 'Unauthorized Purchase Risk', sub: 'Risk / Procurement' },
     { object: 'File' as never, name: 'AP Policy Document v2.1', sub: 'File' },
     { object: 'Process Model' as never, name: 'Supplier Onboarding', sub: 'BPMN' },
-    { object: 'Link' as never, name: 'SAP Help Portal – P2P', sub: 'URL' },
+    { object: 'Link' as never, name: 'Help Portal – P2P', sub: 'URL' },
   ]
   const risks = [
     { object: 'Risk' as never, name: 'Unauthorized Purchase Order Risk', sub: 'Risk', indent: false },
@@ -1267,7 +1267,7 @@ export default function AssetInfoPanel({
       <MenuSeparator />
       <MenuItem text="Embed" icon="source-code" />
       <MenuItem text="Export as" icon="SAP-icons-v4/export">
-        <MenuItem text="SAP Signavio Archive (SGX)" />
+        <MenuItem text="Process Manager Archive (SGX)" />
         <MenuItem text="BPMN 2.0 XML" /><MenuItem text="XML" /><MenuItem text="PNG" />
         <MenuItem text="DMN 1.2 XML" /><MenuItem text="SVG" /><MenuItem text="PDF" /><MenuItem text="Drools" />
         <MenuSeparator />
@@ -1275,7 +1275,7 @@ export default function AssetInfoPanel({
       </MenuItem>
       <MenuItem text="Import Diagram Translations" icon="SAP-icons-v4/import" />
       <MenuSeparator />
-      <MenuItem text="Sync with SAP Cloud ALM" icon="synchronize" />
+      <MenuItem text="Sync with ALM Platform" icon="synchronize" />
       <MenuSeparator />
       <MenuItem text="Rename" icon="edit" /><MenuItem text="Move to" icon="SAP-icons-v4/file-move" /><MenuItem text="Copy to" icon="copy" /><MenuItem text="Move to Trash" icon="delete" />
     </>

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { Send, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const SYSTEM_OPTIONS = ['SAP ECC BST : 910', 'SAP S/4HANA Cloud', 'SAP BTP', 'SAP Ariba'];
+const SYSTEM_OPTIONS = ['LegacyERP BST : 910', 'CoreERP Cloud', 'CloudPlatform', 'ProcureNet'];
 
 type PCAInputFieldProps = {
   onSend: (message: string) => void;

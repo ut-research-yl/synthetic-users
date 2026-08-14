@@ -125,7 +125,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: '22 hours ago',  lastPublished: 28,
     preview: undefined,
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-60 Recruiting',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-60 Recruiting',
     lastSavedById: EDITOR_IDS[1], lastPublishedById: EDITOR_IDS[1] },
 
   { title: 'MHR-60 Recruiting', isFavorite: false,
@@ -134,7 +134,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: '22 hours ago',  lastPublished: 28,
     preview: undefined,
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-60 Recruiting',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-60 Recruiting',
     lastSavedById: EDITOR_IDS[2], lastPublishedById: EDITOR_IDS[2] },
 
   { title: 'MHR-20-30-70-20 Monitor Leave of Absence', isFavorite: false,
@@ -143,7 +143,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 8,              lastPublished: 28,
     preview: 'SampleProcess1',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-20 HR Administration',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-20 HR Administration',
     lastSavedById: EDITOR_IDS[3], lastPublishedById: EDITOR_IDS[3] },
 
   { title: 'HTR_01 Manage Workforce', isFavorite: true,
@@ -152,7 +152,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Draft',
     lastAccessed: 10,             lastPublished: 28,
     preview: undefined,
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Hire to Retire for Human Resources',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Hire to Retire for Human Resources',
     lastSavedById: EDITOR_IDS[4], lastPublishedById: EDITOR_IDS[5] },
 
   { title: 'Process Modellierer', isFavorite: false,
@@ -170,7 +170,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 10,             lastPublished: 28,
     preview: 'SampleProcess2',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-10 Organizational Management',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-10 Organizational Management',
     lastSavedById: EDITOR_IDS[6], lastPublishedById: EDITOR_IDS[6] },
 
   { title: 'MHR-10-20-10 Create/Update Foundation Element', isFavorite: false,
@@ -179,7 +179,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 18,             lastPublished: 28,
     preview: 'SampleProcess3',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-10 Organizational Management',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-10 Organizational Management',
     lastSavedById: EDITOR_IDS[7], lastPublishedById: EDITOR_IDS[0] },
 
   { title: 'MHR-30-10-50 Pay Out Time Accounts', isFavorite: false,
@@ -188,7 +188,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 24,             lastPublished: 28,
     preview: 'SampleProcess4',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-30 Time and Attendance Management',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-30 Time and Attendance Management',
     lastSavedById: EDITOR_IDS[0], lastPublishedById: EDITOR_IDS[1] },
 
   { title: 'MHR-70-10 Onboarding', isFavorite: false,
@@ -197,7 +197,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 28,             lastPublished: 28,
     preview: undefined,
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-70 Onboarding',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-70 Onboarding',
     lastSavedById: EDITOR_IDS[1], lastPublishedById: EDITOR_IDS[1] },
 
   { title: 'MHR-20-40-40 Manage Termination - Death of an Employee', isFavorite: false,
@@ -206,7 +206,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 28,             lastPublished: 28,
     preview: 'SampleProcess1',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-20 HR Administration',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-20 HR Administration',
     lastSavedById: EDITOR_IDS[2], lastPublishedById: EDITOR_IDS[2] },
 
   { title: 'HTR_04 Educate and Develop', isFavorite: false,
@@ -215,7 +215,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 28,             lastPublished: 28,
     preview: undefined,
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Hire to Retire for Human Resources',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Hire to Retire for Human Resources',
     lastSavedById: EDITOR_IDS[3], lastPublishedById: EDITOR_IDS[3] },
 
   { title: 'HTR_02 Attract and Acquire', isFavorite: false,
@@ -224,7 +224,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 28,             lastPublished: 28,
     preview: undefined,
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Hire to Retire for Human Resources',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Hire to Retire for Human Resources',
     lastSavedById: EDITOR_IDS[4], lastPublishedById: EDITOR_IDS[5] },
 
   { title: 'MHR-60-10-10 Create Job Requisition', isFavorite: false,
@@ -233,7 +233,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 28,  lastSaved: 28,  state: 'Published',
     lastAccessed: 28,             lastPublished: 28,
     preview: 'SampleProcess2',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-60 Recruiting',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-60 Recruiting',
     lastSavedById: EDITOR_IDS[5], lastPublishedById: EDITOR_IDS[5] },
 
   { title: 'MHR-20-10-30 Administer Internal Hire (New Employment)', isFavorite: false,
@@ -242,7 +242,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 131, lastSaved: 28,  state: 'Published',
     lastAccessed: 131,            lastPublished: 28,
     preview: 'SampleProcess3',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-20 HR Administration',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-20 HR Administration',
     lastSavedById: EDITOR_IDS[6], lastPublishedById: EDITOR_IDS[6] },
 
   { title: 'MHR-70-10-10-20 Perform Onboarding Tasks', isFavorite: false,
@@ -251,7 +251,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 149, lastSaved: 28,  state: 'Published',
     lastAccessed: 131,            lastPublished: 28,
     preview: 'SampleProcess4',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-70 Onboarding',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-70 Onboarding',
     lastSavedById: EDITOR_IDS[7], lastPublishedById: EDITOR_IDS[0] },
 
   { title: 'MHR-60-10-10-10 Conduct Strategy Alignment Meeting with Hiring Manager', isFavorite: false,
@@ -260,7 +260,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 131, lastSaved: 28,  state: 'Published',
     lastAccessed: 131,            lastPublished: 28,
     preview: 'SampleProcess1',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-60 Recruiting',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-60 Recruiting',
     lastSavedById: EDITOR_IDS[0], lastPublishedById: EDITOR_IDS[1] },
 
   { title: 'MHR-130-20-10 Create Employee Inquiry', isFavorite: false,
@@ -269,7 +269,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 135, lastSaved: 28,  state: 'Published',
     lastAccessed: 135,            lastPublished: 28,
     preview: 'SampleProcess2',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-130 Service Center',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-130 Service Center',
     lastSavedById: EDITOR_IDS[1], lastPublishedById: EDITOR_IDS[1] },
 
   { title: 'MHR-130-10-10 Manage Knowledge Base', isFavorite: false,
@@ -278,7 +278,7 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 162, lastSaved: 28,  state: 'Published',
     lastAccessed: 138,            lastPublished: 28,
     preview: 'SampleProcess3',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-130 Service Center',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-130 Service Center',
     lastSavedById: EDITOR_IDS[2], lastPublishedById: EDITOR_IDS[2] },
 
   { title: 'MHR-60-10-70 Close Recruiting Process', isFavorite: false,
@@ -287,10 +287,10 @@ export const REPOSITORY_ITEMS: MockItem[] = [
     created: 142, lastSaved: 28,  state: 'Published',
     lastAccessed: 142,            lastPublished: 28,
     preview: 'SampleProcess4',
-    folderPath: 'Modeling Files/SAP SuccessFactors human resource processes/SAP SuccessFactors (HXM)/Manage Human Resources/MHR-60 Recruiting',
+    folderPath: 'Modeling Files/PeopleCore HR processes/PeopleCore (HXM)/Manage Human Resources/MHR-60 Recruiting',
     lastSavedById: EDITOR_IDS[3], lastPublishedById: EDITOR_IDS[3] },
 
-  { title: 'SAP SuccessFactors (HXM) processes', isFavorite: true,
+  { title: 'PeopleCore (HXM) processes', isFavorite: true,
     description: 'The leading practice process "Hire to Retire" (HTR) addresses all activities associated with managing the overall employee lifecycle.',
     object: 'Value Chain', type: 'Value Chain',
     created: 30, lastSaved: 30, state: 'Draft',
@@ -383,7 +383,7 @@ export const MPO_ITEMS: MockItem[] = ([
   { title: 'HTR_01 Manage Workforce', roles: [14, 28] },
   { title: 'HTR_02 Attract and Acquire', roles: [28, 35, 38] },
   { title: 'HTR_04 Educate and Develop', roles: [14, 27, 28] },
-  { title: 'SAP SuccessFactors (HXM) processes', roles: [14] },
+  { title: 'PeopleCore (HXM) processes', roles: [14] },
   { title: 'Lead-to-Cash', roles: [] },
   { title: 'Business Process Lifecycle Modeling', roles: [] },
 ] as Array<{ title: string; roles: number[] }>).map(({ title, roles }) => {

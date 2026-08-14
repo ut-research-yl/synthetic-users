@@ -12,7 +12,7 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    title: 'Welcome to SAP Signavio',
+    title: 'Welcome to Process Manager',
     body: "We're unifying Process Manager and Repository into a single, integrated experience — everything you need to model, manage, and transform your processes in one place.",
   },
   {

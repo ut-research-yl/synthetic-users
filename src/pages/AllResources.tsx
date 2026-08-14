@@ -464,7 +464,7 @@ export default function AllResources({ onAssetClick, onSelectionCountChange, con
             <MenuItem text="Publish Revision" icon="SAP-icons-v4/published" />
             <MenuItem text="Unpublish" icon="SAP-icons-v4/published-changed" disabled />
             <MenuItem text="Export as" icon="SAP-icons-v4/export">
-              <MenuItem text="SAP Signavio Archive (SGX)" />
+              <MenuItem text="Process Manager Archive (SGX)" />
               <MenuItem text="BPMN 2.0 XML" /><MenuItem text="XML" /><MenuItem text="PNG" />
               <MenuItem text="DMN 1.2 XML" /><MenuItem text="SVG" /><MenuItem text="PDF" /><MenuItem text="Drools" />
               <MenuSeparator />
@@ -531,7 +531,7 @@ export default function AllResources({ onAssetClick, onSelectionCountChange, con
             <MenuSeparator />
             <MenuItem text="Embed" icon="source-code" />
             <MenuItem text="Export as" icon="SAP-icons-v4/export">
-              <MenuItem text="SAP Signavio Archive (SGX)" />
+              <MenuItem text="Process Manager Archive (SGX)" />
               <MenuItem text="BPMN 2.0 XML" /><MenuItem text="XML" /><MenuItem text="PNG" />
               <MenuItem text="DMN 1.2 XML" /><MenuItem text="SVG" /><MenuItem text="PDF" /><MenuItem text="Drools" />
               <MenuSeparator />
@@ -539,7 +539,7 @@ export default function AllResources({ onAssetClick, onSelectionCountChange, con
             </MenuItem>
             <MenuItem text="Import Diagram Translations" icon="SAP-icons-v4/import" />
             <MenuSeparator />
-            <MenuItem text="Sync with SAP Cloud ALM" icon="synchronize" />
+            <MenuItem text="Sync with ALM Platform" icon="synchronize" />
             <MenuSeparator />
             <MenuItem text="Rename" icon="edit" />
             <MenuItem text="Move to" icon="SAP-icons-v4/file-move" />
@@ -621,7 +621,7 @@ export default function AllResources({ onAssetClick, onSelectionCountChange, con
             <ToolbarItem><Button design="Transparent" icon="source-code">Embed</Button></ToolbarItem>
             <ToolbarItem><Button id="sel-export-btn-ar" design="Transparent" icon="SAP-icons-v4/export" endIcon="slim-arrow-down" onClick={() => setSelExportOpen(v => !v)}>Export as</Button></ToolbarItem>
             <ToolbarItem><Button design="Transparent" icon="SAP-icons-v4/import">Import Diagram Translations</Button></ToolbarItem>
-            <ToolbarItem><Button design="Transparent" icon="synchronize">Sync with SAP Cloud ALM</Button></ToolbarItem>
+            <ToolbarItem><Button design="Transparent" icon="synchronize">Sync with ALM Platform</Button></ToolbarItem>
             <ToolbarItem><Button design="Transparent" icon="edit" onClick={() => { const item = displayResults.find(r => selectedIds.has(r.id)); if (item) { setRenamingItem(item); setRenameDialogOpen(true) } }}>Rename</Button></ToolbarItem>
             <ToolbarItem><Button design="Transparent" icon="SAP-icons-v4/file-move">Move to</Button></ToolbarItem>
             <ToolbarItem><Button design="Transparent" icon="copy">Copy to</Button></ToolbarItem>
@@ -799,7 +799,7 @@ export default function AllResources({ onAssetClick, onSelectionCountChange, con
           <MenuItem text="User/Group assignment" />
         </Menu>
         <Menu opener="sel-export-btn-ar" open={selExportOpen} onClose={() => setSelExportOpen(false)} onItemClick={() => setSelExportOpen(false)}>
-          <MenuItem text="SAP Signavio Archive (SGX)" />
+          <MenuItem text="Process Manager Archive (SGX)" />
           <MenuItem text="BPMN 2.0 XML" />
           <MenuItem text="XML" />
           <MenuItem text="PNG" />
@@ -839,7 +839,7 @@ export default function AllResources({ onAssetClick, onSelectionCountChange, con
           <MenuItem text="Embed" icon="source-code" />
           <MenuItem text="Import Diagram Translations" icon="SAP-icons-v4/import" />
           <MenuSeparator />
-          <MenuItem text="Sync with SAP Cloud ALM" icon="synchronize" />
+          <MenuItem text="Sync with ALM Platform" icon="synchronize" />
           <MenuSeparator />
           <MenuItem text="Rename" icon="edit" />
           <MenuItem text="Copy to" icon="copy" />
@@ -940,7 +940,7 @@ export default function AllResources({ onAssetClick, onSelectionCountChange, con
             <MenuItem text="User/Group assignment" />
           </Menu>
           <Menu opener="sel-export-btn-ar" open={selExportOpen} onClose={() => setSelExportOpen(false)} onItemClick={() => setSelExportOpen(false)}>
-            <MenuItem text="SAP Signavio Archive (SGX)" />
+            <MenuItem text="Process Manager Archive (SGX)" />
             <MenuItem text="BPMN 2.0 XML" />
             <MenuItem text="XML" /><MenuItem text="PNG" />
             <MenuItem text="DMN 1.2 XML" /><MenuItem text="SVG" /><MenuItem text="PDF" /><MenuItem text="Drools" />

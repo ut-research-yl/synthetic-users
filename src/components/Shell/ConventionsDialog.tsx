@@ -30,15 +30,15 @@ type ConventionSection = {
 
 const SECTIONS: ConventionSection[] = [
   {
-    name: 'SAP Signavio Process Governance BPMN 2.0 conventions',
+    name: 'Process Governance BPMN 2.0 conventions',
     entries: [
       { severity: 'warning', name: 'Absence of deadlocks', description: 'Checks if the diagram is free of deadlocks.' },
       { severity: 'warning', name: 'Absence of multi merges', description: 'Checks if the diagram is free of multi merges.' },
       { severity: 'error', name: 'Absence of split and join behavior on one element', description: 'Checks if all gateways are either splitting or merging.' },
       {
         severity: null,
-        name: 'SAP Signavio Process Governance BPMN 2.0 conventions',
-        description: 'Checks if the diagram follows the conventions required for interchange with SAP Signavio Process Governance.',
+        name: 'Process Governance BPMN 2.0 conventions',
+        description: 'Checks if the diagram follows the conventions required for interchange with Process Governance.',
         children: [
           { severity: 'error', name: 'Usage of supported task types' },
         ],
@@ -48,7 +48,7 @@ const SECTIONS: ConventionSection[] = [
         name: 'Usage of a defined BPMN subset',
         description: 'Checks if the defined BPMN sub set is used in the diagram.',
         children: [
-          { severity: 'warning', name: 'BPMN 2.0 for SAP Signavio Process Governance' },
+          { severity: 'warning', name: 'BPMN 2.0 for Process Governance' },
         ],
       },
       { severity: 'error', name: 'Usage of correct syntax', description: 'Checks if all diagrams are modeled using correct syntax.' },
@@ -87,7 +87,7 @@ const SECTIONS: ConventionSection[] = [
     ],
   },
   {
-    name: 'SAP Best Practices',
+    name: 'Best Practices',
     entries: [
       { severity: 'error', name: 'A process must have exactly one start event', description: 'Ensures unambiguous process entry point.' },
       { severity: 'error', name: 'A process must have at least one end event', description: 'Ensures the process has a defined termination.' },

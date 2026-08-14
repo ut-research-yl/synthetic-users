@@ -23,7 +23,7 @@ const CWD_DATA: Record<string, ProcessData> = {
       'O2C Executive Summary':   { pages: { 'Overview': ['value-D-001','value-D-005','ring-D-001','pie-D-001'] } },
     },
   },
-  'SAP O2C Onboarding': {
+  'O2C Onboarding': {
     Investigation: { 'Onboarding Analysis': { pages: { 'Main': ['bar-chart-I-002','ring-I-001','line-I-003','value-I-002'], 'Funnel': ['hist-I-001','bar-chart-I-002','area-I-001'] } } },
     Dashboard: {
       'Onboarding Dashboard': { pages: { 'Overview': ['bar-chart-D-002','value-D-002','pie-D-003','area-D-003'] } },
@@ -164,8 +164,18 @@ const EXTERNAL_WIDGETS: ExternalWidget[] = [
   { id: 'ext-001', name: 'Sales Performance Dashboard', source: 'Tableau',         url: 'https://tableau.example.com/views/sales' },
   { id: 'ext-002', name: 'Marketing KPIs',              source: 'Looker Studio',   url: 'https://lookerstudio.google.com/u/0/reporting/abc' },
   { id: 'ext-003', name: 'Revenue Forecast',            source: 'Power BI',        url: 'https://app.powerbi.com/view?r=abc123' },
-  { id: 'ext-004', name: 'Cost Center Overview',        source: 'SAP Analytics Cloud', url: 'https://sac.example.com/overview' },
+  { id: 'ext-004', name: 'Cost Center Overview',        source: 'Analytics Cloud', url: 'https://sac.example.com/overview' },
   { id: 'ext-005', name: 'Headcount Report',            source: 'Grafana',         url: 'https://grafana.example.com/d/headcount' },
+  { id: 'ext-013', name: 'Account Revenue Breakdown',   source: 'Tableau',         url: 'https://tableau.example.com/views/account-revenue' },
+  { id: 'ext-014', name: 'Actuals vs Budget',           source: 'Power BI',        url: 'https://app.powerbi.com/view?r=avb001' },
+  { id: 'ext-015', name: 'Asset Utilization Report',    source: 'Analytics Cloud', url: 'https://sac.example.com/asset-util' },
+  { id: 'ext-006', name: 'Supply Chain Metrics',        source: 'Tableau',         url: 'https://tableau.example.com/views/supply-chain' },
+  { id: 'ext-007', name: 'Customer Satisfaction Score', source: 'Looker Studio',   url: 'https://lookerstudio.google.com/u/0/reporting/def' },
+  { id: 'ext-008', name: 'Procurement Spend Analysis',  source: 'Power BI',        url: 'https://app.powerbi.com/view?r=def456' },
+  { id: 'ext-009', name: 'Operations Overview',         source: 'Analytics Cloud', url: 'https://sac.example.com/operations' },
+  { id: 'ext-010', name: 'IT Infrastructure Health',    source: 'Grafana',         url: 'https://grafana.example.com/d/infra' },
+  { id: 'ext-011', name: 'Finance Consolidation',       source: 'Power BI',        url: 'https://app.powerbi.com/view?r=ghi789' },
+  { id: 'ext-012', name: 'HR Attrition Trends',         source: 'Looker Studio',   url: 'https://lookerstudio.google.com/u/0/reporting/ghi' },
 ]
 
 // ── Drag ghost ────────────────────────────────────────────────────────────────
@@ -255,7 +265,7 @@ function WidgetCard({ widget, onSelect }: { widget: Widget; onSelect?: () => voi
           <Text style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: '700', color: 'var(--sapTextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {widget.name}
           </Text>
-          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Analysis Configuration"
+          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Internal Analysis"
             style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties}
             onClick={(e: React.MouseEvent) => e.stopPropagation()} />
         </div>
@@ -348,7 +358,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
     ? `${location.process} › ${location.section}`
     : location.type
     ? `${location.process} › ${location.type}`
-    : location.process ?? 'Analysis Configuration'
+    : location.process ?? 'Internal Analysis'
 
   const filtered = WIDGETS.filter(w => {
     if (selectedSource === 'External Widget') return false
@@ -360,7 +370,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
   })
 
   const filteredExternal = externalWidgets.filter(w => {
-    if (selectedSource === 'Analysis Configuration') return false
+    if (selectedSource === 'Internal Analysis') return false
     if (selectedType) return false
     if (pageWidgetIds) return false
     if (!query) return true
@@ -370,11 +380,18 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
 
   const totalCount = filtered.length + filteredExternal.length
 
-  const sortedFiltered = [...filtered].sort((a, b) => {
-    if (sortOrder === 'name-asc') return a.name.localeCompare(b.name)
-    if (sortOrder === 'name-desc') return b.name.localeCompare(a.name)
-    if (sortOrder === 'recently-added') return WIDGETS.indexOf(b) - WIDGETS.indexOf(a)
-    return 0 // last-edited: keep original order
+  const combined = [
+    ...filtered.map(w => ({ kind: 'internal' as const, widget: w })),
+    ...filteredExternal.map(w => ({ kind: 'external' as const, widget: w })),
+  ].sort((a, b) => {
+    if (sortOrder === 'name-asc') return a.widget.name.localeCompare(b.widget.name)
+    if (sortOrder === 'name-desc') return b.widget.name.localeCompare(a.widget.name)
+    if (sortOrder === 'recently-added') {
+      if (a.kind !== b.kind) return a.kind === 'external' ? -1 : 1
+      if (a.kind === 'internal' && b.kind === 'internal') return WIDGETS.indexOf(b.widget) - WIDGETS.indexOf(a.widget)
+      return 0
+    }
+    return 0
   })
 
   const hasFilters = !!selectedType || !!selectedSource || !!location.process
@@ -493,8 +510,11 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
           {totalCount === 0
             ? <div className={s.empty}><Text style={{ color: 'var(--sapContent_LabelColor)' }}>No results found</Text></div>
             : <>
-                {sortedFiltered.map(w => <WidgetCard key={w.id} widget={w} onSelect={() => onWidgetSelect?.(w)} />)}
-                {filteredExternal.map(w => <ExternalWidgetCard key={w.id} widget={w} onSelect={() => onWidgetSelect?.(w)} />)}
+                {combined.map(item =>
+                  item.kind === 'internal'
+                    ? <WidgetCard key={item.widget.id} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} />
+                    : <ExternalWidgetCard key={`ext-${item.widget.id}`} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} />
+                )}
               </>
           }
         </div>
@@ -565,7 +585,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
           const txt = e.detail?.text
           setSelectedSource(txt)
         }}>
-          <MenuItem text="Analysis Configuration" />
+          <MenuItem text="Internal Analysis" />
           <MenuItem text="External Widget" />
         </Menu>,
         document.body

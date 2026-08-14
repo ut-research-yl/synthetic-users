@@ -11,15 +11,15 @@ import { SettingsSection } from '../components/SettingsPageLayout'
 import s from '../components/SettingsPage.module.css'
 
 const SYSTEMS = [
-  { id: 'QE6:002', type: 'SAP ECC', syncStatus: 'Settings Synced', systemStatus: 'Registered', activationStatus: 'Activated' },
-  { id: 'QE8:004', type: 'SAP ECC', syncStatus: 'Settings Synced', systemStatus: 'Registered', activationStatus: 'Activated' },
-  { id: 'QIA:001', type: 'SAP ECC', syncStatus: 'Settings Synced', systemStatus: 'Registered', activationStatus: 'Activated' },
-  { id: 'QND:005', type: 'SAP ECC', syncStatus: 'Sync Pending', systemStatus: 'Registered', activationStatus: 'Activated' },
+  { id: 'QE6:002', type: 'LegacyERP', syncStatus: 'Settings Synced', systemStatus: 'Registered', activationStatus: 'Activated' },
+  { id: 'QE8:004', type: 'LegacyERP', syncStatus: 'Settings Synced', systemStatus: 'Registered', activationStatus: 'Activated' },
+  { id: 'QIA:001', type: 'LegacyERP', syncStatus: 'Settings Synced', systemStatus: 'Registered', activationStatus: 'Activated' },
+  { id: 'QND:005', type: 'LegacyERP', syncStatus: 'Sync Pending', systemStatus: 'Registered', activationStatus: 'Activated' },
 ]
 
 const DEFAULT_ACTIVATION_SYSTEMS = [
-  { id: 'QE4:006', type: 'SAP ECC' },
-  { id: 'QM7:910', type: 'SAP S/4HANA' },
+  { id: 'QE4:006', type: 'LegacyERP' },
+  { id: 'QM7:910', type: 'CoreERP' },
 ]
 
 const PERFORMANCE_INDICATORS = [
@@ -63,8 +63,8 @@ export default function DataCollectionConfig() {
 
   const system = SYSTEMS.find(s => s.id === selectedSystem) ?? SYSTEMS[0]
 
-  const eccSystems = DEFAULT_ACTIVATION_SYSTEMS.filter(s => s.type === 'SAP ECC')
-  const s4Systems = DEFAULT_ACTIVATION_SYSTEMS.filter(s => s.type === 'SAP S/4HANA')
+  const eccSystems = DEFAULT_ACTIVATION_SYSTEMS.filter(s => s.type === 'LegacyERP')
+  const s4Systems = DEFAULT_ACTIVATION_SYSTEMS.filter(s => s.type === 'CoreERP')
 
   return (
     <PageHeader title="Data Collection Configuration" subtitle="Configure which usage data is collected to improve the workspace experience." isDirty={isDirty} onSave={handleSave} onReset={handleReset}>
@@ -231,7 +231,7 @@ export default function DataCollectionConfig() {
           >
             {eccSystems.length > 0 && (
               <TableRow key="group-ecc">
-                <TableCell><Text style={{ fontWeight: 'bold' }}>SAP ECC</Text></TableCell>
+                <TableCell><Text style={{ fontWeight: 'bold' }}>LegacyERP</Text></TableCell>
                 <TableCell></TableCell>
               </TableRow>
             )}
@@ -248,7 +248,7 @@ export default function DataCollectionConfig() {
             ))}
             {s4Systems.length > 0 && (
               <TableRow key="group-s4">
-                <TableCell><Text style={{ fontWeight: 'bold' }}>SAP S/4HANA</Text></TableCell>
+                <TableCell><Text style={{ fontWeight: 'bold' }}>CoreERP</Text></TableCell>
                 <TableCell></TableCell>
               </TableRow>
             )}

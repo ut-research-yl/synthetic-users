@@ -466,7 +466,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                         >
                           <div style={{ padding: '0' }}>
                             <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
-                              Once you create your own groups, the attributes listed in "Ungrouped attributes" are no longer shown in SAP Signavio Process Collaboration Hub
+                              Once you create your own groups, the attributes listed in "Ungrouped attributes" are no longer shown in Process Collaboration Hub
                             </Text>
                           </div>
                         </Popover>
@@ -716,7 +716,7 @@ export default function AttributeEditorPanel({ attrGroups, setAttrGroups, markDi
                               >
                                 <div style={{ padding: '12px' }}>
                                   <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapTextColor)' }}>
-                                    Visibility settings only apply to users with SAP Signavio Process Collaboration Hub license only
+                                    Visibility settings only apply to users with Process Collaboration Hub license only
                                   </Text>
                                 </div>
                               </Popover>
