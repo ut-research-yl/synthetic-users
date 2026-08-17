@@ -261,7 +261,7 @@ export default function ConnectWidgetDialog({ open, onClose, onAdd }: Props) {
               if (idx) setStep(Number(idx))
             }}
           >
-            <WizardStep data-step-index="1" titleText="Select Internal Analysis" selected={step === 1} disabled={false} icon={step > 1 ? 'accept' : undefined}>{' '}</WizardStep>
+            <WizardStep data-step-index="1" titleText="Select Analysis Configuration" selected={step === 1} disabled={false} icon={step > 1 ? 'accept' : undefined}>{' '}</WizardStep>
             <WizardStep data-step-index="2" titleText="Choose Type" selected={step === 2} disabled={step < 2} icon={step > 2 ? 'accept' : undefined}>{' '}</WizardStep>
             <WizardStep data-step-index="3" titleText="Select Widget" selected={step === 3} disabled={step < 3}>{' '}</WizardStep>
           </Wizard>
@@ -273,7 +273,7 @@ export default function ConnectWidgetDialog({ open, onClose, onAdd }: Props) {
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div>
-                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Internal Analysis</Text>
+                <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Analysis Configuration</Text>
                 <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the analysis configuration you want to add a widget from</Text>
               </div>
               <Input placeholder="Search by analysis configuration name" type={'Search' as any} value={search}

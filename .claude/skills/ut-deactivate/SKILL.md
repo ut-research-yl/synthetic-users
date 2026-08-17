@@ -1,5 +1,5 @@
 ---
-description: Deactivate the GitHub Pages public link after usability testing (yaelee-sap/user-testing-Q3)
+description: Deactivate the GitHub Pages public link after usability testing (ut-research-yl/li-ut)
 ---
 
 Takes the UT link offline by replacing the site content with an offline page.
@@ -10,9 +10,9 @@ Does NOT touch the SAP internal repo (github.tools.sap/I587018/Q3-LI-UT).
 ### 1. Replace content with offline page
 
 ```bash
-cd /tmp && rm -rf user-testing-Q3 && git clone https://github.com/yaelee-sap/user-testing-Q3.git
-cd /tmp/user-testing-Q3
-git config user.email "yaelee@github.com" && git config user.name "yaelee-sap"
+cd /tmp && rm -rf li-ut && git clone https://github.com/ut-research-yl/li-ut.git
+cd /tmp/li-ut
+git config user.email "ut-research-yl@github.com" && git config user.name "ut-research-yl"
 git rm -rf . --quiet
 ```
 
@@ -26,17 +26,13 @@ Create `index.html`:
 
 ```bash
 git add index.html && git commit -m "chore: deactivate UT site"
-```
-
-Then ask the user to run:
-```bash
-cd /tmp/user-testing-Q3 && git push --force origin main
+git push --force origin main
 ```
 
 ### 2. Confirm
 
 ```
-✅ Public link deactivated. https://yaelee-sap.github.io/user-testing-Q3/ is now offline.
+✅ Public link deactivated. https://ut-research-yl.github.io/li-ut/ is now offline.
 ```
 
 Note: all JS/CSS assets are removed so even cached visitors will get a broken app on reload.

@@ -265,7 +265,7 @@ function WidgetCard({ widget, onSelect }: { widget: Widget; onSelect?: () => voi
           <Text style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: '700', color: 'var(--sapTextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {widget.name}
           </Text>
-          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Internal Analysis"
+          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Analysis Configuration"
             style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties}
             onClick={(e: React.MouseEvent) => e.stopPropagation()} />
         </div>
@@ -323,9 +323,9 @@ type LocationState = {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-type Props = { onClose: () => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onAddFromBrowse?: (widgetId: string, widgetName: string, widgetType: string) => void }
+type Props = { onClose: () => void; onWidgetSelect?: (widget: Widget | ExternalWidget) => void; onAddFromBrowse?: (widgetId: string, widgetName: string, widgetType: string) => void; onWidgetAdded?: (name: string) => void }
 
-export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: Props) {
+export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, onWidgetAdded }: Props) {
   const [query, setQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [selectedSource, setSelectedSource] = useState<string | null>(null)
@@ -336,6 +336,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
   const [addExternalOpen, setAddExternalOpen] = useState(false)
   const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'last-edited' | 'recently-added'>('name-asc')
   const [externalWidgets, setExternalWidgets] = useState<ExternalWidget[]>(EXTERNAL_WIDGETS)
+  const [addedName, setAddedName] = useState<string | null>(null)
 
   const typeMenuRef = useRef<any>(null)
   const sourceMenuRef = useRef<any>(null)
@@ -358,7 +359,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
     ? `${location.process} › ${location.section}`
     : location.type
     ? `${location.process} › ${location.type}`
-    : location.process ?? 'Internal Analysis'
+    : location.process ?? 'Analysis Configuration'
 
   const filtered = WIDGETS.filter(w => {
     if (selectedSource === 'External Widget') return false
@@ -370,7 +371,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
   })
 
   const filteredExternal = externalWidgets.filter(w => {
-    if (selectedSource === 'Internal Analysis') return false
+    if (selectedSource === 'Analysis Configuration') return false
     if (selectedType) return false
     if (pageWidgetIds) return false
     if (!query) return true
@@ -414,11 +415,20 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
           style={{ flexShrink: 0 } as React.CSSProperties}
         >Add External Widget</Button>
         <ConnectWidgetDialog open={connectOpen} onClose={() => setConnectOpen(false)} onAdd={onAddFromBrowse} />
-        <AddExternalWidgetDialog
-          open={addExternalOpen}
-          onClose={() => setAddExternalOpen(false)}
-          onSave={w => setExternalWidgets(prev => [...prev, w])}
-        />
+        {addExternalOpen && (
+          <AddExternalWidgetDialog
+            open={true}
+            onClose={() => setAddExternalOpen(false)}
+            onSave={w => {
+              setAddExternalOpen(false)
+              setExternalWidgets(prev => [w, ...prev])
+              setSortOrder('recently-added')
+              setAddedName(w.name)
+              setTimeout(() => setAddedName(null), 3000)
+              onWidgetAdded?.(w.name)
+            }}
+          />
+        )}
         <Button icon="decline" design="Transparent" className={s.closeBtn} tooltip="Close"
           style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', flexShrink: 0 } as React.CSSProperties}
           onClick={onClose} />
@@ -428,6 +438,11 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
         {infoVisible && (
           <MessageStrip className={s.messageStrip} design="Information" hideCloseButton={false} onClose={() => setInfoVisible(false)}>
             Drag widgets onto the canvas to add them directly, or drop them onto an existing element to connect it to live data.
+          </MessageStrip>
+        )}
+        {addedName && (
+          <MessageStrip className={s.messageStrip} design="Positive" hideCloseButton onClose={() => setAddedName(null)}>
+            "{addedName}" added to your widgets.
           </MessageStrip>
         )}
 
@@ -585,7 +600,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse }: 
           const txt = e.detail?.text
           setSelectedSource(txt)
         }}>
-          <MenuItem text="Internal Analysis" />
+          <MenuItem text="Analysis Configuration" />
           <MenuItem text="External Widget" />
         </Menu>,
         document.body

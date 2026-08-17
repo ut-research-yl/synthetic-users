@@ -111,7 +111,7 @@ const NAV_PANEL_GROUPS: NavPanelGroup[] = [
     group: 'Mine and Analyze',
     items: [
       { id: 'data_management', label: 'Data Management', checked: true },
-      { id: 'analysis_configuration', label: 'Internal Analysis', checked: true },
+      { id: 'analysis_configuration', label: 'Analysis Configuration', checked: true },
       { id: 'process_analysis', label: 'Process Analysis', checked: true },
       { id: 'analysis_workflows', label: 'Analysis Workflows', checked: true },
     ],

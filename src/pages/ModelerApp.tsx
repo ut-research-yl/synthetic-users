@@ -1710,11 +1710,12 @@ function BpmnCanvas({
           shapeType: shapeType2,
           widgetId: diWidgetId,
           widgetName: diWidgetName,
-          manualValue: WIDGET_STATUS2[diWidgetId] ?? 'No data',
+          manualValue: WIDGET_STATUS2[diWidgetId] ?? 'Green',
           linkedBpmnId: hit.id,
           linkedBpmnName: hit.name,
         }
         setLiShapes(ls => [...ls, newShape])
+        setToastMsg(`"${diWidgetName}" connected to "${hit.name}"`)
       } else {
         // Create LI shape on empty canvas
         const ID_TO_TYPE: Record<string, string> = {
@@ -1785,9 +1786,10 @@ function BpmnCanvas({
           shapeType,
           widgetId: diWidgetId,
           widgetName: diWidgetName,
-          manualValue: WIDGET_STATUS[diWidgetId] ?? 'No data',
+          manualValue: WIDGET_STATUS[diWidgetId] ?? 'Green',
         }
         setLiShapes(ls => [...ls, newShape])
+        setToastMsg(`"${diWidgetName}" added to canvas`)
       }
       return
     }
@@ -1818,7 +1820,7 @@ function BpmnCanvas({
             setToastMsg(`Cannot link ${dictItem.type ?? 'this item'} to this element`)
           }
         } else {
-          // elementType 우선 사용, 없으면 category로 fallback
+
           const sub = (dictItem.subCategory ?? '').toLowerCase()
           const cat = dictItem.type ?? ''
           const et = dictItem.elementType ?? ''
@@ -3045,7 +3047,7 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onAddBrowseWidget={onAddBrowseWidget}
         panelOffset={panelOffset}
       />
-      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} />}
+      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} onWidgetAdded={name => setToastMsg(`"${name}" added to your widgets`)} />}
     </div>
   )
 }

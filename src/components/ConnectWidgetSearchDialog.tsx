@@ -326,7 +326,7 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ overflow: 'hidden', height: '3.875rem', flexShrink: 0, borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', boxShadow: '0 2px 4px rgba(34,53,72,0.06)' }}>
               <Wizard ref={wizardRef} contentLayout={'SingleStep' as any} style={{ width: '100%' } as React.CSSProperties}>
-                <WizardStep titleText="Select Internal Analysis" selected={browseStep === 1} icon={browseStep > 1 ? 'accept' : undefined}>{' '}</WizardStep>
+                <WizardStep titleText="Select Analysis Configuration" selected={browseStep === 1} icon={browseStep > 1 ? 'accept' : undefined}>{' '}</WizardStep>
                 <WizardStep titleText="Choose Type" selected={browseStep === 2} disabled={browseStep < 2} icon={browseStep > 2 ? 'accept' : undefined}>{' '}</WizardStep>
                 <WizardStep titleText="Select Widget" selected={browseStep === 3} disabled={browseStep < 3}>{' '}</WizardStep>
               </Wizard>
@@ -335,7 +335,7 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
               {browseStep === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <div>
-                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Internal Analysis</Text>
+                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Analysis Configuration</Text>
                     <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the analysis configuration you want to add a widget from</Text>
                   </div>
                   <Input placeholder="Search by analysis configuration name" type={'Search' as any} value={processSearch}

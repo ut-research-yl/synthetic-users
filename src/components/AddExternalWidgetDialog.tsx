@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Button, Dialog, Bar, Title, Label, Input, Select, Option, TextArea, IllustratedMessage, BusyIndicator } from '@ui5/webcomponents-react'
 
 type Props = { open: boolean; onClose: () => void; onSave?: (widget: { id: string; name: string; source: string; url: string; shapeType: string }) => void }
@@ -17,6 +17,7 @@ const SHAPE_TYPES = [
 ]
 
 export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props) {
+  const dialogRef = useRef<any>(null)
   const [title, setTitle] = useState('')
   const [source, setSource] = useState(SOURCES[0])
   const [snippet, setSnippet] = useState('')
@@ -24,7 +25,12 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
   const [loading, setLoading] = useState(false)
 
   const reset = () => { setTitle(''); setSource(SOURCES[0]); setSnippet(''); setShapeType('Indicator'); setLoading(false) }
-  const handleClose = () => { reset(); onClose() }
+
+  const doClose = () => {
+    reset()
+    dialogRef.current?.close()
+    onClose()
+  }
 
   const handleSave = () => {
     onSave?.({
@@ -34,13 +40,14 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
       url: snippet.trim(),
       shapeType,
     })
-    handleClose()
+    doClose()
   }
 
   return (
     <Dialog
+      ref={dialogRef}
       open={open}
-      onClose={handleClose}
+      onClose={() => { reset(); onClose() }}
       style={{ '--_ui5_dialog_content_padding': '0' } as React.CSSProperties}
       header={
         <Bar design="Header">
@@ -49,10 +56,8 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
       }
       footer={
         <Bar design="Footer">
-          <div slot="endContent" style={{ display: 'flex', gap: 8 }}>
-            <Button design="Emphasized" disabled={!title.trim() || !snippet.trim()} onClick={handleSave}>Save</Button>
-            <Button design="Transparent" onClick={handleClose}>Cancel</Button>
-          </div>
+          <Button slot="endContent" design="Emphasized" disabled={!title.trim() || !snippet.trim()} onClick={handleSave}>Add</Button>
+          <Button slot="endContent" design="Transparent" onClick={doClose}>Cancel</Button>
         </Bar>
       }
     >
