@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button, Icon, Input, MessageStrip, Text, Menu, MenuItem, Popover, List, ListItemStandard } from '@ui5/webcomponents-react'
+import { Button, Icon, Input, MessageStrip, Text, Menu, MenuItem, Popover, List, ListItemStandard, Dialog, Bar, Title } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 import ConnectWidgetDialog from './ConnectWidgetDialog'
 import AddExternalWidgetDialog from './AddExternalWidgetDialog'
@@ -318,6 +318,7 @@ function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete }: { wid
   const menuRef = useRef<any>(null)
   const suppressSelectRef = useRef(false)
   const btnId = `overflow-ext-${widget.id}`
+  const [confirmOpen, setConfirmOpen] = useState(false)
   return (
     <div className={s.card} draggable onClick={() => { if (!suppressSelectRef.current) onSelect?.(); suppressSelectRef.current = false }} style={{ cursor: 'pointer' }} onDragStart={(e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', widget.id)
@@ -355,12 +356,28 @@ function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete }: { wid
           const action = e.detail?.item?.dataset?.action
           if (action === 'add') { suppressSelectRef.current = true; onAddToCanvas?.() }
           else if (action === 'details') onSelect?.()
-          else if (action === 'delete') { suppressSelectRef.current = true; onDelete?.() }
+          else if (action === 'delete') { suppressSelectRef.current = true; setConfirmOpen(true) }
         }}>
           <MenuItem text="Add to Canvas" icon="add" data-action="add" />
           <MenuItem text="See Details" icon="detail-view" data-action="details" />
           <MenuItem text="Delete" icon="delete" data-action="delete" />
         </Menu>,
+        document.body
+      )}
+      {createPortal(
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}
+          header={<Bar design="Header"><Title slot="startContent" level="H3">Delete Widget</Title></Bar>}
+          footer={
+            <Bar design="Footer">
+              <Button slot="endContent" design="Negative" onClick={() => { setConfirmOpen(false); onDelete?.() }}>Delete</Button>
+              <Button slot="endContent" design="Transparent" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            </Bar>
+          }
+        >
+          <div style={{ padding: '1rem' }}>
+            <Text>Delete <strong>{widget.name}</strong>? This action cannot be undone.</Text>
+          </div>
+        </Dialog>,
         document.body
       )}
     </div>
@@ -373,6 +390,7 @@ function MetricCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: Met
   const menuRef = useRef<any>(null)
   const suppressSelectRef = useRef(false)
   const btnId = `overflow-metric-${widget.id}`
+  const [confirmOpen, setConfirmOpen] = useState(false)
   return (
     <div className={s.card} draggable onClick={() => { if (!suppressSelectRef.current) onSelect?.(); suppressSelectRef.current = false }} style={{ cursor: 'pointer' }} onDragStart={(e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', widget.id)
@@ -407,12 +425,28 @@ function MetricCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: Met
           const action = e.detail?.item?.dataset?.action
           if (action === 'add') { suppressSelectRef.current = true; onAddToCanvas?.() }
           else if (action === 'details') onSelect?.()
-          else if (action === 'delete') { suppressSelectRef.current = true; onDelete?.() }
+          else if (action === 'delete') { suppressSelectRef.current = true; setConfirmOpen(true) }
         }}>
           <MenuItem text="Add to Canvas" icon="add" data-action="add" />
           <MenuItem text="See Details" icon="detail-view" data-action="details" />
           <MenuItem text="Delete" icon="delete" data-action="delete" />
         </Menu>,
+        document.body
+      )}
+      {createPortal(
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}
+          header={<Bar design="Header"><Title slot="startContent" level="H3">Delete Metric</Title></Bar>}
+          footer={
+            <Bar design="Footer">
+              <Button slot="endContent" design="Negative" onClick={() => { setConfirmOpen(false); onDelete?.() }}>Delete</Button>
+              <Button slot="endContent" design="Transparent" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            </Bar>
+          }
+        >
+          <div style={{ padding: '1rem' }}>
+            <Text>Delete <strong>{widget.name}</strong>? This action cannot be undone.</Text>
+          </div>
+        </Dialog>,
         document.body
       )}
     </div>
