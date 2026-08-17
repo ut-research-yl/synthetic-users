@@ -183,7 +183,8 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
       <div style={{ display: 'flex', width: 720 }}>
 
         {/* Left: form */}
-        <BusyIndicator active={isAuthenticating} delay={0} style={{ width: 360, flexShrink: 0 }}>
+        <div style={{ width: 360, flexShrink: 0 }}>
+        <BusyIndicator active={isAuthenticating} delay={0} style={{ width: '100%' }}>
           <div style={{ padding: '1.5rem 1.5rem 1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <Label required showColon>Title</Label>
@@ -269,6 +270,7 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
             )}
           </div>
         </BusyIndicator>
+        </div>
 
         {/* Right: preview */}
         <div style={{ flex: 1, padding: '1.5rem 2rem 1.5rem 0' }}>
