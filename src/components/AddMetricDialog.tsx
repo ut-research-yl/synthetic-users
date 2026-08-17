@@ -288,9 +288,9 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             minHeight: 320,
           }}>
-            {title.trim() ? (
+            {(title.trim() || (isAuthenticated && survey && question)) ? (
               <MetricPreviewCard
-                title={title.trim()}
+                title={title.trim() || survey}
                 metricKind={metricKind}
                 source={source}
                 survey={survey}
@@ -301,7 +301,7 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
                 <IllustratedMessage
                   name="NoEntries"
                   titleText="No preview available"
-                  subtitleText="Enter a title to see a preview"
+                  subtitleText={isAuthenticated ? 'Select a survey and question to see a preview' : 'Enter a title to see a preview'}
                   style={{ display: 'block', marginBottom: '-1rem' } as React.CSSProperties}
                 />
               </div>
