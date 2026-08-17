@@ -288,7 +288,7 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             minHeight: 320,
           }}>
-            {(title.trim() || (isAuthenticated && survey && question)) ? (
+            {(!needsAuth && title.trim()) || (isAuthenticated && (survey && question || title.trim())) ? (
               <MetricPreviewCard
                 title={title.trim() || survey}
                 metricKind={metricKind}
