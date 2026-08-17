@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Dialog, Bar, Title, Label, Input, Select, Option, MessageStrip, Link, BusyIndicator } from '@ui5/webcomponents-react'
+import { Button, Dialog, Bar, Title, Label, Input, Select, Option, MessageStrip, Link, BusyIndicator, IllustratedMessage } from '@ui5/webcomponents-react'
 
 type Props = {
   open: boolean
@@ -21,6 +21,13 @@ const MOCK_QUESTIONS: Record<string, string[]> = {
   Medallia: ['Net Promoter Score', 'Overall Experience Rating'],
 }
 
+const MOCK_DATA: Record<string, { value: string; change: string; changeUp: boolean; color: string }> = {
+  NPS:    { value: '45',   change: '+3 vs last month', changeUp: true,  color: '#B8CC00' },
+  CSAT:   { value: '78%',  change: '-2% vs last month', changeUp: false, color: '#E9730C' },
+  CES:    { value: '2.3',  change: '+0.1 vs last month', changeUp: true, color: '#B8CC00' },
+  Custom: { value: '1,248', change: '+124 vs last month', changeUp: true, color: '#0064d9' },
+}
+
 const SHAPE_TYPES = [
   { value: 'Sentiment',     label: 'Sentiment',     icon: 'SAP-icons-v4/emotion-positive' },
   { value: 'Value',         label: 'Value',         icon: 'record' },
@@ -30,6 +37,76 @@ const SHAPE_TYPES = [
 
 const DEFAULT_SHAPE: Record<string, string> = {
   NPS: 'Sentiment', CSAT: 'Sentiment', CES: 'Value', Custom: 'Indicator',
+}
+
+function MetricPreviewCard({ title, metricKind, source, survey, question }: {
+  title: string; metricKind: string; source: string; survey: string; question: string
+}) {
+  const data = MOCK_DATA[metricKind] ?? MOCK_DATA.Custom
+  return (
+    <div style={{
+      background: '#fff',
+      border: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)',
+      borderRadius: 12,
+      padding: '1.5rem',
+      width: 260,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.75rem',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <span style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', fontWeight: 600 }}>
+          {title}
+        </span>
+        <span style={{
+          fontSize: 10, background: 'var(--sapPageSection_Background, #f5f6f7)',
+          color: 'var(--sapContent_LabelColor)', borderRadius: 4, padding: '2px 6px',
+        }}>
+          {source}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+        <span style={{ fontSize: 40, fontWeight: 700, color: data.color, lineHeight: 1 }}>
+          {data.value}
+        </span>
+        <span style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>
+          {metricKind}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ color: data.changeUp ? '#5C8A00' : '#BB0000', fontSize: 12 }}>
+          {data.changeUp ? '▲' : '▼'}
+        </span>
+        <span style={{ fontSize: 12, color: 'var(--sapContent_LabelColor)' }}>
+          {data.change}
+        </span>
+      </div>
+
+      {(survey || question) && (
+        <div style={{
+          borderTop: '1px solid var(--sapPageHeader_BorderColor, #e8e8e8)',
+          paddingTop: '0.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}>
+          {survey && (
+            <span style={{ fontSize: 11, color: 'var(--sapContent_LabelColor)' }}>
+              Survey: {survey}
+            </span>
+          )}
+          {question && (
+            <span style={{ fontSize: 11, color: 'var(--sapContent_LabelColor)' }}>
+              Q: {question}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function AddMetricDialog({ open, onClose, onSave }: Props) {
@@ -90,6 +167,7 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
     <Dialog
       open={open}
       onClose={doClose}
+      style={{ '--_ui5_dialog_content_padding': '0' } as React.CSSProperties}
       header={
         <Bar design="Header">
           <Title slot="startContent" level="H3">Add Metric</Title>
@@ -102,92 +180,126 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
         </Bar>
       }
     >
-      <BusyIndicator active={isAuthenticating} delay={0} style={{ width: '100%' }}>
-      <div style={{ width: 400, padding: '1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <Label required showColon>Title</Label>
-          <Input
-            maxlength={50}
-            value={title}
-            placeholder="Enter metric title"
-            onInput={(e: any) => setTitle(e.target.value)}
-            style={{ width: '100%' } as React.CSSProperties}
-          />
-        </div>
+      <div style={{ display: 'flex', width: 720 }}>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <Label required showColon>Type</Label>
-          <Select
-            style={{ width: '100%' } as React.CSSProperties}
-            onChange={(e: any) => handleKindChange(e.detail?.selectedOption?.dataset?.value ?? METRIC_KINDS[0])}
-          >
-            {METRIC_KINDS.map(k => <Option key={k} data-value={k} selected={metricKind === k}>{k}</Option>)}
-          </Select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <Label required showColon>Source</Label>
-          <Select
-            style={{ width: '100%' } as React.CSSProperties}
-            onChange={(e: any) => handleSourceChange(e.detail?.selectedOption?.dataset?.value ?? SOURCES[0])}
-          >
-            {SOURCES.map(s => <Option key={s} data-value={s} selected={source === s}>{s}</Option>)}
-          </Select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <Label showColon>Element Type</Label>
-          <Select
-            style={{ width: '100%' } as React.CSSProperties}
-            onChange={(e: any) => setShapeType(e.detail?.selectedOption?.dataset?.value ?? 'Sentiment')}
-          >
-            {SHAPE_TYPES.map(t => (
-              <Option key={t.value} data-value={t.value} icon={t.icon} selected={shapeType === t.value}>
-                {t.label}
-              </Option>
-            ))}
-          </Select>
-        </div>
-
-        {needsAuth && !isAuthenticated && (
-          <MessageStrip design="Negative" hideCloseButton>
-            {source} authentication is required. <Link href="#" onClick={handleAuthenticate} style={{ fontWeight: '600' } as React.CSSProperties}>Authenticate {source}</Link>{' '}or select a different source.
-          </MessageStrip>
-        )}
-
-        {needsAuth && isAuthenticated && (
-          <>
+        {/* Left: form */}
+        <BusyIndicator active={isAuthenticating} delay={0} style={{ width: 360, flexShrink: 0 }}>
+          <div style={{ padding: '1.5rem 1.5rem 1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <Label required showColon>Survey</Label>
+              <Label required showColon>Title</Label>
+              <Input
+                maxlength={50}
+                value={title}
+                placeholder="Enter metric title"
+                onInput={(e: any) => setTitle(e.target.value)}
+                style={{ width: '100%' } as React.CSSProperties}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <Label required showColon>Type</Label>
               <Select
                 style={{ width: '100%' } as React.CSSProperties}
-                onChange={(e: any) => {
-                  setSurvey(e.detail?.selectedOption?.dataset?.value ?? '')
-                  setQuestion('')
-                }}
+                onChange={(e: any) => handleKindChange(e.detail?.selectedOption?.dataset?.value ?? METRIC_KINDS[0])}
               >
-                {(MOCK_SURVEYS[source] ?? []).map(s => (
-                  <Option key={s} data-value={s} selected={survey === s}>{s}</Option>
-                ))}
+                {METRIC_KINDS.map(k => <Option key={k} data-value={k} selected={metricKind === k}>{k}</Option>)}
               </Select>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <Label required showColon>Question</Label>
+              <Label required showColon>Source</Label>
               <Select
                 style={{ width: '100%' } as React.CSSProperties}
-                onChange={(e: any) => setQuestion(e.detail?.selectedOption?.dataset?.value ?? '')}
+                onChange={(e: any) => handleSourceChange(e.detail?.selectedOption?.dataset?.value ?? SOURCES[0])}
               >
-                <Option data-value="" selected={!question} />
-                {(MOCK_QUESTIONS[source] ?? []).map(q => (
-                  <Option key={q} data-value={q} selected={question === q}>{q}</Option>
+                {SOURCES.map(s => <Option key={s} data-value={s} selected={source === s}>{s}</Option>)}
+              </Select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <Label showColon>Element Type</Label>
+              <Select
+                style={{ width: '100%' } as React.CSSProperties}
+                onChange={(e: any) => setShapeType(e.detail?.selectedOption?.dataset?.value ?? 'Sentiment')}
+              >
+                {SHAPE_TYPES.map(t => (
+                  <Option key={t.value} data-value={t.value} icon={t.icon} selected={shapeType === t.value}>
+                    {t.label}
+                  </Option>
                 ))}
               </Select>
             </div>
-          </>
-        )}
+
+            {needsAuth && !isAuthenticated && (
+              <MessageStrip design="Negative" hideCloseButton>
+                {source} authentication is required. <Link href="#" onClick={handleAuthenticate} style={{ fontWeight: '600' } as React.CSSProperties}>Authenticate {source}</Link>{' '}or select a different source.
+              </MessageStrip>
+            )}
+
+            {needsAuth && isAuthenticated && (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <Label required showColon>Survey</Label>
+                  <Select
+                    style={{ width: '100%' } as React.CSSProperties}
+                    onChange={(e: any) => {
+                      setSurvey(e.detail?.selectedOption?.dataset?.value ?? '')
+                      setQuestion('')
+                    }}
+                  >
+                    {(MOCK_SURVEYS[source] ?? []).map(s => (
+                      <Option key={s} data-value={s} selected={survey === s}>{s}</Option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <Label required showColon>Question</Label>
+                  <Select
+                    style={{ width: '100%' } as React.CSSProperties}
+                    onChange={(e: any) => setQuestion(e.detail?.selectedOption?.dataset?.value ?? '')}
+                  >
+                    <Option data-value="" selected={!question} />
+                    {(MOCK_QUESTIONS[source] ?? []).map(q => (
+                      <Option key={q} data-value={q} selected={question === q}>{q}</Option>
+                    ))}
+                  </Select>
+                </div>
+              </>
+            )}
+          </div>
+        </BusyIndicator>
+
+        {/* Right: preview */}
+        <div style={{ flex: 1, padding: '1.5rem 2rem 1.5rem 0' }}>
+          <div style={{
+            width: '100%', height: '100%', borderRadius: 8,
+            background: 'var(--sapPageSection_Background, #f8f9fa)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            minHeight: 320,
+          }}>
+            {title.trim() ? (
+              <MetricPreviewCard
+                title={title.trim()}
+                metricKind={metricKind}
+                source={source}
+                survey={survey}
+                question={question}
+              />
+            ) : (
+              <div style={{ overflow: 'hidden', width: '100%' }}>
+                <IllustratedMessage
+                  name="NoEntries"
+                  titleText="No preview available"
+                  subtitleText="Enter a title to see a preview"
+                  style={{ display: 'block', marginBottom: '-1rem' } as React.CSSProperties}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
-      </BusyIndicator>
     </Dialog>
   )
 }
