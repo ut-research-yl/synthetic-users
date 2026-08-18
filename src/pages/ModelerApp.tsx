@@ -1083,6 +1083,7 @@ function BpmnCanvas({
   onRegisterAddLiShape,
   onRegisterSelectLiShapeById,
   onRegisterLinkDictToElement,
+  onRegisterLinkWidgetToElement,
   onSelectElementById,
   onLiShapesChange,
   onWidgetSelect,
@@ -1110,6 +1111,7 @@ function BpmnCanvas({
   onRegisterAddLiShape?: (fn: (shape: LiShape) => void) => void
   onRegisterSelectLiShapeById?: (fn: (id: string) => void) => void
   onRegisterLinkDictToElement?: (fn: (elementId: string, dictId: string, dictName: string) => void) => void
+  onRegisterLinkWidgetToElement?: (fn: (widgetId: string, widgetName: string, widgetType: string, elementId: string, elementName: string) => void) => void
   onSelectElementById?: (fn: (id: string) => void) => void
   onLiShapesChange?: (shapes: LiShape[]) => void
   onWidgetSelect?: (widget: Widget | ExternalWidget) => void
@@ -1216,10 +1218,35 @@ function BpmnCanvas({
       const placed = { ...shape, cx: pos.cx, cy: pos.cy }
       setLiShapes(ls => [...ls, placed])
       setToastMsg(`"${shape.widgetName}" added to canvas`)
-      setPanX(pos.cx - vbW / 2)
-      setPanY(pos.cy - vbH / 2)
     })
   }, [onRegisterAddLiShape])
+
+  useEffect(() => {
+    onRegisterLinkWidgetToElement?.((widgetId, widgetName, widgetType, elementId, elementName) => {
+      const WIDGET_TYPE_TO_LI_SHAPE: Record<string, string> = {
+        'Value': 'Value', 'Bar Chart': 'Progress Bar', 'Line Chart': 'Trend',
+        'Area Chart': 'Trend', 'Dual Axis Chart': 'Trend', 'Pie Chart': 'Ring Chart',
+        'Treemap': 'Progress Bar', 'Heat Map': 'Traffic Light', 'Sankey Chart': 'Trend',
+        'Histogram': 'Progress Bar', 'Ring Chart': 'Ring Chart',
+      }
+      const shapeType = WIDGET_TYPE_TO_LI_SHAPE[widgetType] ?? 'Indicator'
+      const element = elementsRef.current.find(e => e.id === elementId)
+      const pos = element
+        ? findLiShapePosition(element, elementsRef.current, liShapesRef.current, shapeType)
+        : { cx: 400, cy: 300 }
+      const newShape: LiShape = {
+        id: `li-${Date.now()}`,
+        cx: pos.cx, cy: pos.cy,
+        shapeType, widgetId, widgetName,
+        manualValue: 'Green',
+        linkedBpmnId: elementId,
+        linkedBpmnName: elementName,
+      }
+      pushHistory(elementsRef.current, liShapesRef.current)
+      setLiShapes(ls => [...ls, newShape])
+      setToastMsg(`"${widgetName}" linked to "${elementName}"`)
+    })
+  }, [onRegisterLinkWidgetToElement])
 
   useEffect(() => {
     onRegisterSelectLiShapeById?.((id: string) => {
@@ -1474,8 +1501,7 @@ function BpmnCanvas({
       onElementSelect?.(null)
       onLiShapeSelect?.(null)
       setEditingId(null)
-      // start rubber-band or pan
-      panState.current = { startX: e.clientX, startY: e.clientY, origPanX: panX, origPanY: panY }
+      // start rubber-band only (pan disabled)
       setRubberBand({ x1: svgPt.x, y1: svgPt.y, x2: svgPt.x, y2: svgPt.y })
     } else {
       if (e.shiftKey) {
@@ -1587,27 +1613,7 @@ function BpmnCanvas({
     const handler = (e: WheelEvent) => {
       e.preventDefault()
       e.stopPropagation()
-      if (e.ctrlKey || e.metaKey) {
-        const svgPt = clientToSvg(e.clientX, e.clientY, svgEl)
-        const factor = e.deltaY > 0 ? 0.95 : 1.05
-        setZoom(prevZoom => {
-          const newZoom = Math.min(Math.max(prevZoom * factor, 25), 400)
-          const clamped = Math.round(newZoom)
-          const oldScale = 100 / prevZoom
-          const newScale = 100 / clamped
-          const cw = svgEl.parentElement?.clientWidth ?? 1200
-          const ch = svgEl.parentElement?.clientHeight ?? 800
-          const screenFracX = (svgPt.x - panXRef.current) / (cw * oldScale)
-          const screenFracY = (svgPt.y - panYRef.current) / (ch * oldScale)
-          setPanX(svgPt.x - screenFracX * cw * newScale)
-          setPanY(svgPt.y - screenFracY * ch * newScale)
-          return clamped
-        })
-      } else {
-        const s = 100 / zoom
-        setPanX(px => px + e.deltaX * s * 1.2)
-        setPanY(py => py + e.deltaY * s * 1.2)
-      }
+      // pan and zoom disabled for synthetic user prototype
     }
     svgEl.addEventListener('wheel', handler, { passive: false })
     return () => svgEl.removeEventListener('wheel', handler)
@@ -3010,6 +3016,8 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
   const [shapesOpen, setShapesOpen] = useState(false)
   const [moreElementsOpen, setMoreElementsOpen] = useState(false)
 
+  const linkWidgetToElementRef = useRef<((widgetId: string, widgetName: string, widgetType: string, elementId: string, elementName: string) => void) | null>(null)
+
   const toggleDict = () => { setDictOpen(v => !v); setDataOpen(false); setShapesOpen(false); setMoreElementsOpen(false) }
   const toggleData = () => { setDataOpen(v => !v); setDictOpen(false); setShapesOpen(false); setMoreElementsOpen(false) }
   const toggleShapes = () => { setShapesOpen(v => !v); setMoreElementsOpen(false); setDictOpen(false); setDataOpen(false) }
@@ -3039,6 +3047,7 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onRegisterAddLiShape={onRegisterAddLiShape}
         onRegisterSelectLiShapeById={onRegisterSelectLiShapeById}
         onRegisterLinkDictToElement={onRegisterLinkDictToElement}
+        onRegisterLinkWidgetToElement={(fn) => { linkWidgetToElementRef.current = fn }}
         onSelectElementById={onSelectElementById}
         onLiShapesChange={onLiShapesChange}
         onOpenDictPanel={onOpenDictPanel}
@@ -3047,7 +3056,11 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onAddBrowseWidget={onAddBrowseWidget}
         panelOffset={panelOffset}
       />
-      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} />}
+      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget}
+        onLinkWidgetToElement={(widgetId, widgetName, widgetType, elementId, elementName) => {
+          linkWidgetToElementRef.current?.(widgetId, widgetName, widgetType, elementId, elementName)
+        }}
+      />}
     </div>
   )
 }

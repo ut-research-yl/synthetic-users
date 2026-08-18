@@ -419,7 +419,7 @@ export default function Shell() {
     <>
     <NavigationLayout style={{ height: '100vh' }} mode={navExpanded ? 'Expanded' : 'Collapsed'}>
       <div slot="header">
-        {wipBannerVisible && (
+        {false && wipBannerVisible && (
           <div style={{
             height: '2.75rem',
             background: 'var(--sapHighlightColor)',

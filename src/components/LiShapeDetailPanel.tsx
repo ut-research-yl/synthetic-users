@@ -51,6 +51,7 @@ type Props = {
   onClose: () => void
   onUpdate?: (id: string, changes: Partial<LiShape>) => void
   onSelectLinkedElement?: (elementId: string) => void
+  onConnectElement?: () => void
 }
 
 const SHAPE_OPTIONS = [

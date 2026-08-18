@@ -6,6 +6,7 @@ import ConnectWidgetDialog from './ConnectWidgetDialog'
 import AddExternalWidgetDialog from './AddExternalWidgetDialog'
 import AddMetricDialog from './AddMetricDialog'
 import s from './DataPanel.module.css'
+import { elementData, ELEMENT_GEOMETRY } from '../data/liveInsightsData'
 
 // ── Data hierarchy ────────────────────────────────────────────────────────────
 
@@ -190,6 +191,14 @@ export const METRICS: Metric[] = [
   { id: 'metric-005', name: 'Return Process CES',      metricKind: 'CES',  source: 'Qualtrics',   shapeType: 'Value' },
 ]
 
+// ── Canvas elements (for Link to Element picker) ─────────────────────────────
+
+const CANVAS_ELEMENTS = Object.keys(ELEMENT_GEOMETRY).map(id => ({
+  id,
+  name: elementData[id]?.name ?? id,
+  type: elementData[id]?.subtype ?? elementData[id]?.type ?? '',
+}))
+
 // ── Drag ghost ────────────────────────────────────────────────────────────────
 
 const TYPE_SVG: Record<string, string> = {
@@ -259,7 +268,7 @@ function createDragGhost(label: string, subtitle: string | undefined, iconType: 
 
 // ── Widget card ───────────────────────────────────────────────────────────────
 
-function WidgetCard({ widget, onSelect, onAddToCanvas }: { widget: Widget; onSelect?: () => void; onAddToCanvas?: () => void }) {
+function WidgetCard({ widget, onSelect, onAddToCanvas, onLinkToElement }: { widget: Widget; onSelect?: () => void; onAddToCanvas?: () => void; onLinkToElement?: () => void }) {
   const menuRef = useRef<any>(null)
   const suppressSelectRef = useRef(false)
   const btnId = `overflow-${widget.id}`
@@ -295,6 +304,7 @@ function WidgetCard({ widget, onSelect, onAddToCanvas }: { widget: Widget; onSel
         style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', flexShrink: 0 } as React.CSSProperties}
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation()
+          suppressSelectRef.current = true
           if (menuRef.current) { menuRef.current.opener = btnId; menuRef.current.open = true }
         }} />
       {createPortal(
@@ -302,8 +312,10 @@ function WidgetCard({ widget, onSelect, onAddToCanvas }: { widget: Widget; onSel
           const action = e.detail?.item?.dataset?.action
           if (action === 'add') { suppressSelectRef.current = true; onAddToCanvas?.() }
           else if (action === 'details') onSelect?.()
+          else if (action === 'link') { suppressSelectRef.current = true; onLinkToElement?.() }
         }}>
           <MenuItem text="Add to Canvas" icon="add" data-action="add" />
+          <MenuItem text="Link to Element" icon="chain-link" data-action="link" />
           <MenuItem text="See Details" icon="detail-view" data-action="details" />
         </Menu>,
         document.body
@@ -314,7 +326,7 @@ function WidgetCard({ widget, onSelect, onAddToCanvas }: { widget: Widget; onSel
 
 // ── External Widget card ──────────────────────────────────────────────────────
 
-function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: ExternalWidget; onSelect?: () => void; onAddToCanvas?: () => void; onDelete?: () => void }) {
+function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete, onLinkToElement }: { widget: ExternalWidget; onSelect?: () => void; onAddToCanvas?: () => void; onDelete?: () => void; onLinkToElement?: () => void }) {
   const menuRef = useRef<any>(null)
   const suppressSelectRef = useRef(false)
   const btnId = `overflow-ext-${widget.id}`
@@ -349,6 +361,7 @@ function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete }: { wid
         style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', flexShrink: 0 } as React.CSSProperties}
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation()
+          suppressSelectRef.current = true
           if (menuRef.current) { menuRef.current.opener = btnId; menuRef.current.open = true }
         }} />
       {createPortal(
@@ -356,9 +369,11 @@ function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete }: { wid
           const action = e.detail?.item?.dataset?.action
           if (action === 'add') { suppressSelectRef.current = true; onAddToCanvas?.() }
           else if (action === 'details') onSelect?.()
+          else if (action === 'link') { suppressSelectRef.current = true; onLinkToElement?.() }
           else if (action === 'delete') { suppressSelectRef.current = true; setConfirmOpen(true) }
         }}>
           <MenuItem text="Add to Canvas" icon="add" data-action="add" />
+          <MenuItem text="Link to Element" icon="chain-link" data-action="link" />
           <MenuItem text="See Details" icon="detail-view" data-action="details" />
           <MenuItem text="Delete" icon="delete" data-action="delete" />
         </Menu>,
@@ -387,7 +402,7 @@ function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete }: { wid
 
 // ── Metric card ───────────────────────────────────────────────────────────────
 
-function MetricCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: Metric; onSelect?: () => void; onAddToCanvas?: () => void; onDelete?: () => void }) {
+function MetricCard({ widget, onSelect, onAddToCanvas, onDelete, onLinkToElement }: { widget: Metric; onSelect?: () => void; onAddToCanvas?: () => void; onDelete?: () => void; onLinkToElement?: () => void }) {
   const menuRef = useRef<any>(null)
   const suppressSelectRef = useRef(false)
   const btnId = `overflow-metric-${widget.id}`
@@ -419,6 +434,7 @@ function MetricCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: Met
         style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', flexShrink: 0 } as React.CSSProperties}
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation()
+          suppressSelectRef.current = true
           if (menuRef.current) { menuRef.current.opener = btnId; menuRef.current.open = true }
         }} />
       {createPortal(
@@ -426,9 +442,11 @@ function MetricCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: Met
           const action = e.detail?.item?.dataset?.action
           if (action === 'add') { suppressSelectRef.current = true; onAddToCanvas?.() }
           else if (action === 'details') onSelect?.()
+          else if (action === 'link') { suppressSelectRef.current = true; onLinkToElement?.() }
           else if (action === 'delete') { suppressSelectRef.current = true; setConfirmOpen(true) }
         }}>
           <MenuItem text="Add to Canvas" icon="add" data-action="add" />
+          <MenuItem text="Link to Element" icon="chain-link" data-action="link" />
           <MenuItem text="See Details" icon="detail-view" data-action="details" />
           <MenuItem text="Delete" icon="delete" data-action="delete" />
         </Menu>,
@@ -466,9 +484,9 @@ type LocationState = {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-type Props = { onClose: () => void; onWidgetSelect?: (widget: Widget | ExternalWidget | Metric) => void; onAddFromBrowse?: (widgetId: string, widgetName: string, widgetType: string) => void; onWidgetAdded?: (name: string) => void }
+type Props = { onClose: () => void; onWidgetSelect?: (widget: Widget | ExternalWidget | Metric) => void; onAddFromBrowse?: (widgetId: string, widgetName: string, widgetType: string) => void; onWidgetAdded?: (name: string) => void; onLinkWidgetToElement?: (widgetId: string, widgetName: string, widgetType: string, elementId: string, elementName: string) => void }
 
-export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, onWidgetAdded }: Props) {
+export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, onWidgetAdded, onLinkWidgetToElement }: Props) {
   const [query, setQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [selectedSource, setSelectedSource] = useState<string | null>(null)
@@ -481,6 +499,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
   const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'recently-added'>('name-asc')
   const [externalWidgets, setExternalWidgets] = useState<ExternalWidget[]>(EXTERNAL_WIDGETS)
   const [metrics, setMetrics] = useState<Metric[]>(METRICS)
+  const [linkWidget, setLinkWidget] = useState<{ id: string; name: string; type: string } | null>(null)
 
   const nextAddedAt = useRef(-1)
 
@@ -700,10 +719,10 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
             : <>
                 {combined.map(item =>
                   item.kind === 'internal'
-                    ? <WidgetCard key={item.widget.id} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Widget).type); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} />
+                    ? <WidgetCard key={item.widget.id} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Widget).type); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} onLinkToElement={() => setLinkWidget({ id: item.widget.id, name: item.widget.name, type: (item.widget as Widget).type })} />
                     : item.kind === 'metric'
-                    ? <MetricCard key={`metric-${item.widget.id}`} widget={item.widget as Metric} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Metric).shapeType ?? 'Indicator'); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} onDelete={() => setMetrics(prev => prev.filter(m => m.id !== item.widget.id))} />
-                    : <ExternalWidgetCard key={`ext-${item.widget.id}`} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as ExternalWidget).shapeType ?? 'Indicator'); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} onDelete={() => setExternalWidgets(prev => prev.filter(w => w.id !== item.widget.id))} />
+                    ? <MetricCard key={`metric-${item.widget.id}`} widget={item.widget as Metric} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Metric).shapeType ?? 'Indicator'); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} onDelete={() => setMetrics(prev => prev.filter(m => m.id !== item.widget.id))} onLinkToElement={() => setLinkWidget({ id: item.widget.id, name: item.widget.name, type: (item.widget as Metric).shapeType ?? 'Indicator' })} />
+                    : <ExternalWidgetCard key={`ext-${item.widget.id}`} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as ExternalWidget).shapeType ?? 'Indicator'); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} onDelete={() => setExternalWidgets(prev => prev.filter(w => w.id !== item.widget.id))} onLinkToElement={() => setLinkWidget({ id: item.widget.id, name: item.widget.name, type: (item.widget as ExternalWidget).shapeType ?? 'Indicator' })} />
                 )}
               </>
           }
@@ -814,6 +833,51 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
             })}
           </List>
         </Popover>,
+        document.body
+      )}
+
+      {/* Link to Element dialog */}
+      {linkWidget && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setLinkWidget(null)}
+        >
+          <div
+            style={{ background: 'var(--sapBackgroundColor, #fff)', borderRadius: '0.5rem', boxShadow: 'var(--sapContent_Shadow3)', width: 400, overflow: 'hidden' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--sapPageHeader_BorderColor)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: '700', color: 'var(--sapTextColor)' }}>Link to Element</span>
+              <Button icon="decline" design="Transparent"
+                style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties}
+                onClick={() => setLinkWidget(null)} />
+            </div>
+            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--sapPageHeader_BorderColor)' }}>
+              <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>
+                Select a canvas element to link &quot;{linkWidget.name}&quot; to.
+              </Text>
+            </div>
+            <div style={{ overflowY: 'auto', maxHeight: 360 }}>
+              {CANVAS_ELEMENTS.map(el => (
+                <div key={el.id}
+                  onClick={() => {
+                    onLinkWidgetToElement?.(linkWidget.id, linkWidget.name, linkWidget.type, el.id, el.name)
+                    setLinkWidget(null)
+                  }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.625rem 1rem', borderBottom: '1px solid var(--sapList_BorderColor)', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--sapList_Hover_Background)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                >
+                  <span style={{ fontSize: 'var(--sapFontSize)' }}>{el.name}</span>
+                  <span style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>{el.type}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '0.5rem 1rem', borderTop: '1px solid var(--sapPageHeader_BorderColor)', display: 'flex', justifyContent: 'flex-end' }}>
+              <Button design="Transparent" onClick={() => setLinkWidget(null)}>Cancel</Button>
+            </div>
+          </div>
+        </div>,
         document.body
       )}
 
