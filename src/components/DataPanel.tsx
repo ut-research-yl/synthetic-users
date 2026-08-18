@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button, Icon, Input, MessageStrip, Text, Menu, MenuItem, Popover, List, ListItemStandard, Dialog, Bar, Title } from '@ui5/webcomponents-react'
+import { Button, Icon, Input, MessageStrip, Text, Menu, MenuItem, Popover, List, ListItemStandard, MessageBox, MessageBoxAction, Modals } from '@ui5/webcomponents-react'
 import { SigChipV2 } from '@signavio/sap-signavio-uixtension'
 import ConnectWidgetDialog from './ConnectWidgetDialog'
 import AddExternalWidgetDialog from './AddExternalWidgetDialog'
@@ -74,10 +74,10 @@ export type WidgetType = 'Value' | 'Bar Chart' | 'Line Chart' | 'Area Chart' | '
 
 export type Widget = { id: string; name: string; type: WidgetType; process?: string; source?: string }
 
-export type ExternalWidget = { id: string; name: string; source: string; url: string; shapeType?: string }
+export type ExternalWidget = { id: string; name: string; source: string; url: string; shapeType?: string; addedAt?: number }
 
 export type MetricKind = 'NPS' | 'CSAT' | 'CES' | 'Custom'
-export type Metric = { id: string; name: string; metricKind: MetricKind; source: string; shapeType?: string }
+export type Metric = { id: string; name: string; metricKind: MetricKind; source: string; shapeType?: string; addedAt?: number }
 
 const WIDGETS: Widget[] = [
   { id: 'value-I-001',     name: 'Active Cases',              type: 'Value',           process: 'Order to Cash',    source: 'O2C Performance' },
@@ -164,7 +164,7 @@ const TYPE_ICON: Record<WidgetType, string> = {
   'Histogram':       'SAP-icons-v4/graph-histogram',
 }
 
-const EXTERNAL_WIDGETS: ExternalWidget[] = [
+export const EXTERNAL_WIDGETS: ExternalWidget[] = [
   { id: 'ext-001', name: 'Sales Performance Dashboard', source: 'Tableau',         url: 'https://tableau.example.com/views/sales' },
   { id: 'ext-002', name: 'Marketing KPIs',              source: 'Looker Studio',   url: 'https://lookerstudio.google.com/u/0/reporting/abc' },
   { id: 'ext-003', name: 'Revenue Forecast',            source: 'Power BI',        url: 'https://app.powerbi.com/view?r=abc123' },
@@ -182,7 +182,7 @@ const EXTERNAL_WIDGETS: ExternalWidget[] = [
   { id: 'ext-012', name: 'HR Attrition Trends',         source: 'Looker Studio',   url: 'https://lookerstudio.google.com/u/0/reporting/ghi' },
 ]
 
-const METRICS: Metric[] = [
+export const METRICS: Metric[] = [
   { id: 'metric-001', name: 'Onboarding NPS',         metricKind: 'NPS',  source: 'Qualtrics',   shapeType: 'Sentiment' },
   { id: 'metric-002', name: 'Purchase Experience NPS', metricKind: 'NPS',  source: 'Qualtrics',   shapeType: 'Sentiment' },
   { id: 'metric-003', name: 'Support CSAT',            metricKind: 'CSAT', source: 'Medallia',    shapeType: 'Sentiment' },
@@ -281,7 +281,7 @@ function WidgetCard({ widget, onSelect, onAddToCanvas }: { widget: Widget; onSel
           <Text style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: '700', color: 'var(--sapTextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {widget.name}
           </Text>
-          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Analysis Configuration"
+          <Button icon="SAP-icons-v4/link" design="Transparent" tooltip="Open in Internal Analysis"
             style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties}
             onClick={(e: React.MouseEvent) => e.stopPropagation()} />
         </div>
@@ -365,19 +365,20 @@ function ExternalWidgetCard({ widget, onSelect, onAddToCanvas, onDelete }: { wid
         document.body
       )}
       {createPortal(
-        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}
-          header={<Bar design="Header"><Title slot="startContent" level="H3">Delete Widget</Title></Bar>}
-          footer={
-            <Bar design="Footer">
-              <Button slot="endContent" design="Negative" onClick={() => { setConfirmOpen(false); onDelete?.() }}>Delete</Button>
-              <Button slot="endContent" design="Transparent" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-            </Bar>
-          }
+        <MessageBox
+          open={confirmOpen}
+          type="Warning"
+          titleText="Delete Widget"
+          actions={[
+            <Button key="del" design="Negative" onClick={() => { onDelete?.(); setConfirmOpen(false); Modals.showToast({ children: `"${widget.name}" deleted.` }) }}>Delete</Button>,
+            MessageBoxAction.Cancel,
+          ]}
+          onClose={() => setConfirmOpen(false)}
         >
           <div style={{ padding: '1rem' }}>
-            <Text>Delete <strong>{widget.name}</strong>? This action cannot be undone.</Text>
+            &quot;{widget.name}&quot; will be permanently deleted.
           </div>
-        </Dialog>,
+        </MessageBox>,
         document.body
       )}
     </div>
@@ -402,7 +403,7 @@ function MetricCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: Met
         setTimeout(cleanup, 0)
       }}>
       <div className={s.cardIcon} title="Metric">
-        <Icon name="performance" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties} />
+        <Icon name="SAP-icons-v4/link" style={{ width: '1rem', height: '1rem', color: 'var(--sapHighlightColor)' } as React.CSSProperties} />
       </div>
       <div className={s.cardInfo}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -434,19 +435,20 @@ function MetricCard({ widget, onSelect, onAddToCanvas, onDelete }: { widget: Met
         document.body
       )}
       {createPortal(
-        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}
-          header={<Bar design="Header"><Title slot="startContent" level="H3">Delete Metric</Title></Bar>}
-          footer={
-            <Bar design="Footer">
-              <Button slot="endContent" design="Negative" onClick={() => { setConfirmOpen(false); onDelete?.() }}>Delete</Button>
-              <Button slot="endContent" design="Transparent" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-            </Bar>
-          }
+        <MessageBox
+          open={confirmOpen}
+          type="Warning"
+          titleText="Delete Metric"
+          actions={[
+            <Button key="del" design="Negative" onClick={() => { onDelete?.(); setConfirmOpen(false); Modals.showToast({ children: `"${widget.name}" deleted.` }) }}>Delete</Button>,
+            MessageBoxAction.Cancel,
+          ]}
+          onClose={() => setConfirmOpen(false)}
         >
           <div style={{ padding: '1rem' }}>
-            <Text>Delete <strong>{widget.name}</strong>? This action cannot be undone.</Text>
+            &quot;{widget.name}&quot; will be permanently deleted.
           </div>
-        </Dialog>,
+        </MessageBox>,
         document.body
       )}
     </div>
@@ -476,10 +478,11 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
   const [connectOpen, setConnectOpen] = useState(false)
   const [addExternalOpen, setAddExternalOpen] = useState(false)
   const [addMetricOpen, setAddMetricOpen] = useState(false)
-  const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'last-edited' | 'recently-added'>('name-asc')
+  const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'recently-added'>('name-asc')
   const [externalWidgets, setExternalWidgets] = useState<ExternalWidget[]>(EXTERNAL_WIDGETS)
   const [metrics, setMetrics] = useState<Metric[]>(METRICS)
-  const [addedName, setAddedName] = useState<string | null>(null)
+
+  const nextAddedAt = useRef(-1)
 
   const typeMenuRef = useRef<any>(null)
   const sourceMenuRef = useRef<any>(null)
@@ -502,7 +505,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
     ? `${location.process} › ${location.section}`
     : location.type
     ? `${location.process} › ${location.type}`
-    : location.process ?? 'Analysis Configuration'
+    : location.process ?? 'Internal Analysis'
 
   const filtered = WIDGETS.filter(w => {
     if (selectedSource === 'External Widget') return false
@@ -515,7 +518,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
   })
 
   const filteredExternal = externalWidgets.filter(w => {
-    if (selectedSource === 'Analysis Configuration') return false
+    if (selectedSource === 'Internal Analysis') return false
     if (selectedSource === 'Metric') return false
     if (selectedType) return false
     if (pageWidgetIds) return false
@@ -525,7 +528,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
   })
 
   const filteredMetrics = metrics.filter(w => {
-    if (selectedSource === 'Analysis Configuration') return false
+    if (selectedSource === 'Internal Analysis') return false
     if (selectedSource === 'External Widget') return false
     if (selectedType) return false
     if (pageWidgetIds) return false
@@ -536,18 +539,19 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
 
   const totalCount = filtered.length + filteredExternal.length + filteredMetrics.length
 
+  const extCount = filteredExternal.length
+  const metCount = filteredMetrics.length
+
   const combined = [
-    ...filtered.map(w => ({ kind: 'internal' as const, widget: w })),
-    ...filteredExternal.map(w => ({ kind: 'external' as const, widget: w })),
-    ...filteredMetrics.map(w => ({ kind: 'metric' as const, widget: w })),
+    ...filteredExternal.map((w, i) => ({ kind: 'external' as const, widget: w, recentIdx: w.addedAt ?? i })),
+    ...filteredMetrics.map((w, i) => ({ kind: 'metric' as const, widget: w, recentIdx: w.addedAt ?? (extCount + i) })),
+    ...filtered.map((w, i) => ({ kind: 'internal' as const, widget: w, recentIdx: extCount + metCount + i })),
   ].sort((a, b) => {
     if (sortOrder === 'name-asc') return a.widget.name.localeCompare(b.widget.name)
     if (sortOrder === 'name-desc') return b.widget.name.localeCompare(a.widget.name)
     if (sortOrder === 'recently-added') {
-      const kindOrder = { external: 0, metric: 1, internal: 2 }
-      if (a.kind !== b.kind) return kindOrder[a.kind] - kindOrder[b.kind]
-      if (a.kind === 'internal' && b.kind === 'internal') return WIDGETS.indexOf(b.widget) - WIDGETS.indexOf(a.widget)
-      return 0
+      if (a.recentIdx !== b.recentIdx) return a.recentIdx - b.recentIdx
+      return a.widget.name.localeCompare(b.widget.name)
     }
     return 0
   })
@@ -569,6 +573,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
           id="data-add-btn"
           design="Default"
           icon="add"
+          endIcon="slim-arrow-down"
           style={{ flexShrink: 0 } as React.CSSProperties}
           onClick={() => {
             if (addMenuRef.current) {
@@ -584,10 +589,8 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
             onClose={() => setAddExternalOpen(false)}
             onSave={w => {
               setAddExternalOpen(false)
-              setExternalWidgets(prev => [w, ...prev])
-              setSortOrder('recently-added')
-              setAddedName(w.name)
-              setTimeout(() => setAddedName(null), 3000)
+              setExternalWidgets(prev => [{ ...w, addedAt: nextAddedAt.current-- }, ...prev])
+              Modals.showToast({ children: `"${w.name}" added to the list.` })
               onWidgetAdded?.(w.name)
             }}
           />
@@ -598,10 +601,8 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
             onClose={() => setAddMetricOpen(false)}
             onSave={m => {
               setAddMetricOpen(false)
-              setMetrics(prev => [m as Metric, ...prev])
-              setSortOrder('recently-added')
-              setAddedName(m.name)
-              setTimeout(() => setAddedName(null), 3000)
+              setMetrics(prev => [{ ...m as Metric, addedAt: nextAddedAt.current-- }, ...prev])
+              Modals.showToast({ children: `"${m.name}" added to the list.` })
               onWidgetAdded?.(m.name)
             }}
           />
@@ -615,11 +616,6 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
         {infoVisible && (
           <MessageStrip className={s.messageStrip} design="Information" hideCloseButton={false} onClose={() => setInfoVisible(false)}>
             Drag widgets onto the canvas to add them directly, or drop them onto an existing element to connect it to live data.
-          </MessageStrip>
-        )}
-        {addedName && (
-          <MessageStrip className={s.messageStrip} design="Positive" hideCloseButton onClose={() => setAddedName(null)}>
-            "{addedName}" added to your widgets.
           </MessageStrip>
         )}
 
@@ -704,10 +700,10 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
             : <>
                 {combined.map(item =>
                   item.kind === 'internal'
-                    ? <WidgetCard key={item.widget.id} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Widget).type)} />
+                    ? <WidgetCard key={item.widget.id} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Widget).type); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} />
                     : item.kind === 'metric'
-                    ? <MetricCard key={`metric-${item.widget.id}`} widget={item.widget as Metric} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Metric).shapeType ?? 'Indicator')} onDelete={() => setMetrics(prev => prev.filter(m => m.id !== item.widget.id))} />
-                    : <ExternalWidgetCard key={`ext-${item.widget.id}`} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as ExternalWidget).shapeType ?? 'Indicator')} onDelete={() => setExternalWidgets(prev => prev.filter(w => w.id !== item.widget.id))} />
+                    ? <MetricCard key={`metric-${item.widget.id}`} widget={item.widget as Metric} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as Metric).shapeType ?? 'Indicator'); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} onDelete={() => setMetrics(prev => prev.filter(m => m.id !== item.widget.id))} />
+                    : <ExternalWidgetCard key={`ext-${item.widget.id}`} widget={item.widget} onSelect={() => onWidgetSelect?.(item.widget)} onAddToCanvas={() => { onAddFromBrowse?.(item.widget.id, item.widget.name, (item.widget as ExternalWidget).shapeType ?? 'Indicator'); Modals.showToast({ children: `"${item.widget.name}" added to canvas.` }) }} onDelete={() => setExternalWidgets(prev => prev.filter(w => w.id !== item.widget.id))} />
                 )}
               </>
           }
@@ -779,7 +775,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
           const txt = e.detail?.text
           setSelectedSource(txt)
         }}>
-          <MenuItem text="Analysis Configuration" />
+          <MenuItem text="Internal Analysis" />
           <MenuItem text="External Widget" />
           <MenuItem text="Metric" />
         </Menu>,
@@ -793,8 +789,8 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
           if (key === 'external') setAddExternalOpen(true)
           else if (key === 'metric') setAddMetricOpen(true)
         }}>
-          <MenuItem text="External Widget" data-add-type="external" icon="attachment" />
-          <MenuItem text="Metric" data-add-type="metric" icon="performance" />
+          <MenuItem text="External Widget" data-add-type="external" />
+          <MenuItem text="Metric" data-add-type="metric" />
         </Menu>,
         document.body
       )}
@@ -806,8 +802,8 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
             const key = e.detail?.item?.dataset?.sort
             if (key) { setSortOrder(key); sortMenuRef.current.open = false }
           }}>
-            {(['name-asc', 'name-desc', 'last-edited', 'recently-added'] as const).map((key, _, arr) => {
-              const labels: Record<string, string> = { 'name-asc': 'Name (A–Z)', 'name-desc': 'Name (Z–A)', 'last-edited': 'Last edited', 'recently-added': 'Recently added' }
+            {(['recently-added', 'name-asc', 'name-desc'] as const).map((key, _, arr) => {
+              const labels: Record<string, string> = { 'name-asc': 'Name (A–Z)', 'name-desc': 'Name (Z–A)', 'recently-added': 'Recently added' }
               return (
                 <ListItemStandard key={key} data-sort={key}
                   selected={sortOrder === key}

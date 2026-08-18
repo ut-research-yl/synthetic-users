@@ -285,7 +285,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Executive dashboard showing DSO, DPO, working capital ratio and close cycle time.',
       createdAt: 'Feb 01, 2024', changedAt: 'Apr 15, 2025', folder: 'Finance / Reporting',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Finance KPIs Q1' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Finance KPIs Q1' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -293,7 +293,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Live view of overdue payables, blocked invoices, and exception queues by entity.',
       createdAt: 'May 12, 2024', changedAt: 'Mar 20, 2025', folder: 'Finance / Accounts Payable',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'AP Aging 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'AP Aging 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -301,7 +301,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Tracks close task completion status, bottlenecks and variance against SLA.',
       createdAt: 'Mar 08, 2023', changedAt: 'Apr 28, 2025', folder: 'Finance / Record to Report',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Close Cycle 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Close Cycle 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -309,7 +309,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Monthly comparison of planned vs actual spend by cost center and GL account.',
       createdAt: 'Jan 20, 2024', changedAt: 'Feb 14, 2025', folder: 'Finance / Controlling',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Budget FY2025' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Budget FY2025' }, { label: 'Owner:', value: 'Maria Hoffmann', avatarInitial: 'MH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -317,7 +317,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Highlights unmatched IC transactions across entities ahead of close.',
       createdAt: 'Jun 15, 2024', changedAt: 'Jan 31, 2025', folder: 'Finance / Record to Report',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'IC Recon 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'IC Recon 2025' }, { label: 'Owner:', value: 'Jan Holt', avatarInitial: 'JH' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -325,7 +325,7 @@ const FINANCE_TRANSFORMATION_RESPONSE: FakeResponse = {
       description: 'Real-time cash position and 30-day liquidity forecast across all bank accounts.',
       createdAt: 'Aug 10, 2024', changedAt: 'Apr 05, 2025', folder: 'Finance / Treasury',
       project: 'Finance Transformation 2026',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Treasury Q2 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Treasury Q2 2025' }, { label: 'Owner:', value: 'Laura Chen', avatarInitial: 'LC' }],
     },
     // Initiative group — 3 items
     {
@@ -476,7 +476,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Mar 01, 2024', changedAt: 'Apr 20, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Procurement KPIs Q1' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Procurement KPIs Q1' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -485,7 +485,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Jun 10, 2024', changedAt: 'Mar 15, 2025', folder: 'Procurement / Supplier Management',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Supplier OTD 2025' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Supplier OTD 2025' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -494,7 +494,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Jan 15, 2024', changedAt: 'Feb 28, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Spend DE 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Spend DE 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -503,7 +503,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Apr 22, 2024', changedAt: 'Apr 05, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Contract KPIs Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Contract KPIs Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -512,7 +512,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Jul 08, 2024', changedAt: 'Mar 30, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'PO Cycle 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'PO Cycle 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -521,7 +521,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Sep 12, 2024', changedAt: 'Jan 22, 2025', folder: 'Procurement / Accounts Payable',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Invoice Exceptions' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Invoice Exceptions' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -530,7 +530,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Nov 01, 2024', changedAt: 'Apr 12, 2025', folder: 'Procurement / Germany',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Spot Buy 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Spot Buy 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     {
       domainObjectType: 'Dashboard', assetType: 'Dashboard',
@@ -539,7 +539,7 @@ const PROCUREMENT_ONBOARDING_RESPONSE: FakeResponse = {
       createdAt: 'Feb 20, 2024', changedAt: 'Mar 10, 2025', folder: 'Procurement / Supplier Management',
       department: 'Procurement',
       region: 'Germany',
-      customChips: [{ label: 'Analysis Configuration:', value: 'Supplier Risk Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'Supplier Risk Q1' }, { label: 'Owner:', value: 'Tim Bauer', avatarInitial: 'TB' }],
     },
     // Initiative group — 2 items
     {
@@ -607,7 +607,7 @@ const P2P_QUARTERLY_RESPONSE: FakeResponse = {
       name: 'P2P Process Health Monitor', version: '2.4', status: 'Published', processId: 'DASH-601',
       description: 'Live dashboard showing PO cycle time, invoice exception rate, on-time delivery and contract compliance KPIs.',
       createdAt: 'Mar 05, 2024', changedAt: 'Apr 15, 2025', folder: 'Purchase-to-Pay',
-      customChips: [{ label: 'Analysis Configuration:', value: 'P2P Health Q2 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
+      customChips: [{ label: 'Internal Analysis:', value: 'P2P Health Q2 2025' }, { label: 'Owner:', value: 'Sophie Wagner', avatarInitial: 'SW' }],
     },
     // Dictionary Entries — 6 items
     {

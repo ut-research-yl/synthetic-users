@@ -107,7 +107,7 @@ const MOCK_GROUPS: MockGroup[] = [
     name: 'Process Mining and Analysis',
     items: [
       { key: 'pex',                          name: 'Access Process Intelligence' },
-      { key: 'pexCreateProcess',             name: 'Create Analysis Configuration',                                      description: 'Create and use an analysis configuration to evaluate, benchmark, and measure your business process performance.' },
+      { key: 'pexCreateProcess',             name: 'Create Internal Analysis',                                      description: 'Create and use an internal analysis to evaluate, benchmark, and measure your business process performance.' },
       { key: 'piPdmDataIntegration',         name: 'Access Data Integration',                                            description: 'Access customizable data connections, source data sets, and on-premises extractors.' },
       { key: 'piPdmDataModeling',            name: 'Access Data Modeling',                                               description: 'Access data pipelines to model and transform data for custom process analysis.' },
       { key: 'signalODataToken',             name: 'Access SIGNAL OData API',                                            description: 'Access analytical results in Process Intelligence via third-party systems.' },

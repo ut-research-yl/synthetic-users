@@ -3047,7 +3047,7 @@ export default function ModelerApp({ assetId, onTogglePanel, onElementSelect, on
         onAddBrowseWidget={onAddBrowseWidget}
         panelOffset={panelOffset}
       />
-      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} onWidgetAdded={name => setToastMsg(`"${name}" added to your widgets`)} />}
+      {dataOpen && <DataPanel onClose={() => setDataOpen(false)} onWidgetSelect={onWidgetSelect} onAddFromBrowse={onAddBrowseWidget} />}
     </div>
   )
 }

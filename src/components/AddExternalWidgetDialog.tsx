@@ -1,9 +1,17 @@
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { Button, Dialog, Bar, Title, Label, Input, Select, Option, TextArea, IllustratedMessage, BusyIndicator } from '@ui5/webcomponents-react'
 
 type Props = { open: boolean; onClose: () => void; onSave?: (widget: { id: string; name: string; source: string; url: string; shapeType: string }) => void }
 
 const SOURCES = ['Looker Studio', 'Tableau', 'Power BI', 'Analytics Cloud', 'Grafana', 'Custom URL']
+
+function extractPreviewUrl(snippet: string): string | null {
+  const trimmed = snippet.trim()
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  const srcMatch = trimmed.match(/src=["']([^"']+)["']/)
+  if (srcMatch) return srcMatch[1]
+  return null
+}
 
 const SHAPE_TYPES = [
   { value: 'Indicator',     label: 'Indicator',     icon: 'SAP-icons-v4/data-indicator' },
@@ -17,7 +25,6 @@ const SHAPE_TYPES = [
 ]
 
 export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props) {
-  const dialogRef = useRef<any>(null)
   const [title, setTitle] = useState('')
   const [source, setSource] = useState(SOURCES[0])
   const [snippet, setSnippet] = useState('')
@@ -28,7 +35,6 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
 
   const doClose = () => {
     reset()
-    dialogRef.current?.close()
     onClose()
   }
 
@@ -45,7 +51,6 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
 
   return (
     <Dialog
-      ref={dialogRef}
       open={open}
       onClose={() => { reset(); onClose() }}
       style={{ '--_ui5_dialog_content_padding': '0' } as React.CSSProperties}
@@ -119,29 +124,43 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
 
         {/* Right: preview */}
         <div style={{ width: 440, flexShrink: 0, padding: '1.5rem 2rem 1.5rem 0' }}>
-          <div style={{
-            width: '100%', height: '100%', borderRadius: 8,
-            background: 'var(--sapPageSection_Background, #f8f9fa)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            minHeight: 320,
-          }}>
-            {loading ? (
-              <BusyIndicator active size="L" />
-            ) : snippet ? (
-              <div style={{ padding: '1rem', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)', wordBreak: 'break-all', textAlign: 'center' }}>
-                {snippet.slice(0, 120)}{snippet.length > 120 ? '…' : ''}
+          {(() => {
+            const previewUrl = !loading && snippet ? extractPreviewUrl(snippet) : null
+            return (
+              <div style={{
+                width: '100%', height: '100%', borderRadius: 8, overflow: 'hidden',
+                background: 'var(--sapPageSection_Background, #f8f9fa)',
+                display: 'flex', alignItems: previewUrl ? 'stretch' : 'center', justifyContent: previewUrl ? 'stretch' : 'center',
+                minHeight: 320,
+              }}>
+                {loading ? (
+                  <BusyIndicator active size="L" />
+                ) : previewUrl ? (
+                  <iframe
+                    key={previewUrl}
+                    src={previewUrl}
+                    title={title || 'Widget preview'}
+                    style={{ width: '100%', height: '100%', minHeight: 320, border: 'none' }}
+                    allowFullScreen
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  />
+                ) : snippet ? (
+                  <div style={{ padding: '1rem', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)', wordBreak: 'break-all', textAlign: 'center' }}>
+                    {snippet.slice(0, 120)}{snippet.length > 120 ? '…' : ''}
+                  </div>
+                ) : (
+                  <div style={{ overflow: 'hidden', width: '100%', paddingBottom: 0 }}>
+                    <IllustratedMessage
+                      name="NoEntries"
+                      titleText="No preview available"
+                      subtitleText="Paste a link or code snippet to see a preview"
+                      style={{ display: 'block', marginBottom: '-1rem' } as React.CSSProperties}
+                    />
+                  </div>
+                )}
               </div>
-            ) : (
-              <div style={{ overflow: 'hidden', width: '100%', paddingBottom: 0 }}>
-                <IllustratedMessage
-                  name="NoEntries"
-                  titleText="No preview available"
-                  subtitleText="Paste a link or code snippet to see a preview"
-                  style={{ display: 'block', marginBottom: '-1rem' } as React.CSSProperties}
-                />
-              </div>
-            )}
-          </div>
+            )
+          })()}
         </div>
 
       </div>

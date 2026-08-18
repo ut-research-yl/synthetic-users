@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Icon, Label, Tab, Text } from '@ui5/webcomponents-react'
 import { SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
-import type { Widget, ExternalWidget } from './DataPanel'
+import type { Widget, ExternalWidget, Metric } from './DataPanel'
 
 const CHART_SVG: Record<string, string> = {
   'Value':           `<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="200" y="80" text-anchor="middle" font-size="52" font-weight="700" fill="#0064d9" font-family="72,Arial">2,847</text><text x="200" y="108" text-anchor="middle" font-size="13" fill="#556b82" font-family="72,Arial">Current Value</text><line x1="80" y1="132" x2="320" y2="132" stroke="#e8ecf0" stroke-width="1.5"/><rect x="148" y="148" width="12" height="12" rx="2" fill="#27a65a"/><text x="166" y="159" font-size="13" fill="#27a65a" font-family="72,Arial" font-weight="600">↑ 12.3%</text><text x="200" y="185" text-anchor="middle" font-size="11" fill="#8c9bab" font-family="72,Arial">vs. last period</text></svg>`,
@@ -15,6 +15,7 @@ const CHART_SVG: Record<string, string> = {
   'Sankey Chart':    `<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="40" y="20" width="22" height="65" fill="#0064d9" rx="2"/><rect x="40" y="95" width="22" height="45" fill="#5baae7" rx="2"/><rect x="40" y="150" width="22" height="30" fill="#a8d4f5" rx="2"/><path d="M62 20 C160 20 240 25 338 25 L338 65 C240 65 160 60 62 85 Z" fill="#0064d9" opacity="0.3"/><path d="M62 95 C160 95 240 90 338 90 L338 120 C240 120 160 130 62 140 Z" fill="#5baae7" opacity="0.3"/><path d="M62 150 C160 150 240 130 338 130 L338 170 C240 170 160 170 62 180 Z" fill="#a8d4f5" opacity="0.3"/><rect x="338" y="25" width="22" height="65" fill="#0064d9" rx="2"/><rect x="338" y="90" width="22" height="40" fill="#5baae7" rx="2"/><rect x="338" y="130" width="22" height="40" fill="#a8d4f5" rx="2"/></svg>`,
   'Histogram':       `<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="50" y1="160" x2="380" y2="160" stroke="#e8ecf0" stroke-width="1"/><rect x="55" y="130" width="36" height="30" fill="#0064d9" rx="1" opacity="0.5"/><rect x="95" y="100" width="36" height="60" fill="#0064d9" rx="1" opacity="0.7"/><rect x="135" y="60" width="36" height="100" fill="#0064d9" rx="1"/><rect x="175" y="40" width="36" height="120" fill="#0064d9" rx="1"/><rect x="215" y="55" width="36" height="105" fill="#0064d9" rx="1" opacity="0.9"/><rect x="255" y="90" width="36" height="70" fill="#0064d9" rx="1" opacity="0.7"/><rect x="295" y="120" width="36" height="40" fill="#0064d9" rx="1" opacity="0.5"/><rect x="335" y="145" width="36" height="15" fill="#0064d9" rx="1" opacity="0.3"/></svg>`,
   'External Widget': `<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="60" y="40" width="280" height="120" rx="8" fill="#f5f6f7" stroke="#e8ecf0" stroke-width="1.5"/><rect x="80" y="60" width="100" height="8" rx="4" fill="#d4e8fa"/><rect x="80" y="76" width="140" height="8" rx="4" fill="#e8ecf0"/><rect x="80" y="100" width="60" height="40" rx="4" fill="#0064d9" opacity="0.15"/><rect x="150" y="100" width="60" height="40" rx="4" fill="#0064d9" opacity="0.25"/><rect x="220" y="100" width="60" height="40" rx="4" fill="#0064d9" opacity="0.4"/></svg>`,
+  'Metric':          `<svg width="100%" height="100%" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M76 158 A124 124 0 0 1 324 158" stroke="#e8ecf0" stroke-width="18" stroke-linecap="round"/><path d="M76 158 A124 124 0 0 1 290 80" stroke="#0064d9" stroke-width="18" stroke-linecap="round"/><text x="200" y="138" text-anchor="middle" font-size="50" font-weight="700" fill="#0064d9" font-family="72,Arial">78%</text><text x="200" y="162" text-anchor="middle" font-size="12" fill="#27a65a" font-family="72,Arial" font-weight="600">↑ +3.2 pts vs last month</text><text x="200" y="185" text-anchor="middle" font-size="11" fill="#8c9bab" font-family="72,Arial">CSAT Score</text></svg>`,
 }
 
 const TYPE_ICON: Record<string, string> = {
@@ -29,6 +30,7 @@ const TYPE_ICON: Record<string, string> = {
   'Sankey Chart':    'SAP-icons-v4/graph-sankey',
   'Histogram':       'SAP-icons-v4/graph-histogram',
   'External Widget': 'SAP-icons-v4/link',
+  'Metric':          'SAP-icons-v4/link',
 }
 
 type Relation = { type: string; name: string; icon: string }
@@ -164,12 +166,16 @@ const WIDGET_RELATIONS: Record<string, Relation[]> = {
 }
 
 type Props = {
-  widget: Widget | ExternalWidget
+  widget: Widget | ExternalWidget | Metric
   onClose: () => void
 }
 
-function isExternal(w: Widget | ExternalWidget): w is ExternalWidget {
+function isExternal(w: Widget | ExternalWidget | Metric): w is ExternalWidget {
   return 'url' in w
+}
+
+function isMetric(w: Widget | ExternalWidget | Metric): w is Metric {
+  return 'metricKind' in w
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -183,11 +189,12 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 export default function WidgetDetailPanel({ widget, onClose }: Props) {
   const ext = isExternal(widget)
-  const widgetType = ext ? 'External Widget' : (widget as Widget).type
-  const process = ext ? undefined : (widget as Widget).process
-  const source = ext ? (widget as ExternalWidget).source : (widget as Widget).source
+  const met = isMetric(widget)
+  const widgetType = met ? 'Metric' : ext ? 'External Widget' : (widget as Widget).type
+  const process = (ext || met) ? undefined : (widget as Widget).process
+  const source = met ? (widget as Metric).source : ext ? (widget as ExternalWidget).source : (widget as Widget).source
   const chartSvg = CHART_SVG[widgetType] ?? CHART_SVG['Bar Chart']
-  const iconName = TYPE_ICON[widgetType] ?? 'chart-table-view'
+  const iconName = (met || ext) ? 'SAP-icons-v4/link' : (TYPE_ICON[widgetType] ?? 'chart-table-view')
 
   const tabs = [
     <Tab text="Details" key="details">
@@ -202,8 +209,9 @@ export default function WidgetDetailPanel({ widget, onClose }: Props) {
         }}>
           <div style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: chartSvg }} />
         </div>
+        {met && <DetailRow label="Metric Kind" value={(widget as Metric).metricKind} />}
         {process && <DetailRow label="Process" value={process} />}
-        {source && <DetailRow label={ext ? 'Source' : 'Dashboard'} value={source} />}
+        {source && <DetailRow label={ext ? 'Source' : met ? 'Source' : 'Dashboard'} value={source} />}
         {ext && (widget as ExternalWidget).url && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 0' }}>
             <Label showColon style={{ color: 'var(--sapContent_LabelColor)' }}>URL</Label>
@@ -215,7 +223,7 @@ export default function WidgetDetailPanel({ widget, onClose }: Props) {
         <DetailRow label="Widget Type" value={widgetType} />
       </div>
     </Tab>,
-    <Tab text="Relations" key="relations">
+    ...(!ext && !met ? [<Tab text="Relations" key="relations">
       <div style={{ paddingBottom: '16px' }}>
         {(() => {
           const relations = WIDGET_RELATIONS[widget.id] ?? []
@@ -237,7 +245,7 @@ export default function WidgetDetailPanel({ widget, onClose }: Props) {
           ))
         })()}
       </div>
-    </Tab>,
+    </Tab>] : []),
   ]
 
   return (

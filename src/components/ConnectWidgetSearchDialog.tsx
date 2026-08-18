@@ -7,6 +7,7 @@ import {
   Label, Breadcrumbs, BreadcrumbsItem, Wizard, WizardStep, IllustratedMessage,
   Table, TableRow, TableCell, TableHeaderRow, TableHeaderCell,
 } from '@ui5/webcomponents-react'
+import { EXTERNAL_WIDGETS, METRICS } from './DataPanel'
 
 // ── Shared data ───────────────────────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ const TYPE_ICON: Record<string, string> = {
   'Treemap': 'SAP-icons-v4/graph-histogram', 'Heat Map': 'heatmap-chart',
   'Sankey Chart': 'SAP-icons-v4/graph-sankey', 'Histogram': 'SAP-icons-v4/graph-histogram',
   'Ring Chart': 'SAP-icons-v4/ring-chart',
+  'External Widget': 'SAP-icons-v4/link', 'Metric': 'SAP-icons-v4/link',
 }
 
 const LI_SUGGESTED: Record<string, string[]> = {
@@ -114,13 +116,27 @@ const LI_SUGGESTED: Record<string, string[]> = {
   'Sentiment': ['Value', 'Pie Chart', 'Bar Chart'],
 }
 
-const TYPE_ORDER = ['Bar Chart','Line Chart','Area Chart','Dual Axis Chart','Pie Chart','Treemap','Heat Map','Sankey Chart','Histogram','Value']
+const TYPE_ORDER = ['Bar Chart','Line Chart','Area Chart','Dual Axis Chart','Pie Chart','Treemap','Heat Map','Sankey Chart','Histogram','Value','External Widget','Metric']
+
+type UnifiedWidget = { id: string; name: string; type: string; subline: string; source?: string; url?: string; metricKind?: string }
+const ALL_WIDGETS: UnifiedWidget[] = [
+  ...Object.entries(CWD_WIDGETS).map(([id, w]) => ({ id, name: w.name, type: w.type, subline: w.path })),
+  ...EXTERNAL_WIDGETS.map(w => ({ id: w.id, name: w.name, type: 'External Widget', subline: w.source, source: w.source, url: w.url })),
+  ...METRICS.map(w => ({ id: w.id, name: w.name, type: 'Metric', subline: `${w.metricKind} · ${w.source}`, source: w.source, metricKind: w.metricKind })),
+]
+
+const METRIC_PREVIEW_DATA: Record<string, { value: string; change: string; up: boolean; color: string }> = {
+  NPS:    { value: '45',    change: '+3 vs last month',   up: true,  color: '#B8CC00' },
+  CSAT:   { value: '78%',   change: '-2% vs last month',  up: false, color: '#E9730C' },
+  CES:    { value: '2.3',   change: '+0.1 vs last month', up: true,  color: '#B8CC00' },
+  Custom: { value: '1,248', change: '+124 vs last month', up: true,  color: '#0064d9' },
+}
 
 type Props = {
   open: boolean
   shapeType: string
   currentWidgetId?: string
-  onConnect: (widgetId: string, widgetName: string) => void
+  onConnect: (widgetId: string, widgetName: string, widgetType: string) => void
   onClose: () => void
 }
 
@@ -162,15 +178,15 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
 
   const filteredWidgets = useMemo(() => {
     const q = search.toLowerCase()
-    return Object.entries(CWD_WIDGETS).filter(([id, w]) => {
+    return ALL_WIDGETS.filter(w => {
       if (isValueShape && w.type !== 'Value') return false
       if (typeFilter && w.type !== typeFilter) return false
-      if (q && !w.name.toLowerCase().includes(q) && !id.toLowerCase().includes(q)) return false
+      if (q && !w.name.toLowerCase().includes(q) && !w.id.toLowerCase().includes(q)) return false
       return true
-    }).sort((a, b) => a[1].name.localeCompare(b[1].name))
+    }).sort((a, b) => a.name.localeCompare(b.name))
   }, [search, typeFilter, isValueShape])
 
-  const selectedSearchWidget = selectedSearchId ? CWD_WIDGETS[selectedSearchId] : null
+  const selectedSearchWidget = selectedSearchId ? ALL_WIDGETS.find(w => w.id === selectedSearchId) ?? null : null
 
   const procData = selectedProcess ? CWD_DATA[selectedProcess] : null
   const sources = selectedType && procData?.[selectedType] ? Object.keys(procData[selectedType]!) : []
@@ -190,10 +206,9 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
 
   const handleConnect = () => {
     const id = activeTab === 'Search' ? selectedSearchId : selectedBrowseId
-    if (id && CWD_WIDGETS[id]) {
-      onConnect(id, CWD_WIDGETS[id].name)
-      onClose()
-    }
+    if (!id) return
+    const item = ALL_WIDGETS.find(w => w.id === id)
+    if (item) { onConnect(id, item.name, item.type); onClose() }
   }
 
   return createPortal(
@@ -266,12 +281,12 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
                   <Button design="Transparent" icon="sort" />
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid var(--sapList_BorderColor, #d9d9d9)' }}>
-                    {filteredWidgets.map(([id, w]) => {
+                    {filteredWidgets.map(w => {
                       const isDisabled = isValueShape && w.type !== 'Value'
-                      const isSelected = selectedSearchId === id
+                      const isSelected = selectedSearchId === w.id
                       return (
-                        <div key={id}
-                          onClick={() => !isDisabled && setSelectedSearchId(id)}
+                        <div key={w.id}
+                          onClick={() => !isDisabled && setSelectedSearchId(w.id)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: '0.75rem',
                             padding: '0.625rem 1rem',
@@ -283,13 +298,13 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
                           onMouseEnter={e => { if (!isDisabled && !isSelected) e.currentTarget.style.background = 'var(--sapList_Hover_Background, #f5f6f7)' }}
                           onMouseLeave={e => { e.currentTarget.style.background = isSelected ? 'var(--sapList_SelectionBackgroundColor, #e8f3ff)' : '#fff' }}
                         >
-                          <RadioButton name="search-widget" checked={isSelected} onChange={() => setSelectedSearchId(id)} style={{ flexShrink: 0 } as React.CSSProperties} />
+                          <RadioButton name="search-widget" checked={isSelected} onChange={() => setSelectedSearchId(w.id)} style={{ flexShrink: 0 } as React.CSSProperties} />
                           <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', background: 'var(--sapAvatar_6_Background, #d1efff)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Icon name={TYPE_ICON[w.type] ?? 'bar-chart'} style={{ color: '#0064d9', width: '1rem', height: '1rem' } as React.CSSProperties} />
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 'var(--sapFontSize)', fontWeight: 700, color: 'var(--sapTextColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.name}</div>
-                            <div style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.125rem' }}>{w.path}</div>
+                            <div style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.125rem' }}>{w.subline}</div>
                           </div>
                           <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)', flexShrink: 0 } as React.CSSProperties}>{w.type}</Text>
                         </div>
@@ -309,11 +324,54 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
                         <Text style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: 700, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>{selectedSearchWidget.name}</Text>
                         <Button design="Transparent" icon="SAP-icons-v4/link" />
                       </div>
-                      <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>{selectedSearchWidget.path}</Text>
+                      <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>{selectedSearchWidget.subline}</Text>
                     </div>
-                    <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', border: '1px solid var(--sapList_BorderColor)', boxShadow: '0 1px 4px rgba(34,53,72,0.07)', padding: '1rem', display: 'flex', minHeight: 0 }}
-                      dangerouslySetInnerHTML={{ __html: PREVIEW_CHARTS[selectedSearchWidget.type] ?? PREVIEW_CHARTS['Bar Chart'] }}
-                    />
+                    {PREVIEW_CHARTS[selectedSearchWidget.type] ? (
+                      <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', border: '1px solid var(--sapList_BorderColor)', boxShadow: '0 1px 4px rgba(34,53,72,0.07)', padding: '1rem', display: 'flex', minHeight: 0 }}
+                        dangerouslySetInnerHTML={{ __html: PREVIEW_CHARTS[selectedSearchWidget.type] }}
+                      />
+                    ) : selectedSearchWidget.type === 'Metric' ? (() => {
+                      const mock = METRIC_PREVIEW_DATA[selectedSearchWidget.metricKind ?? 'Custom'] ?? METRIC_PREVIEW_DATA['Custom']
+                      return (
+                        <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', border: '1px solid var(--sapList_BorderColor)', boxShadow: '0 1px 4px rgba(34,53,72,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
+                          <div style={{ border: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', borderRadius: 12, padding: '1.5rem', width: 220, display: 'flex', flexDirection: 'column', gap: '0.75rem', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                              <Text style={{ fontSize: 'var(--sapFontSmallSize)', fontWeight: 700, color: 'var(--sapTextColor)', lineHeight: 1.3 } as React.CSSProperties}>{selectedSearchWidget.name}</Text>
+                              <span style={{ fontSize: 10, background: 'var(--sapPageSection_Background, #f5f6f7)', color: 'var(--sapContent_LabelColor)', borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', flexShrink: 0 }}>{selectedSearchWidget.source}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                              <span style={{ fontSize: 40, fontWeight: 700, color: mock.color, lineHeight: 1 }}>{mock.value}</span>
+                              <span style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>{selectedSearchWidget.metricKind}</span>
+                            </div>
+                            <div style={{ height: 1, background: 'var(--sapPageHeader_BorderColor, #d9d9d9)' }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <span style={{ color: mock.up ? '#5C8A00' : '#BB0000', fontSize: 12 }}>{mock.up ? '▲' : '▼'}</span>
+                              <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>{mock.change}</Text>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })() : selectedSearchWidget.type === 'External Widget' ? (
+                      <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', border: '1px solid var(--sapList_BorderColor)', boxShadow: '0 1px 4px rgba(34,53,72,0.07)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+                        <div style={{ background: 'var(--sapPageSection_Background, #f5f6f7)', borderBottom: '1px solid var(--sapList_BorderColor)', padding: '0.375rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0 }}>
+                          <Icon name="locked" style={{ width: '0.75rem', height: '0.75rem', color: 'var(--sapContent_LabelColor)', flexShrink: 0 } as React.CSSProperties} />
+                          <Text style={{ fontSize: 10, color: 'var(--sapContent_LabelColor)', fontFamily: 'monospace', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as React.CSSProperties}>{selectedSearchWidget.url}</Text>
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '0.75rem 1rem', gap: '0.5rem' }}>
+                          <div style={{ flexShrink: 0 }}>
+                            <span style={{ background: '#e8f3ff', color: '#0064d9', fontSize: 11, fontWeight: 700, borderRadius: 4, padding: '2px 8px' }}>{selectedSearchWidget.source}</span>
+                          </div>
+                          <div style={{ flex: 1, minHeight: 0 }} dangerouslySetInnerHTML={{ __html: PREVIEW_CHARTS['Bar Chart'] }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ flex: 1, background: '#fff', borderRadius: '1rem', border: '1px solid var(--sapList_BorderColor)', boxShadow: '0 1px 4px rgba(34,53,72,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                          <Icon name="SAP-icons-v4/link" style={{ width: '2.5rem', height: '2.5rem', color: '#0064d9' } as React.CSSProperties} />
+                          <Text style={{ fontSize: 'var(--sapFontSize)', color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>{selectedSearchWidget.type}</Text>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -326,7 +384,7 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ overflow: 'hidden', height: '3.875rem', flexShrink: 0, borderBottom: '1px solid var(--sapPageHeader_BorderColor, #d9d9d9)', boxShadow: '0 2px 4px rgba(34,53,72,0.06)' }}>
               <Wizard ref={wizardRef} contentLayout={'SingleStep' as any} style={{ width: '100%' } as React.CSSProperties}>
-                <WizardStep titleText="Select Analysis Configuration" selected={browseStep === 1} icon={browseStep > 1 ? 'accept' : undefined}>{' '}</WizardStep>
+                <WizardStep titleText="Select Internal Analysis" selected={browseStep === 1} icon={browseStep > 1 ? 'accept' : undefined}>{' '}</WizardStep>
                 <WizardStep titleText="Choose Type" selected={browseStep === 2} disabled={browseStep < 2} icon={browseStep > 2 ? 'accept' : undefined}>{' '}</WizardStep>
                 <WizardStep titleText="Select Widget" selected={browseStep === 3} disabled={browseStep < 3}>{' '}</WizardStep>
               </Wizard>
@@ -335,10 +393,10 @@ export default function ConnectWidgetSearchDialog({ open, shapeType, currentWidg
               {browseStep === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <div>
-                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Analysis Configuration</Text>
-                    <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the analysis configuration you want to add a widget from</Text>
+                    <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block', marginBottom: '0.125rem' } as React.CSSProperties}>Select Internal Analysis</Text>
+                    <Text style={{ color: 'var(--sapContent_LabelColor)' } as React.CSSProperties}>Select the internal analysis you want to add a widget from</Text>
                   </div>
-                  <Input placeholder="Search by analysis configuration name" type={'Search' as any} value={processSearch}
+                  <Input placeholder="Search by internal analysis name" type={'Search' as any} value={processSearch}
                     onInput={(e: any) => setProcessSearch(e.target.value)} style={{ width: '100%' } as React.CSSProperties}>
                     <Icon slot="icon" name="search" />
                   </Input>

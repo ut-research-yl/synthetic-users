@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Button, Icon, Input, Label, Select, Option, Tab, Text, List, ListItemStandard } from '@ui5/webcomponents-react'
+import { Button, Icon, Input, Label, Modals, Select, Option, Tab, Text, List, ListItemStandard } from '@ui5/webcomponents-react'
 import { SigChipV2, SigRightSidePanel } from '@signavio/sap-signavio-uixtension'
 import type { LiShape } from '../pages/ModelerApp'
-import ConnectWidgetDialog, { CWD_DATA } from './ConnectWidgetDialog'
+import { CWD_DATA } from './ConnectWidgetDialog'
 import ConnectWidgetSearchDialog from './ConnectWidgetSearchDialog'
 import { RelationsTab } from '../pages/Repository/RelationsTab'
 
@@ -121,7 +121,6 @@ const [previewOpen, setPreviewOpen] = useState(false)
   const [shapeDropdownOpen, setShapeDropdownOpen] = useState(false)
   const [shapeDropdownPos, setShapeDropdownPos] = useState<{ top: number; left: number } | null>(null)
   const shapeDropdownRef = useRef<HTMLDivElement>(null)
-  const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [searchDialogOpen, setSearchDialogOpen] = useState(false)
 
   const shapeDropdownPortalRef = useRef<HTMLDivElement>(null)
@@ -367,21 +366,25 @@ const [previewOpen, setPreviewOpen] = useState(false)
         )
       })()}
 
-      {connectDialogOpen && (
-        <ConnectWidgetDialog
-          open={connectDialogOpen}
-          onClose={() => setConnectDialogOpen(false)}
-        />
-      )}
       {searchDialogOpen && (
         <ConnectWidgetSearchDialog
           open={searchDialogOpen}
           shapeType={shapeType}
           currentWidgetId={widgetId || undefined}
-          onConnect={(id, name) => {
+          onConnect={(id, name, type) => {
+            const WIDGET_TYPE_TO_SHAPE: Record<string, string> = {
+              'Value': 'Value', 'Bar Chart': 'Progress Bar', 'Line Chart': 'Trend',
+              'Area Chart': 'Trend', 'Dual Axis Chart': 'Trend', 'Pie Chart': 'Ring Chart',
+              'Treemap': 'Progress Bar', 'Heat Map': 'Traffic Light', 'Sankey Chart': 'Trend',
+              'Histogram': 'Progress Bar', 'Ring Chart': 'Ring Chart',
+              'External Widget': 'Indicator', 'Metric': 'Indicator',
+            }
+            const newShapeType = WIDGET_TYPE_TO_SHAPE[type] ?? 'Indicator'
             setWidgetId(id)
+            setShapeType(newShapeType)
             setPreviewOpen(false)
-            onUpdate?.(shape.id, { widgetId: id, widgetName: name })
+            onUpdate?.(shape.id, { widgetId: id, widgetName: name, shapeType: newShapeType })
+            Modals.showToast({ children: `"${name}" connected to shape.` })
           }}
           onClose={() => setSearchDialogOpen(false)}
         />

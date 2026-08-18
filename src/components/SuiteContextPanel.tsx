@@ -17,7 +17,7 @@ import DictionaryLinkedPanel from './DictionaryLinkedPanel'
 import CreateDictionaryItemPanel from './CreateDictionaryItemPanel'
 import type { DictPanelItem } from './DictionaryDetailPanel'
 import type { LiShape } from '../pages/ModelerApp'
-import type { Widget, ExternalWidget } from './DataPanel'
+import type { Widget, ExternalWidget, Metric } from './DataPanel'
 import { elementData } from '../data/liveInsightsData'
 import type { SelectedAssetInfo } from '../pages/AllResources'
 import s from './SuiteContextPanel.module.css'
@@ -88,7 +88,7 @@ function makeMockAsset(assetId?: string, assetName?: string): SelectedAssetInfo 
 
 // ── Panel content (goes inside the SplitterElement) ───────────────────────────
 
-export function SuiteContextPanelContent({ activePanel, onTogglePanel, pendingMessage, onPendingConsumed, assetId, assetName, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem, onLinkDictItem }: SharedProps & { assetId?: string; assetName?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null; onLinkDictItem?: (elementId: string, dictId: string, dictName: string) => void }) {
+export function SuiteContextPanelContent({ activePanel, onTogglePanel, pendingMessage, onPendingConsumed, assetId, assetName, selectedElementId, selectedLiShape, onLiShapeUpdate, onSelectElement, liShapes, onSelectLiShape, selectedWidget, selectedDictId, selectedDictItem, onLinkDictItem }: SharedProps & { assetId?: string; assetName?: string; selectedLiShape?: LiShape | null; onLiShapeUpdate?: (id: string, changes: Partial<LiShape>) => void; onSelectElement?: (id: string) => void; liShapes?: LiShape[]; onSelectLiShape?: (shape: LiShape) => void; selectedWidget?: Widget | ExternalWidget | Metric | null; selectedDictId?: string | null; selectedDictItem?: DictPanelItem | null; onLinkDictItem?: (elementId: string, dictId: string, dictName: string) => void }) {
   if (!activePanel) return null
 
   if (activePanel === 'create-dict-item' && selectedDictItem) {
