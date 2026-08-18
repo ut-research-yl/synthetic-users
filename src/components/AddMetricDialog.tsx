@@ -259,7 +259,6 @@ export default function AddMetricDialog({ open, onClose, onSave }: Props) {
                     style={{ width: '100%' } as React.CSSProperties}
                     onChange={(e: any) => setQuestion(e.detail?.selectedOption?.dataset?.value ?? '')}
                   >
-                    <Option data-value="" selected={!question} />
                     {(MOCK_QUESTIONS[source] ?? []).map(q => (
                       <Option key={q} data-value={q} selected={question === q}>{q}</Option>
                     ))}

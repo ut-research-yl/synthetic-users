@@ -193,10 +193,18 @@ export const METRICS: Metric[] = [
 
 // ── Canvas elements (for Link to Element picker) ─────────────────────────────
 
+function elementShapeLabel(type: string, subtype: string): string {
+  if (type === 'event') return subtype === 'Start' ? 'Start Event' : 'End Event'
+  if (type === 'gateway') return 'Gateway'
+  if (type === 'task') return 'Task'
+  if (type === 'artifact' && subtype === 'ITSystem') return 'IT System'
+  return subtype || type
+}
+
 const CANVAS_ELEMENTS = Object.keys(ELEMENT_GEOMETRY).map(id => ({
   id,
   name: elementData[id]?.name ?? id,
-  type: elementData[id]?.subtype ?? elementData[id]?.type ?? '',
+  type: elementShapeLabel(elementData[id]?.type ?? '', elementData[id]?.subtype ?? ''),
 }))
 
 // ── Drag ghost ────────────────────────────────────────────────────────────────
@@ -500,6 +508,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
   const [externalWidgets, setExternalWidgets] = useState<ExternalWidget[]>(EXTERNAL_WIDGETS)
   const [metrics, setMetrics] = useState<Metric[]>(METRICS)
   const [linkWidget, setLinkWidget] = useState<{ id: string; name: string; type: string } | null>(null)
+  const [linkSearch, setLinkSearch] = useState('')
 
   const nextAddedAt = useRef(-1)
 
@@ -850,19 +859,26 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
               <span style={{ fontSize: 'var(--sapFontHeader5Size)', fontWeight: '700', color: 'var(--sapTextColor)' }}>Link to Element</span>
               <Button icon="decline" design="Transparent"
                 style={{ '--_ui5_button_base_min_width': '1.625rem', width: '1.625rem', height: '1.625rem' } as React.CSSProperties}
-                onClick={() => setLinkWidget(null)} />
+                onClick={() => { setLinkWidget(null); setLinkSearch('') }} />
             </div>
-            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--sapPageHeader_BorderColor)' }}>
+            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--sapPageHeader_BorderColor)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <Text style={{ fontSize: 'var(--sapFontSmallSize)', color: 'var(--sapContent_LabelColor)' }}>
                 Select a canvas element to link &quot;{linkWidget.name}&quot; to.
               </Text>
+              <Input
+                placeholder="Search elements..."
+                value={linkSearch}
+                onInput={(e: any) => setLinkSearch(e.target.value)}
+                style={{ width: '100%' }}
+              />
             </div>
-            <div style={{ overflowY: 'auto', maxHeight: 360 }}>
-              {CANVAS_ELEMENTS.map(el => (
+            <div style={{ overflowY: 'auto', maxHeight: 320 }}>
+              {CANVAS_ELEMENTS.filter(el => el.name.toLowerCase().includes(linkSearch.toLowerCase())).map(el => (
                 <div key={el.id}
                   onClick={() => {
                     onLinkWidgetToElement?.(linkWidget.id, linkWidget.name, linkWidget.type, el.id, el.name)
                     setLinkWidget(null)
+                    setLinkSearch('')
                   }}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.625rem 1rem', borderBottom: '1px solid var(--sapList_BorderColor)', cursor: 'pointer' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--sapList_Hover_Background)')}
@@ -874,7 +890,7 @@ export default function DataPanel({ onClose, onWidgetSelect, onAddFromBrowse, on
               ))}
             </div>
             <div style={{ padding: '0.5rem 1rem', borderTop: '1px solid var(--sapPageHeader_BorderColor)', display: 'flex', justifyContent: 'flex-end' }}>
-              <Button design="Transparent" onClick={() => setLinkWidget(null)}>Cancel</Button>
+              <Button design="Transparent" onClick={() => { setLinkWidget(null); setLinkSearch('') }}>Cancel</Button>
             </div>
           </div>
         </div>,

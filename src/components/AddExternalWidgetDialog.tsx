@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Button, Dialog, Bar, Title, Label, Input, Select, Option, TextArea, IllustratedMessage, BusyIndicator } from '@ui5/webcomponents-react'
+import { Button, Dialog, Bar, Title, Label, Input, Select, Option, IllustratedMessage, BusyIndicator, Text } from '@ui5/webcomponents-react'
+import { PREVIEW_CHARTS } from './ConnectWidgetSearchDialog'
 
 type Props = { open: boolean; onClose: () => void; onSave?: (widget: { id: string; name: string; source: string; url: string; shapeType: string }) => void }
 
@@ -23,6 +24,7 @@ const SHAPE_TYPES = [
   { value: 'Cockpit',       label: 'Cockpit',       icon: 'SAP-icons-v4/gauge-cockpit' },
   { value: 'Sentiment',     label: 'Sentiment',     icon: 'SAP-icons-v4/emotion-positive' },
 ]
+
 
 export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props) {
   const [title, setTitle] = useState('')
@@ -93,9 +95,8 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Label required showColon>Link / Code Snippet</Label>
-            <TextArea
+            <Input
               placeholder="Paste the link or code snippet here"
-              rows={1}
               value={snippet}
               onInput={(e: any) => {
                 const val = e.target.value
@@ -128,26 +129,22 @@ export default function AddExternalWidgetDialog({ open, onClose, onSave }: Props
             const previewUrl = !loading && snippet ? extractPreviewUrl(snippet) : null
             return (
               <div style={{
-                width: '100%', height: '100%', borderRadius: 8, overflow: 'hidden',
+                width: '100%', height: '100%', borderRadius: 8,
                 background: 'var(--sapPageSection_Background, #f8f9fa)',
-                display: 'flex', alignItems: previewUrl ? 'stretch' : 'center', justifyContent: previewUrl ? 'stretch' : 'center',
-                minHeight: 320,
+                display: 'flex', flexDirection: 'column',
+                alignItems: previewUrl ? 'stretch' : 'center', justifyContent: previewUrl ? 'flex-start' : 'center',
+                minHeight: 320, padding: previewUrl ? '1.25rem' : 0, boxSizing: 'border-box',
               }}>
                 {loading ? (
                   <BusyIndicator active size="L" />
                 ) : previewUrl ? (
-                  <iframe
-                    key={previewUrl}
-                    src={previewUrl}
-                    title={title || 'Widget preview'}
-                    style={{ width: '100%', height: '100%', minHeight: 320, border: 'none' }}
-                    allowFullScreen
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                  />
-                ) : snippet ? (
-                  <div style={{ padding: '1rem', color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSmallSize)', wordBreak: 'break-all', textAlign: 'center' }}>
-                    {snippet.slice(0, 120)}{snippet.length > 120 ? '…' : ''}
-                  </div>
+                  <>
+                    {title && <Text style={{ fontWeight: 700, fontSize: 'var(--sapFontLargeSize)', display: 'block' }}>{title}</Text>}
+                    <Text style={{ color: 'var(--sapContent_LabelColor)', fontSize: 'var(--sapFontSize)', display: 'block', marginBottom: '0.5rem' }}>{source}</Text>
+                    <div style={{ background: '#fff', borderRadius: '0.75rem', border: '1px solid var(--sapPageHeader_BorderColor, #e5e5e5)', padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: PREVIEW_CHARTS['Line Chart'] }} />
+                    </div>
+                  </>
                 ) : (
                   <div style={{ overflow: 'hidden', width: '100%', paddingBottom: 0 }}>
                     <IllustratedMessage
